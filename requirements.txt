@@ -1,0 +1,66 @@
+# Django Core
+# Django 5.2.x - Kompatibel dengan Python 3.10, 3.11, 3.12, 3.13
+Django>=5.2.8,<5.3
+django-extensions>=3.2.0,<4.0
+
+# HTMX Integration
+# django-htmx 1.27+ - Kompatibel dengan Python 3.10-3.13
+django-htmx>=1.27.0
+
+# Form Enhancement
+# django-widget-tweaks 1.5+ - Kompatibel dengan Python 3.10-3.13
+django-widget-tweaks>=1.5.0
+
+# Filtering & Search
+# django-filter 25.x - Kompatibel dengan Python 3.10-3.13
+django-filter>=25.2,<26.0
+
+# Image Processing
+# Pillow 11.x/12.x - Kompatibel dengan Python 3.10-3.13
+Pillow>=11.0.0,<13.0
+
+# Database
+# PyMySQL 1.1+ - Kompatibel dengan Python 3.10-3.13
+PyMySQL>=1.1.2,<2.0  # MySQL driver untuk Django (lebih mudah diinstall di Windows)
+# Catatan: PyMySQL perlu dikonfigurasi di psb_pondok/__init__.py sebelum Django diimport
+
+# Development Tools (Optional but recommended)
+# IPython 8.x - Kompatibel dengan Python 3.10-3.13
+ipython>=8.0.0,<9.0
+# python-decouple 3.8+ - Kompatibel dengan Python 3.10-3.13
+python-decouple>=3.8
+
+# Rich Text Editor
+# django-summernote 0.8.20+ - Kompatibel dengan Python 3.10-3.13
+django-summernote>=0.8.20.0
+
+# Data Export/Import
+# openpyxl 3.1+ - Kompatibel dengan Python 3.10-3.13
+openpyxl>=3.1.5,<4.0
+# pandas 2.2+ - Kompatibel dengan Python 3.10-3.13
+pandas>=2.2.0,<3.0
+# reportlab 4.0+ - Kompatibel dengan Python 3.10-3.13
+reportlab>=4.0.0,<5.0
+# Note: xhtml2pdf dihapus karena tidak digunakan dan memerlukan pycairo (build tools)
+# Jika diperlukan di masa depan, install manual: pip install --no-deps xhtml2pdf>=0.2.11
+
+# Static Files & Performance
+# whitenoise 6.11+ - Kompatibel dengan Python 3.10-3.13
+whitenoise>=6.11.0,<7.0
+# django-htmlmin 0.11+ - Kompatibel dengan Python 3.10-3.13
+django-htmlmin>=0.11.0
+# django-compressor>=4.4  # DISABLED - appconf tidak kompatibel dengan Python 3.10
+# appconf>=0.1.1  # DISABLED - tidak diperlukan tanpa django-compressor
+# rcssmin 1.2+ - Kompatibel dengan Python 3.10-3.13
+rcssmin>=1.2.2
+# rjsmin 1.2+ - Kompatibel dengan Python 3.10-3.13
+rjsmin>=1.2.5
+
+# Security
+# django-axes 8.1+ - Kompatibel dengan Python 3.10-3.13 (mendukung Django 5.2)
+django-axes>=8.1.0,<9.0  # Brute force protection dan login security
+# django-csp 4.0+ - Kompatibel dengan Python 3.10-3.13 (mendukung Django 5.2)
+django-csp>=4.0,<5.0  # Content Security Policy untuk mencegah XSS attacks
+# fontawesomefree 6.6+ - Kompatibel dengan Python 3.10-3.13
+fontawesomefree>=6.6.0
+

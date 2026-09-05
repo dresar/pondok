@@ -1,0 +1,137 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Kategori - Admin Panel{% endblock %}
+
+{% block page_title %}Kategori{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'blog:list' %}" class="hover:text-gray-900">Blog</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Kategori</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    deleteModal: false, 
+    deleteId: null, 
+    deleteName: '',
+    formModal: false,
+    formTitle: 'Tambah Kategori',
+    editId: null
+}">
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-gray-900">Kategori</h2>
+            <button @click="formModal = true; formTitle = 'Tambah Kategori'; editId = null" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <i class="fas fa-plus mr-2"></i>Tambah
+            </button>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="get" class="mb-4">
+            <input type="text" name="search" value="{{ search }}" placeholder="Cari kategori..." 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+        </form>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Urutan</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for cat in categories %}
+                    <tr>
+                        <td class="px-6 py-4">{{ cat.name }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ cat.slug }}</td>
+                        <td class="px-6 py-4">{{ cat.order }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button @click="formModal = true; formTitle = 'Edit Kategori'; editId = {{ cat.id }}; window.location.href = '?edit={{ cat.id }}'" 
+                                    class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button @click="deleteModal = true; deleteId = {{ cat.id }}; deleteName = '{{ cat.name }}'" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">Tidak ada data</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if categories.has_other_pages %}
+        <div class="mt-4 flex justify-center">
+            {% if categories.has_previous %}
+            <a href="?page={{ categories.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded-lg mr-2">Sebelumnya</a>
+            {% endif %}
+            <span class="px-4 py-2">{{ categories.number }} / {{ categories.paginator.num_pages }}</span>
+            {% if categories.has_next %}
+            <a href="?page={{ categories.next_page_number }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded-lg ml-2">Selanjutnya</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Form Modal -->
+    <div x-show="formModal || {% if category %}true{% else %}false{% endif %}" 
+         x-cloak 
+         @click.away="formModal = false; window.location.href = '{% url 'blog:category_list' %}'" 
+         class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full" @click.stop>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">{% if category %}Edit Kategori{% else %}Tambah Kategori{% endif %}</h3>
+                <button @click="formModal = false; window.location.href = '{% url 'blog:category_list' %}'" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" action="{% if category %}{% url 'blog:category_update' category.id %}{% else %}{% url 'blog:category_create' %}{% endif %}">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+                        {{ form.slug }}
+                        {% if form.slug.errors %}<p class="mt-1 text-sm text-red-600">{{ form.slug.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Otomatis dibuat jika kosong</p>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" @click="formModal = false; window.location.href = '{% url 'blog:category_list' %}'" class="px-4 py-2 bg-gray-200 rounded-lg">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Modal -->
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold mb-4">Hapus Kategori</h3>
+            <p class="text-gray-700 mb-6">Hapus "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="deleteModal = false" class="px-4 py-2 bg-gray-200 rounded-lg">Batal</button>
+                <form method="post" action="{% url 'blog:category_delete' 0 %}" x-bind:action="'/admin-panel/blog/category/' + deleteId + '/delete/'">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

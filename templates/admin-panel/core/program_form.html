@@ -1,0 +1,137 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'core:program_list' %}" class="hover:text-gray-900">Program</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">{{ title }}</span></li>
+{% endblock %}
+
+{% block extra_css %}
+{{ form.media.css }}
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-4xl">
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Program *</label>
+            {{ form.nama }}
+            {% if form.nama.errors %}<p class="mt-1 text-sm text-red-600">{{ form.nama.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+            {{ form.slug }}
+            {% if form.slug.errors %}<p class="mt-1 text-sm text-red-600">{{ form.slug.errors.0 }}</p>{% endif %}
+            <p class="mt-1 text-xs text-gray-500">Otomatis dibuat jika kosong</p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi *</label>
+            {{ form.deskripsi }}
+            {% if form.deskripsi.errors %}<p class="mt-1 text-sm text-red-600">{{ form.deskripsi.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Gambar</label>
+            <div class="flex gap-2 mb-2">
+                <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm" onclick="openProgramImagePicker()">
+                    <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                </button>
+                <span class="text-xs text-gray-500 self-center">atau</span>
+            </div>
+            {% if program and program.gambar %}
+            <div id="program-image-preview">
+                <img src="{{ program.gambar.url }}" alt="{{ program.nama }}" class="w-32 h-32 object-cover rounded-lg mb-2">
+            </div>
+            {% else %}
+            <div id="program-image-preview" class="hidden"></div>
+            {% endif %}
+            {{ form.gambar }}
+            <p class="mt-1 text-xs text-gray-500">Upload manual atau pilih dari gallery yang sudah dikompres WebP</p>
+            {% if form.gambar.errors %}<p class="mt-1 text-sm text-red-600">{{ form.gambar.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
+                {{ form.tanggal_mulai }}
+                {% if form.tanggal_mulai.errors %}<p class="mt-1 text-sm text-red-600">{{ form.tanggal_mulai.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai</label>
+                {{ form.tanggal_selesai }}
+                {% if form.tanggal_selesai.errors %}<p class="mt-1 text-sm text-red-600">{{ form.tanggal_selesai.errors.0 }}</p>{% endif %}
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                {{ form.status }}
+                {% if form.status.errors %}<p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="flex items-center space-x-2">
+                    {{ form.is_featured }}
+                    <span class="text-sm font-medium text-gray-700">Unggulan</span>
+                </label>
+            </div>
+        </div>
+        <div class="border-t pt-4">
+            <h3 class="text-lg font-semibold mb-4">SEO</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                    {{ form.meta_title }}
+                    {% if form.meta_title.errors %}<p class="mt-1 text-sm text-red-600">{{ form.meta_title.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                    {{ form.meta_description }}
+                    {% if form.meta_description.errors %}<p class="mt-1 text-sm text-red-600">{{ form.meta_description.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end space-x-3 pt-4">
+            <a href="{% url 'core:program_list' %}" class="px-4 py-2 bg-gray-200 rounded-lg">Batal</a>
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Simpan</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script>
+    // Function untuk open image picker program
+    function openProgramImagePicker() {
+        openImagePicker({
+            targetPreviewId: 'program-image-preview',
+            onSelect: function(imageId, imageUrl, imageTitle) {
+                const preview = document.getElementById('program-image-preview');
+                if (preview) {
+                    const escapedTitle = imageTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    preview.innerHTML = '<img src="' + imageUrl + '" alt="' + escapedTitle + '" class="w-32 h-32 object-cover rounded-lg mb-2">';
+                    preview.style.display = 'block';
+                }
+                let hiddenInput = document.getElementById('selected_image_id');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'selected_image_id';
+                    hiddenInput.name = 'selected_image_id';
+                    const form = document.querySelector('form');
+                    if (form) {
+                        form.appendChild(hiddenInput);
+                    }
+                }
+                hiddenInput.value = imageId;
+            }
+        });
+    }
+</script>
+{% endblock %}
+

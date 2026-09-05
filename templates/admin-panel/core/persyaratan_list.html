@@ -1,0 +1,257 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+{% if form %}{{ form.media.css }}{% endif %}
+<style>
+    .summernote-content {
+        line-height: 1.8;
+    }
+    .summernote-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .summernote-content p {
+        margin-bottom: 1rem;
+    }
+    .summernote-content ul, .summernote-content ol {
+        margin: 1rem 0;
+        padding-left: 2rem;
+    }
+    .summernote-content li {
+        margin: 0.5rem 0;
+    }
+    /* List dengan nomor bulat */
+    .requirement-list {
+        list-style: none;
+        padding-left: 0;
+        counter-reset: requirement-counter;
+    }
+    .requirement-item {
+        counter-increment: requirement-counter;
+        position: relative;
+        padding-left: 4rem;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    .requirement-item:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+        transform: translateX(5px);
+    }
+    .requirement-item::before {
+        content: counter(requirement-counter);
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 2.5rem;
+        height: 2.5rem;
+        background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.125rem;
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    }
+    .requirement-text {
+        color: #1f2937;
+        line-height: 1.8;
+        font-size: 0.9375rem;
+    }
+    @media (max-width: 768px) {
+        .requirement-item {
+            padding-left: 3.5rem;
+        }
+        .requirement-item::before {
+            width: 2rem;
+            height: 2rem;
+            font-size: 1rem;
+            left: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block title %}Persyaratan - Admin Panel{% endblock %}
+
+{% block page_title %}Persyaratan{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Persyaratan</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-6xl" x-data="{ 
+    editMode: {% if form.errors %}true{% else %}false{% endif %},
+    activeTab: 'santri'
+}">
+    <!-- Header dengan Tab Santri/Santriwati -->
+    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Administrasi</h2>
+            <p class="text-sm text-gray-600 mt-1">Persyaratan Pendaftaran</p>
+        </div>
+        <button 
+            x-show="!editMode"
+            @click="editMode = true"
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center">
+            <i class="fas fa-edit mr-2"></i>Edit Persyaratan
+        </button>
+    </div>
+    
+    <!-- Tab Santri / Santriwati -->
+    <div class="flex gap-2 border-b border-gray-200 mb-6">
+        <button 
+            @click="activeTab = 'santri'"
+            :class="activeTab === 'santri' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-600 hover:text-gray-900'"
+            class="px-6 py-3 transition-colors">
+            <i class="fas fa-male mr-2"></i>Persyaratan Santri (Putra)
+        </button>
+        <button 
+            @click="activeTab = 'santriwati'"
+            :class="activeTab === 'santriwati' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-600 hover:text-gray-900'"
+            class="px-6 py-3 transition-colors">
+            <i class="fas fa-female mr-2"></i>Persyaratan Santriwati (Putri)
+        </button>
+    </div>
+    
+    <!-- Mode Read-Only -->
+    <div x-show="!editMode" class="space-y-8">
+        <!-- Icon -->
+        <div class="flex justify-center mb-6">
+            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-clipboard-check text-4xl text-blue-600"></i>
+            </div>
+        </div>
+        
+        <!-- Persyaratan Santri -->
+        <div x-show="activeTab === 'santri'">
+            <h3 class="text-xl font-bold text-blue-600 mb-4">Persyaratan Penerimaan</h3>
+            <div class="bg-gray-50 rounded-lg border border-gray-200 p-6">
+                {% if persyaratan and persyaratan.persyaratan_santri %}
+                <div class="summernote-content">
+                    {{ persyaratan.persyaratan_santri|safe }}
+                </div>
+                {% else %}
+                <p class="text-gray-500 italic">Belum ada persyaratan santri yang diisi</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Persyaratan Santriwati -->
+        <div x-show="activeTab === 'santriwati'">
+            <h3 class="text-xl font-bold text-blue-600 mb-4">Persyaratan Penerimaan</h3>
+            <div class="bg-gray-50 rounded-lg border border-gray-200 p-6">
+                {% if persyaratan and persyaratan.persyaratan_santriwati %}
+                <div class="summernote-content">
+                    {{ persyaratan.persyaratan_santriwati|safe }}
+                </div>
+                {% else %}
+                <p class="text-gray-500 italic">Belum ada persyaratan santriwati yang diisi</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if persyaratan %}
+        <div class="text-sm text-gray-500 pt-4 border-t border-gray-200">
+            <i class="fas fa-clock mr-2"></i>Terakhir diupdate: {{ persyaratan.updated_at|date:"d F Y, H:i" }}
+        </div>
+        {% endif %}
+        
+        <div class="flex justify-end pt-4">
+            <a href="{% url 'admin-panel:index' %}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+        </div>
+    </div>
+    
+    <!-- Mode Edit -->
+    <div x-show="editMode" x-cloak style="display: none;">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Tab untuk Edit -->
+            <div class="flex gap-2 border-b border-gray-200 mb-6">
+                <button 
+                    type="button"
+                    @click="activeTab = 'santri'"
+                    :class="activeTab === 'santri' ? 'border-b-2 border-green-600 text-green-600 font-semibold' : 'text-gray-600 hover:text-gray-900'"
+                    class="px-6 py-3 transition-colors">
+                    <i class="fas fa-male mr-2"></i>Edit Persyaratan Santri
+                </button>
+                <button 
+                    type="button"
+                    @click="activeTab = 'santriwati'"
+                    :class="activeTab === 'santriwati' ? 'border-b-2 border-green-600 text-green-600 font-semibold' : 'text-gray-600 hover:text-gray-900'"
+                    class="px-6 py-3 transition-colors">
+                    <i class="fas fa-female mr-2"></i>Edit Persyaratan Santriwati
+                </button>
+            </div>
+            
+            <!-- Form Santri -->
+            <div x-show="activeTab === 'santri'">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Persyaratan Santri (Putra) *</label>
+                    {{ form.persyaratan_santri }}
+                    {% if form.persyaratan_santri.errors %}<p class="mt-1 text-sm text-red-600">{{ form.persyaratan_santri.errors.0 }}</p>{% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Gunakan editor untuk membuat daftar persyaratan dengan format HTML. Buat list berurutan untuk setiap item persyaratan.</p>
+                </div>
+                
+                {% if persyaratan and persyaratan.persyaratan_santri %}
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Preview Persyaratan Santri:</h4>
+                    <div class="summernote-content">
+                        {{ persyaratan.persyaratan_santri|safe }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Form Santriwati -->
+            <div x-show="activeTab === 'santriwati'">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Persyaratan Santriwati (Putri) *</label>
+                    {{ form.persyaratan_santriwati }}
+                    {% if form.persyaratan_santriwati.errors %}<p class="mt-1 text-sm text-red-600">{{ form.persyaratan_santriwati.errors.0 }}</p>{% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Gunakan editor untuk membuat daftar persyaratan dengan format HTML. Buat list berurutan untuk setiap item persyaratan.</p>
+                </div>
+                
+                {% if persyaratan and persyaratan.persyaratan_santriwati %}
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Preview Persyaratan Santriwati:</h4>
+                    <div class="summernote-content">
+                        {{ persyaratan.persyaratan_santriwati|safe }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+                <button 
+                    type="button"
+                    @click="editMode = false"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                    <i class="fas fa-times mr-2"></i>Batal
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i>Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if form %}{{ form.media.js }}{% endif %}
+{% endblock %}

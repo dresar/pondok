@@ -1,0 +1,252 @@
+{% extends 'admin-panel/base.html' %}
+{% load humanize %}
+
+{% block title %}Rekening Bank - Admin Panel{% endblock %}
+
+{% block page_title %}Rekening Bank{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:keuangan_dashboard' %}" class="hover:text-gray-900">Keuangan</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Rekening Bank</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Rekening Bank</h2>
+            <p class="text-sm text-gray-600">Kelola rekening bank tujuan pembayaran</p>
+        </div>
+        <button 
+            onclick="document.getElementById('form-container').scrollIntoView({ behavior: 'smooth' }); document.getElementById('form-container').classList.remove('hidden'); document.getElementById('id_nama_bank').focus();"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+            <i class="fas fa-plus mr-2"></i>Tambah Rekening
+        </button>
+    </div>
+    
+    <!-- Form Create/Edit -->
+    <div id="form-container" class="mb-6 {% if not editing_id %}hidden{% endif %}">
+        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                {% if editing_id %}
+                    <i class="fas fa-edit mr-2 text-green-600"></i>Edit Rekening Bank
+                {% else %}
+                    <i class="fas fa-plus mr-2 text-green-600"></i>Tambah Rekening Bank Baru
+                {% endif %}
+            </h3>
+            
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                {% if editing_id %}
+                <input type="hidden" name="bank_id" value="{{ editing_id }}">
+                {% endif %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.nama_bank.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.nama_bank.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.nama_bank }}
+                        {% if form.nama_bank.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.nama_bank.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div id="custom-bank-container" style="display: {% if form.nama_bank.value == 'Lainnya' %}block{% else %}none{% endif %};">
+                        <label for="{{ form.nama_bank_custom.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.nama_bank_custom.label }}
+                        </label>
+                        {{ form.nama_bank_custom }}
+                        {% if form.nama_bank_custom.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.nama_bank_custom.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.nomor_rekening.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.nomor_rekening.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.nomor_rekening }}
+                        {% if form.nomor_rekening.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.nomor_rekening.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.nama_pemilik_rekening.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.nama_pemilik_rekening.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.nama_pemilik_rekening }}
+                        {% if form.nama_pemilik_rekening.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.nama_pemilik_rekening.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.biaya_pendaftaran.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.biaya_pendaftaran.label }}
+                        </label>
+                        {{ form.biaya_pendaftaran }}
+                        {% if form.biaya_pendaftaran.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.biaya_pendaftaran.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.order.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.order.label }}
+                        </label>
+                        {{ form.order }}
+                        {% if form.order.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.order.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <label for="{{ form.is_active.id_for_label }}" class="flex items-center cursor-pointer">
+                            {{ form.is_active }}
+                            <span class="ml-2 text-sm font-medium text-gray-700">{{ form.is_active.label }}</span>
+                        </label>
+                        {% if form.is_active.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.is_active.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="{{ form.keterangan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.keterangan.label }}
+                    </label>
+                    {{ form.keterangan }}
+                    {% if form.keterangan.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.keterangan.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <ul class="list-disc list-inside text-sm text-red-800">
+                        {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button 
+                        type="button"
+                        onclick="document.getElementById('form-container').classList.add('hidden'); window.location.href='{% url 'admin-panel:bank_account_list' %}';"
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        <i class="fas fa-save mr-2"></i>Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- List Rekening Bank -->
+    <div class="overflow-x-auto">
+        {% if banks %}
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Rekening</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Pemilik</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Biaya Pendaftaran</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Urutan</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for bank in banks %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ forloop.counter }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ bank.get_display_name }}</div>
+                        {% if bank.keterangan %}
+                        <div class="text-xs text-gray-500">{{ bank.keterangan|truncatewords:10 }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bank.nomor_rekening }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bank.nama_pemilik_rekening }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {% if bank.biaya_pendaftaran %}
+                            Rp {{ bank.biaya_pendaftaran|floatformat:0|intcomma }}
+                        {% else %}
+                            <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if bank.is_active %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            Aktif
+                        </span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            Nonaktif
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bank.order }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex items-center space-x-2">
+                            <a href="{% url 'admin-panel:bank_account_list' %}?edit={{ bank.id }}" 
+                               class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="post" action="{% url 'admin-panel:bank_account_delete' bank.id %}" 
+                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus rekening bank ini?');"
+                                  class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-university text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500">Belum ada rekening bank yang ditambahkan.</p>
+            <button 
+                onclick="document.getElementById('form-container').classList.remove('hidden'); document.getElementById('id_nama_bank').focus();"
+                class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i>Tambah Rekening Pertama
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Toggle custom bank field
+document.addEventListener('DOMContentLoaded', function() {
+    const namaBankSelect = document.getElementById('id_nama_bank');
+    const customBankContainer = document.getElementById('custom-bank-container');
+    
+    if (namaBankSelect && customBankContainer) {
+        namaBankSelect.addEventListener('change', function() {
+            if (this.value === 'Lainnya') {
+                customBankContainer.style.display = 'block';
+            } else {
+                customBankContainer.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

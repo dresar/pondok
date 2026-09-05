@@ -1,0 +1,472 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Hero Section - Admin Panel{% endblock %}
+
+{% block page_title %}Hero Section{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Hero Section</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    deleteModal: false, 
+    deleteId: null, 
+    deleteName: '', 
+    formModal: false
+}">
+    <div class="bg-white rounded-lg shadow mb-4 md:mb-6 p-4 md:p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-900">Hero Section</h2>
+            <button @click="formModal = true" class="px-3 py-2 md:px-4 md:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center text-sm md:text-base">
+                <i class="fas fa-plus mr-2"></i>Tambah
+            </button>
+        </div>
+    </div>
+    
+    <!-- Preview Section -->
+    {% if active_heroes %}
+    <div class="bg-white rounded-lg shadow mb-4 md:mb-6 p-4 md:p-6">
+        <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4">Preview (Maksimal 3 Aktif)</h3>
+        <div class="relative min-h-[300px] md:min-h-[400px] rounded-lg overflow-hidden bg-gray-100" 
+             x-data="{ 
+                 previewSlide: 0,
+                 totalSlides: {{ active_heroes|length }},
+                 init() {
+                     {% if active_heroes|length > 1 %}
+                     setInterval(() => {
+                         this.previewSlide = (this.previewSlide + 1) % this.totalSlides;
+                     }, 5000);
+                     {% endif %}
+                 }
+             }">
+            <div class="hero-preview-slideshow relative w-full h-full" style="min-height: 300px; position: relative;">
+                {% for hero in active_heroes %}
+                <div class="hero-preview-slide absolute inset-0 transition-opacity duration-500" 
+                     x-show="previewSlide === {{ forloop.counter0 }}" 
+                     x-transition:enter="transition ease-out duration-500" 
+                     x-transition:enter-start="opacity-0" 
+                     x-transition:enter-end="opacity-100" 
+                     x-transition:leave="transition ease-in duration-500" 
+                     x-transition:leave-start="opacity-100" 
+                     x-transition:leave-end="opacity-0"
+                     style="{% if forloop.first %}display: block; opacity: 1; z-index: 1;{% else %}display: none; opacity: 0; z-index: 0;{% endif %}">
+                    {% if hero.image %}
+                    <img src="{{ hero.image.url }}" alt="{{ hero.title|default:'Hero Image' }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full bg-gradient-to-br from-green-600 to-blue-600 flex items-center justify-center">
+                        <i class="fas fa-image text-white text-6xl opacity-50"></i>
+                    </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-4 md:p-6 text-white z-10">
+                        <h4 class="text-xl md:text-2xl font-bold mb-2 drop-shadow-lg">
+                            {% if hero.title %}{{ hero.title }}{% else %}Pendaftaran Santri Baru{% endif %}
+                        </h4>
+                        <p class="text-base md:text-lg drop-shadow-md">
+                            {% if hero.subtitle %}{{ hero.subtitle }}{% else %}2025/2026{% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if active_heroes|length > 1 %}
+            <!-- Navigation Arrows -->
+            <button @click="previewSlide = (previewSlide - 1 + totalSlides) % totalSlides" 
+                    class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 md:p-3 rounded-full transition-all duration-300 cursor-pointer">
+                <i class="fas fa-chevron-left text-sm md:text-base"></i>
+            </button>
+            <button @click="previewSlide = (previewSlide + 1) % totalSlides" 
+                    class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 md:p-3 rounded-full transition-all duration-300 cursor-pointer">
+                <i class="fas fa-chevron-right text-sm md:text-base"></i>
+            </button>
+            
+            <!-- Pagination Dots -->
+            <div class="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+                {% for hero in active_heroes %}
+                <button @click="previewSlide = {{ forloop.counter0 }}" 
+                        class="w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 cursor-pointer" 
+                        :class="previewSlide === {{ forloop.counter0 }} ? 'bg-white' : 'bg-white/50'"
+                        :aria-label="'Slide {{ forloop.counter }}'"></button>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <p class="text-xs md:text-sm text-gray-600 mt-3">
+            <i class="fas fa-info-circle mr-1"></i>Ini adalah preview tampilan hero section di halaman home. Maksimal 3 hero yang aktif akan ditampilkan.
+        </p>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow mb-4 md:mb-6 p-4 md:p-6">
+        <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4">Preview (Maksimal 3 Aktif)</h3>
+        <div class="relative min-h-[300px] md:min-h-[400px] rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+            <div class="text-center text-gray-500">
+                <i class="fas fa-image text-4xl md:text-6xl mb-3 text-gray-300"></i>
+                <p class="text-sm md:text-base">Belum ada hero section yang aktif</p>
+                <p class="text-xs md:text-sm mt-2">Aktifkan hero section untuk melihat preview</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="bg-white rounded-lg shadow p-4 md:p-6">
+        <form method="get" class="mb-4 md:mb-6">
+            <input type="text" name="search" value="{{ search }}" placeholder="Cari hero..." 
+                   class="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base">
+        </form>
+        
+        {% if heroes %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+            {% for hero in heroes %}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+                <div class="aspect-video bg-gray-100 flex items-center justify-center relative">
+                    {% if hero.image %}
+                    <img src="{{ hero.image.url }}" alt="{{ hero.title }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <i class="fas fa-image text-gray-300 text-2xl md:text-3xl"></i>
+                    {% endif %}
+                    {% if hero.is_active %}
+                    <span class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold">Aktif</span>
+                    {% endif %}
+                </div>
+                <div class="p-3 md:p-4">
+                    <h3 class="font-semibold text-gray-900 text-sm md:text-base mb-1 md:mb-2 line-clamp-2">
+                        {% if hero.title %}{{ hero.title }}{% else %}<span class="text-gray-400 italic">(Tidak ada judul)</span>{% endif %}
+                    </h3>
+                    <p class="text-xs md:text-sm {% if hero.subtitle %}text-gray-600{% else %}text-gray-400 italic{% endif %} mb-2 line-clamp-1">
+                        {% if hero.subtitle %}{{ hero.subtitle }}{% else %}(Tidak ada sub judul){% endif %}
+                    </p>
+                    <div class="flex items-center justify-between mb-2 md:mb-3">
+                        <span class="px-2 py-0.5 text-xs rounded-full {% if hero.is_active %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {% if hero.is_active %}Aktif{% else %}Tidak Aktif{% endif %}
+                        </span>
+                        <span class="text-xs text-gray-500">#{{ hero.order }}</span>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2 md:pt-3 border-t border-gray-100">
+                        <button @click="formModal = true; window.location.href = '?edit={{ hero.id }}'" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                            <i class="fas fa-edit text-sm"></i>
+                        </button>
+                        <button @click="deleteModal = true; deleteId = {{ hero.id }}; deleteName = '{{ hero.title|default:"Hero" }}'" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if heroes.has_other_pages %}
+        <div class="mt-4 md:mt-6 flex flex-col sm:flex-row justify-center items-center gap-2">
+            {% if heroes.has_previous %}
+            <a href="?page={{ heroes.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" class="px-3 py-2 md:px-4 md:py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors text-sm md:text-base">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            <span class="px-3 py-2 md:px-4 md:py-2 text-xs md:text-sm text-gray-700">Halaman {{ heroes.number }} dari {{ heroes.paginator.num_pages }}</span>
+            {% if heroes.has_next %}
+            <a href="?page={{ heroes.next_page_number }}{% if search %}&search={{ search }}{% endif %}" class="px-3 py-2 md:px-4 md:py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors text-sm md:text-base">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-inbox text-4xl mb-4 text-gray-300"></i>
+            <p>Tidak ada data</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Form Modal -->
+    <div x-show="formModal || {% if hero %}true{% else %}false{% endif %}" x-cloak @click.away="formModal = false; window.location.href = '{% url 'core:hero_section_list' %}'" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl p-4 md:p-6 max-w-md w-full mx-auto my-4" @click.stop>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg md:text-xl font-semibold">{% if hero %}Edit Hero Section{% else %}Tambah Hero Section{% endif %}</h3>
+                <button @click="formModal = false; window.location.href = '{% url 'core:hero_section_list' %}'" class="text-gray-500 hover:text-gray-700 text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{% if hero %}{% url 'core:hero_section_update' hero.id %}{% else %}{% url 'core:hero_section_create' %}{% endif %}">
+                {% csrf_token %}
+                <div class="space-y-3 md:space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul (Opsional)</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<p class="mt-1 text-sm text-red-600">{{ form.title.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sub Judul (Opsional)</label>
+                        {{ form.subtitle }}
+                        {% if form.subtitle.errors %}<p class="mt-1 text-sm text-red-600">{{ form.subtitle.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Gambar <span id="image-required-indicator" class="text-red-500">*</span>
+                            <span id="image-optional-indicator" class="text-gray-500 text-xs hidden">(Opsional jika sudah pilih dari gallery)</span>
+                        </label>
+                        <div class="flex gap-2 mb-2">
+                            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm" onclick="openHeroImagePicker()">
+                                <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                            </button>
+                            <span class="text-xs text-gray-500 self-center">atau</span>
+                        </div>
+                        {% if hero and hero.image %}
+                        <div id="hero-image-preview" class="mb-3">
+                            <img src="{{ hero.image.url }}" alt="{{ hero.title }}" class="w-full max-w-xs h-48 object-cover rounded-lg border border-gray-300">
+                            <p class="text-xs text-gray-600 mt-2">Gambar saat ini</p>
+                        </div>
+                        {% else %}
+                        <div id="hero-image-preview" class="mb-3 hidden"></div>
+                        {% endif %}
+                        {{ form.image }}
+                        <p class="mt-1 text-xs text-gray-500">Upload manual (opsional jika sudah pilih dari gallery) atau pilih dari gallery yang sudah dikompres WebP</p>
+                        {% if form.image.errors %}<p class="mt-1 text-sm text-red-600">{{ form.image.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Urutan</label>
+                        {{ form.order }}
+                        {% if form.order.errors %}<p class="mt-1 text-sm text-red-600">{{ form.order.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            {{ form.is_active }}
+                            <span class="text-sm font-medium text-gray-700">Aktif</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-info-circle mr-1"></i>Maksimal 3 hero yang dapat aktif. Jika sudah ada 3 hero aktif, nonaktifkan salah satu terlebih dahulu.
+                        </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
+                        <button type="button" @click="formModal = false; window.location.href = '{% url 'core:hero_section_list' %}'" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors text-sm md:text-base">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Modal -->
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Hapus Hero Section</h3>
+            <p class="text-gray-700 mb-6">Hapus "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="deleteModal = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
+                <form method="post" action="{% url 'core:hero_section_delete' 0 %}" x-bind:action="'/admin-panel/core/hero-section/' + deleteId + '/delete/'">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Handle image picker selection untuk update indicator
+function updateImageIndicator(hasSelectedImage) {
+    const requiredIndicator = document.getElementById('image-required-indicator');
+    const optionalIndicator = document.getElementById('image-optional-indicator');
+    const imageInput = document.querySelector('input[name="image"]');
+    
+    if (hasSelectedImage) {
+        if (requiredIndicator) requiredIndicator.style.display = 'none';
+        if (optionalIndicator) optionalIndicator.classList.remove('hidden');
+        if (imageInput) {
+            imageInput.removeAttribute('required');
+            imageInput.setAttribute('data-optional', 'true');
+        }
+    } else {
+        if (requiredIndicator) requiredIndicator.style.display = 'inline';
+        if (optionalIndicator) optionalIndicator.classList.add('hidden');
+        if (imageInput && !imageInput.hasAttribute('data-optional')) {
+            // Hanya set required jika belum ada gambar yang dipilih dan ini create baru
+            const isEdit = {% if hero %}true{% else %}false{% endif %};
+            if (!isEdit) {
+                imageInput.setAttribute('required', 'required');
+            }
+        }
+    }
+}
+
+// Function untuk open image picker hero section
+function openHeroImagePicker() {
+    openImagePicker({
+        targetPreviewId: 'hero-image-preview',
+        onSelect: function(imageId, imageUrl, imageTitle) {
+            const preview = document.getElementById('hero-image-preview');
+            if (preview) {
+                const escapedTitle = imageTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                preview.innerHTML = '<img src="' + imageUrl + '" alt="' + escapedTitle + '" class="w-full max-w-xs h-48 object-cover rounded-lg border border-gray-300"><p class="text-xs text-green-600 mt-2"><i class="fas fa-check-circle mr-1"></i>Gambar dipilih dari gallery</p>';
+                preview.style.display = 'block';
+            }
+            let hiddenInput = document.getElementById('selected_image_id');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'selected_image_id';
+                hiddenInput.name = 'selected_image_id';
+                const form = document.querySelector('form');
+                if (form) {
+                    form.appendChild(hiddenInput);
+                }
+            }
+            hiddenInput.value = imageId;
+            updateImageIndicator(true);
+        }
+    });
+}
+
+// Check jika sudah ada selected_image_id saat load
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedImageId = document.getElementById('selected_image_id');
+    if (selectedImageId && selectedImageId.value) {
+        updateImageIndicator(true);
+    }
+    
+    // Monitor perubahan pada file input
+    const imageInput = document.querySelector('input[name="image"]');
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                updateImageIndicator(false); // File diupload, show required indicator
+            }
+        });
+    }
+});
+
+// Preview slideshow dengan JavaScript vanilla - memastikan preview berfungsi
+document.addEventListener('DOMContentLoaded', function() {
+    const previewContainer = document.querySelector('.hero-preview-slideshow');
+    if (!previewContainer) {
+        console.log('Preview container not found');
+        return;
+    }
+    
+    const slides = previewContainer.querySelectorAll('.hero-preview-slide');
+    console.log('Found slides:', slides.length);
+    
+    if (slides.length === 0) {
+        console.log('No slides found');
+        return;
+    }
+    
+    // Pastikan slide pertama terlihat
+    if (slides.length > 0) {
+        slides[0].style.display = 'block';
+        slides[0].style.opacity = '1';
+        slides[0].style.zIndex = '1';
+    }
+    
+    if (slides.length <= 1) {
+        console.log('Only one slide, no slideshow needed');
+        return;
+    }
+    
+    let currentSlide = 0;
+    let slideInterval = null;
+    
+    // Fungsi untuk menampilkan slide
+    function showSlide(index) {
+        console.log('Showing slide:', index);
+        slides.forEach((slide, i) => {
+            if (i === index) {
+                slide.style.display = 'block';
+                slide.style.zIndex = '2';
+                setTimeout(() => {
+                    slide.style.opacity = '1';
+                }, 10);
+            } else {
+                slide.style.opacity = '0';
+                slide.style.zIndex = '1';
+                setTimeout(() => {
+                    if (i !== index) {
+                        slide.style.display = 'none';
+                    }
+                }, 500);
+            }
+        });
+        
+        // Update pagination dots
+        const dotsContainer = previewContainer.parentElement.querySelector('.absolute.bottom-4, .absolute.bottom-6');
+        if (dotsContainer) {
+            const dots = dotsContainer.querySelectorAll('button');
+            dots.forEach((dot, i) => {
+                if (i === index) {
+                    dot.classList.remove('bg-white/50');
+                    dot.classList.add('bg-white');
+                } else {
+                    dot.classList.remove('bg-white');
+                    dot.classList.add('bg-white/50');
+                }
+            });
+        }
+    }
+    
+    // Auto-slide
+    function startAutoSlide() {
+        if (slideInterval) clearInterval(slideInterval);
+        slideInterval = setInterval(() => {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }, 5000);
+    }
+    
+    startAutoSlide();
+    
+    // Navigation arrows - cari semua button dan filter yang memiliki icon chevron
+    const allButtons = previewContainer.parentElement.querySelectorAll('button');
+    allButtons.forEach(btn => {
+        const leftIcon = btn.querySelector('.fa-chevron-left');
+        const rightIcon = btn.querySelector('.fa-chevron-right');
+        
+        if (leftIcon) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(currentSlide);
+                startAutoSlide();
+            });
+        }
+        
+        if (rightIcon) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+                startAutoSlide();
+            });
+        }
+    });
+    
+    // Pagination dots
+    const dotsContainer = previewContainer.parentElement.querySelector('.absolute.bottom-4, .absolute.bottom-6');
+    if (dotsContainer) {
+        const dots = dotsContainer.querySelectorAll('button');
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentSlide = index;
+                showSlide(currentSlide);
+                startAutoSlide();
+            });
+        });
+    }
+    
+    // Pause on hover
+    const previewWrapper = previewContainer.parentElement;
+    previewWrapper.addEventListener('mouseenter', () => {
+        if (slideInterval) clearInterval(slideInterval);
+    });
+    previewWrapper.addEventListener('mouseleave', () => {
+        startAutoSlide();
+    });
+});
+</script>
+{% endblock %}

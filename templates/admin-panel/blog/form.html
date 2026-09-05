@@ -1,0 +1,344 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block title %}{% if blog_post %}Edit Artikel{% else %}Tambah Artikel Baru{% endif %} - Admin Panel{% endblock %}
+
+{% block page_title %}{% if blog_post %}Edit Artikel{% else %}Tambah Artikel Baru{% endif %}{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'blog:list' %}" class="hover:text-gray-900">Daftar Artikel</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">{% if blog_post %}Edit{% else %}Tambah Baru{% endif %}</span></li>
+{% endblock %}
+
+{% block extra_css %}
+{{ form.media.css }}
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Informasi Dasar -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-file-alt mr-2 text-green-600"></i>Informasi Dasar
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.title.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.slug.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.slug.label }}
+                    </label>
+                    {{ form.slug }}
+                    {% if form.slug.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.slug.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Slug akan otomatis dibuat dari judul jika kosong</p>
+                </div>
+                
+                <div>
+                    <label for="{{ form.author.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.author.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.author }}
+                    {% if form.author.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.author.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Konten Artikel -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-edit mr-2 text-green-600"></i>Konten Artikel
+            </h3>
+            <div class="space-y-6">
+                <div>
+                    <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.content.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.content.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.excerpt.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.excerpt.label }}
+                    </label>
+                    {{ form.excerpt }}
+                    {% if form.excerpt.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.excerpt.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Ringkasan artikel untuk preview dan SEO (max 500 karakter)</p>
+                </div>
+                
+                <div>
+                    <label for="{{ form.featured_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.featured_image.label }}
+                    </label>
+                    <div class="flex gap-2 mb-2">
+                        <button type="button" onclick="openImagePicker({
+                            targetPreviewId: 'blog-featured-image-preview',
+                            onSelect: function(imageId, imageUrl, imageTitle) {
+                                const preview = document.getElementById('blog-featured-image-preview');
+                                if (preview) {
+                                    preview.innerHTML = `<img src='${imageUrl}' alt='${imageTitle}' class='h-32 w-auto object-contain rounded-lg border border-gray-200'>`;
+                                    preview.style.display = 'block';
+                                }
+                                // Set hidden input untuk image ID (bukan file input)
+                                let hiddenInput = document.getElementById('selected_image_id');
+                                if (!hiddenInput) {
+                                    hiddenInput = document.createElement('input');
+                                    hiddenInput.type = 'hidden';
+                                    hiddenInput.id = 'selected_image_id';
+                                    hiddenInput.name = 'selected_image_id';
+                                    document.querySelector('form').appendChild(hiddenInput);
+                                }
+                                hiddenInput.value = imageId;
+                            }
+                        })" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm">
+                            <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                        </button>
+                        <span class="text-xs text-gray-500 self-center">atau</span>
+                    </div>
+                    {% if blog_post and blog_post.featured_image %}
+                    <div id="blog-featured-image-preview" class="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-xs text-gray-600 mb-2">Gambar saat ini:</p>
+                        <img src="{{ blog_post.featured_image.url }}" alt="Featured Image" class="h-32 w-auto object-contain rounded-lg border border-gray-200" 
+                             onerror="this.parentElement.innerHTML='<p class=\'text-xs text-red-500\'>Gambar tidak ditemukan. Silakan pilih gambar baru dari gallery atau upload manual.</p>'">
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Centang checkbox di bawah untuk menghapus gambar, atau pilih file baru untuk mengganti.
+                        </p>
+                    </div>
+                    {% else %}
+                    <div id="blog-featured-image-preview" class="mb-3 hidden"></div>
+                    <p class="text-xs text-gray-500 mb-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Upload manual atau pilih dari gallery yang sudah dikompres WebP
+                    </p>
+                    {% endif %}
+                    {{ form.featured_image }}
+                    {% if form.featured_image.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.featured_image.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Kategori & Tag -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-tags mr-2 text-green-600"></i>Kategori & Tag
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.category.label }}
+                    </label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tags.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tags.label }}
+                    </label>
+                    {{ form.tags }}
+                    {% if form.tags.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tags.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Pilih beberapa tag dengan menahan Ctrl/Cmd</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SEO Settings -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-search mr-2 text-green-600"></i>SEO Settings
+            </h3>
+            <div class="space-y-6">
+                <div>
+                    <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.meta_title.label }}
+                    </label>
+                    {{ form.meta_title }}
+                    {% if form.meta_title.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.meta_title.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Meta title untuk SEO (default: judul artikel, max 200 karakter)</p>
+                </div>
+                
+                <div>
+                    <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.meta_description.label }}
+                    </label>
+                    {{ form.meta_description }}
+                    {% if form.meta_description.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.meta_description.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Meta description untuk SEO (max 300 karakter, ideal 150-160)</p>
+                </div>
+                
+                <div>
+                    <label for="{{ form.meta_keywords.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.meta_keywords.label }}
+                    </label>
+                    {{ form.meta_keywords }}
+                    {% if form.meta_keywords.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.meta_keywords.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Kata kunci dipisahkan koma (contoh: pondok, pesantren, pendidikan)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Media Tambahan -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-video mr-2 text-green-600"></i>Media Tambahan
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.video_file.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.video_file.label }}
+                    </label>
+                    {% if blog_post and blog_post.video_file %}
+                    <div class="mb-2">
+                        <video controls class="w-full h-32 rounded-lg border border-gray-200">
+                            <source src="{{ blog_post.video_file.url }}" type="video/mp4">
+                        </video>
+                    </div>
+                    {% endif %}
+                    {{ form.video_file }}
+                    {% if form.video_file.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.video_file.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status & Publikasi -->
+        <div class="pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-cog mr-2 text-green-600"></i>Status & Publikasi
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.status.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.published_at.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.published_at.label }}
+                    </label>
+                    {{ form.published_at }}
+                    {% if form.published_at.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.published_at.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center">
+                    <label for="{{ form.is_featured.id_for_label }}" class="flex items-center cursor-pointer">
+                        {{ form.is_featured }}
+                        <span class="ml-2 text-sm font-medium text-gray-700">{{ form.is_featured.label }}</span>
+                    </label>
+                    {% if form.is_featured.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.is_featured.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <ul class="list-disc list-inside text-sm text-red-800">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+            <a href="{% if blog_post %}{% url 'blog:detail' blog_id=blog_post.id %}{% else %}{% url 'blog:list' %}{% endif %}" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                <i class="fas fa-save mr-2"></i>Simpan Artikel
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script>
+// Fix datetime-local format untuk published_at
+document.addEventListener('DOMContentLoaded', function() {
+    const publishedAtInput = document.getElementById('id_published_at');
+    if (publishedAtInput && publishedAtInput.value) {
+        // Convert format dari "19-07-2025 17.13.35" ke "2025-07-19T17:13"
+        const value = publishedAtInput.value;
+        // Jika format sudah benar, skip
+        if (!value.includes('T')) {
+            // Coba parse berbagai format
+            let dateObj = null;
+            
+            // Format: "19-07-2025 17.13.35" atau "19-07-2025 17:13:35"
+            const match1 = value.match(/(\d{2})-(\d{2})-(\d{4})\s+(\d{2})[.:](\d{2})(?:[.:](\d{2}))?/);
+            if (match1) {
+                const [, day, month, year, hour, minute] = match1;
+                dateObj = new Date(`${year}-${month}-${day}T${hour}:${minute}`);
+            }
+            
+            // Format: "2025-07-19 17:13:35"
+            const match2 = value.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
+            if (match2) {
+                const [, year, month, day, hour, minute] = match2;
+                dateObj = new Date(`${year}-${month}-${day}T${hour}:${minute}`);
+            }
+            
+            if (dateObj && !isNaN(dateObj.getTime())) {
+                // Format ke YYYY-MM-DDTHH:MM
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const hours = String(dateObj.getHours()).padStart(2, '0');
+                const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                publishedAtInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+        }
+    }
+    
+});
+</script>
+{% endblock %}
+

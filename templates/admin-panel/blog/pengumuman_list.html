@@ -1,0 +1,458 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+{% load indonesia_format %}
+
+{% block title %}Pengumuman - Admin Panel{% endblock %}
+
+{% block extra_css %}
+{% if form %}{{ form.media.css }}{% endif %}
+<style>
+    /* Summernote Content Styling */
+    .summernote-content {
+        line-height: 1.8;
+    }
+    .summernote-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .summernote-content p {
+        margin-bottom: 1rem;
+    }
+    .summernote-content ul, .summernote-content ol {
+        margin: 1rem 0;
+        padding-left: 2rem;
+    }
+    .summernote-content li {
+        margin: 0.5rem 0;
+    }
+    .summernote-content h1, .summernote-content h2, .summernote-content h3,
+    .summernote-content h4, .summernote-content h5, .summernote-content h6 {
+        font-weight: 600;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .summernote-content a {
+        color: #059669;
+        text-decoration: underline;
+    }
+    .summernote-content a:hover {
+        color: #047857;
+    }
+    .summernote-content blockquote {
+        border-left: 4px solid #10b981;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: #6b7280;
+    }
+    .summernote-content code {
+        background-color: #f3f4f6;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+    .summernote-content pre {
+        background-color: #1f2937;
+        color: #f9fafb;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+    .summernote-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+    }
+    .summernote-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+    .summernote-content table th,
+    .summernote-content table td {
+        border: 1px solid #e5e7eb;
+        padding: 0.5rem;
+    }
+    .summernote-content table th {
+        background-color: #f9fafb;
+        font-weight: 600;
+    }
+    
+    /* Line clamp untuk truncate text */
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Pengumuman{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'blog:list' %}" class="hover:text-gray-900">Blog</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Pengumuman</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    deleteModal: false, 
+    deleteId: null, 
+    deleteName: '',
+    formModal: false,
+    detailModal: false,
+    detailData: null
+}">
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-gray-900">Pengumuman</h2>
+            <button @click="formModal = true" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <i class="fas fa-plus mr-2"></i>Tambah
+            </button>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="get" class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" name="search" value="{{ search }}" placeholder="Cari pengumuman..." 
+                   class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option value="">Semua Status</option>
+                <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft</option>
+                <option value="published" {% if status == 'published' %}selected{% endif %}>Published</option>
+            </select>
+        </form>
+        
+        {% if pengumuman %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for p in pengumuman %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+                <!-- Gambar -->
+                {% if p.gambar %}
+                <div class="relative h-48 overflow-hidden bg-gray-100">
+                    <img src="{{ p.gambar.url }}" alt="{{ p.judul }}" 
+                         class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                    {% if p.is_penting %}
+                    <div class="absolute top-3 right-3">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-400 text-yellow-900 flex items-center gap-1">
+                            <i class="fas fa-star"></i>Penting
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="relative h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                    <i class="fas fa-bullhorn text-6xl text-white opacity-50"></i>
+                    {% if p.is_penting %}
+                    <div class="absolute top-3 right-3">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-400 text-yellow-900 flex items-center gap-1">
+                            <i class="fas fa-star"></i>Penting
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Content -->
+                <div class="p-4 flex-1 flex flex-col">
+                    <h3 class="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{{ p.judul }}</h3>
+                    
+                    <!-- Konten dengan Summernote Support -->
+                    {% if p.konten %}
+                    <div class="summernote-content text-sm text-gray-700 line-clamp-3 mb-3 flex-1">
+                        {{ p.konten|safe }}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-400 italic mb-3">Tidak ada konten</p>
+                    {% endif %}
+                    
+                    <!-- Info Footer -->
+                    <div class="mt-auto pt-3 border-t border-gray-100">
+                        <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
+                            <span>
+                                <i class="fas fa-calendar mr-1"></i>
+                                {{ p.published_at|date:"d M Y"|default:"Belum dipublikasi" }}
+                            </span>
+                            <span class="px-2 py-1 rounded-full font-medium {% if p.status == 'published' %}bg-green-100 text-green-800{% else %}bg-gray-200 text-gray-700{% endif %}">
+                                {{ p.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex items-center gap-2 mt-3">
+                            <button @click="openDetailModal({{ p.id }})" 
+                                    class="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium">
+                                <i class="fas fa-eye mr-1"></i>Detail
+                            </button>
+                            <button @click="formModal = true; window.location.href = '?edit={{ p.id }}'" 
+                                    class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                    title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button @click="deleteModal = true; deleteId = {{ p.id }}; deleteName = '{{ p.judul|escapejs }}'" 
+                                    class="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
+                                    title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-bullhorn text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Tidak ada pengumuman ditemukan</p>
+        </div>
+        {% endif %}
+        
+        {% if pengumuman.has_other_pages %}
+        <div class="mt-4 flex justify-center">
+            {% if pengumuman.has_previous %}
+            <a href="?page={{ pengumuman.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded-lg mr-2">Sebelumnya</a>
+            {% endif %}
+            <span class="px-4 py-2">{{ pengumuman.number }} / {{ pengumuman.paginator.num_pages }}</span>
+            {% if pengumuman.has_next %}
+            <a href="?page={{ pengumuman.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded-lg ml-2">Selanjutnya</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Form Modal -->
+    <div x-show="formModal || {% if pengumuman_obj %}true{% else %}false{% endif %}" 
+         x-cloak 
+         @click.away="formModal = false; window.location.href = '{% url 'blog:pengumuman_list' %}'" 
+         class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">{% if pengumuman_obj %}Edit Pengumuman{% else %}Tambah Pengumuman{% endif %}</h3>
+                <button @click="formModal = false; window.location.href = '{% url 'blog:pengumuman_list' %}'" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{% if pengumuman_obj %}{% url 'blog:pengumuman_update' pengumuman_obj.id %}{% else %}{% url 'blog:pengumuman_create' %}{% endif %}">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul *</label>
+                        {{ form.judul }}
+                        {% if form.judul.errors %}<p class="mt-1 text-sm text-red-600">{{ form.judul.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+                        {{ form.slug }}
+                        {% if form.slug.errors %}<p class="mt-1 text-sm text-red-600">{{ form.slug.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Otomatis dibuat jika kosong</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Konten *</label>
+                        {{ form.konten }}
+                        {% if form.konten.errors %}<p class="mt-1 text-sm text-red-600">{{ form.konten.errors.0 }}</p>{% endif %}
+                        {% if pengumuman_obj and pengumuman_obj.konten %}
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Preview Konten:</h4>
+                            <div class="summernote-content prose prose-sm max-w-none">
+                                {{ pengumuman_obj.konten|safe }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Gambar</label>
+                        <div class="flex gap-2 mb-2">
+                            <button type="button" onclick="openImagePicker({
+                                targetPreviewId: 'pengumuman-image-preview',
+                                onSelect: function(imageId, imageUrl, imageTitle) {
+                                    const preview = document.getElementById('pengumuman-image-preview');
+                                    if (preview) {
+                                        preview.innerHTML = `<img src='${imageUrl}' alt='${imageTitle}' class='w-32 h-32 object-cover rounded-lg mb-2'>`;
+                                        preview.style.display = 'block';
+                                    }
+                                    let hiddenInput = document.getElementById('selected_image_id');
+                                    if (!hiddenInput) {
+                                        hiddenInput = document.createElement('input');
+                                        hiddenInput.type = 'hidden';
+                                        hiddenInput.id = 'selected_image_id';
+                                        hiddenInput.name = 'selected_image_id';
+                                        document.querySelector('form').appendChild(hiddenInput);
+                                    }
+                                    hiddenInput.value = imageId;
+                                }
+                            })" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm">
+                                <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                            </button>
+                            <span class="text-xs text-gray-500 self-center">atau</span>
+                        </div>
+                        {% if pengumuman_obj and pengumuman_obj.gambar %}
+                        <div id="pengumuman-image-preview">
+                            <img src="{{ pengumuman_obj.gambar.url }}" alt="{{ pengumuman_obj.judul }}" class="w-32 h-32 object-cover rounded-lg mb-2">
+                        </div>
+                        {% else %}
+                        <div id="pengumuman-image-preview" class="hidden"></div>
+                        {% endif %}
+                        {{ form.gambar }}
+                        <p class="mt-1 text-xs text-gray-500">Upload manual atau pilih dari gallery yang sudah dikompres WebP</p>
+                        {% if form.gambar.errors %}<p class="mt-1 text-sm text-red-600">{{ form.gambar.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}<p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-2">
+                                {{ form.is_penting }}
+                                <span class="text-sm font-medium text-gray-700">Penting</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Publikasi</label>
+                        {{ form.published_at }}
+                        {% if form.published_at.errors %}<p class="mt-1 text-sm text-red-600">{{ form.published_at.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-semibold mb-4">SEO</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                                {{ form.meta_title }}
+                                {% if form.meta_title.errors %}<p class="mt-1 text-sm text-red-600">{{ form.meta_title.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                                {{ form.meta_description }}
+                                {% if form.meta_description.errors %}<p class="mt-1 text-sm text-red-600">{{ form.meta_description.errors.0 }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" @click="formModal = false; window.location.href = '{% url 'blog:pengumuman_list' %}'" class="px-4 py-2 bg-gray-200 rounded-lg">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Detail Modal -->
+    <div x-show="detailModal" 
+         x-cloak 
+         @click.away="detailModal = false"
+         class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-green-500 to-blue-500 p-6 flex items-center justify-between flex-shrink-0">
+                <div class="flex-1">
+                    <h3 class="text-xl font-bold text-white mb-2" x-text="detailData ? detailData.judul : ''"></h3>
+                    <div class="flex items-center gap-3 text-sm text-white/90">
+                        <span x-show="detailData && detailData.is_penting">
+                            <i class="fas fa-star"></i> Penting
+                        </span>
+                        <span>
+                            <i class="fas fa-calendar mr-1"></i>
+                            <span x-text="detailData ? detailData.published_at : ''"></span>
+                        </span>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-white/20" 
+                              x-text="detailData && detailData.status === 'published' ? 'Published' : 'Draft'"></span>
+                    </div>
+                </div>
+                <button @click="detailModal = false" class="text-white hover:text-gray-200 transition-colors p-2 hover:bg-white/20 rounded-lg ml-4">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <template x-if="detailData && detailData.gambar">
+                    <div class="mb-6">
+                        <img :src="detailData.gambar" :alt="detailData.judul" 
+                             class="w-full h-auto rounded-lg shadow-md">
+                    </div>
+                </template>
+                
+                <div class="summernote-content prose prose-lg max-w-none" id="detail-konten" x-html="detailData ? detailData.konten : ''"></div>
+            </div>
+            
+            <!-- Footer Actions -->
+            <div class="border-t border-gray-200 p-4 bg-gray-50 flex justify-end gap-3 flex-shrink-0">
+                <button @click="detailModal = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                    Tutup
+                </button>
+                <button @click="formModal = true; detailModal = false; window.location.href = '?edit=' + (detailData ? detailData.id : '')" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Edit
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Modal -->
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold mb-4">Hapus Pengumuman</h3>
+            <p class="text-gray-700 mb-6">Hapus "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="deleteModal = false" class="px-4 py-2 bg-gray-200 rounded-lg">Batal</button>
+                <form method="post" action="{% url 'blog:pengumuman_delete' 0 %}" x-bind:action="'/admin-panel/blog/pengumuman/' + deleteId + '/delete/'">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if form %}{{ form.media.js }}{% endif %}
+<script>
+// Data pengumuman untuk modal detail
+const pengumumanData = {
+    {% for p in pengumuman %}
+    {{ p.id }}: {
+        id: {{ p.id }},
+        judul: {{ p.judul|tojson }},
+        konten: {{ p.konten|tojson }},
+        gambar: {% if p.gambar %}{{ p.gambar.url|tojson }}{% else %}null{% endif %},
+        status: {{ p.status|tojson }},
+        is_penting: {{ p.is_penting|yesno:"true,false" }},
+        published_at: {% if p.published_at %}{{ p.published_at|date:"d M Y H:i"|tojson }}{% else %}null{% endif %},
+        slug: {{ p.slug|default:""|tojson }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+function openDetailModal(id) {
+    const data = pengumumanData[id];
+    if (!data) return;
+    
+    // Set data ke Alpine.js - cari element dengan x-data
+    const container = document.querySelector('[x-data*="detailModal"]');
+    if (container && container._x_dataStack) {
+        const component = container._x_dataStack[0];
+        component.detailData = data;
+        component.detailModal = true;
+    } else {
+        // Fallback: langsung set ke global Alpine jika tersedia
+        if (typeof Alpine !== 'undefined') {
+            const el = document.querySelector('[x-data*="detailModal"]');
+            if (el) {
+                Alpine.$data(el).detailData = data;
+                Alpine.$data(el).detailModal = true;
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

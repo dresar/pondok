@@ -1,0 +1,136 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+{% if form %}{{ form.media.css }}{% endif %}
+<style>
+    .summernote-content {
+        line-height: 1.8;
+    }
+    .summernote-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .summernote-content p {
+        margin-bottom: 1rem;
+    }
+    .summernote-content ul, .summernote-content ol {
+        margin: 1rem 0;
+        padding-left: 2rem;
+    }
+    .summernote-content li {
+        margin: 0.5rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block title %}Visi Misi - Admin Panel{% endblock %}
+
+{% block page_title %}Visi Misi{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Visi Misi</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-4xl" x-data="{ editMode: {% if form.errors %}true{% else %}false{% endif %} }">
+    <!-- Header dengan Tombol Edit -->
+    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Visi Misi</h2>
+            <p class="text-sm text-gray-600 mt-1">Kelola visi dan misi pondok pesantren</p>
+        </div>
+        <button 
+            x-show="!editMode"
+            @click="editMode = true"
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center">
+            <i class="fas fa-edit mr-2"></i>Edit Visi Misi
+        </button>
+    </div>
+    
+    <!-- Mode Read-Only -->
+    <div x-show="!editMode" class="space-y-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-500 mb-2">Visi</label>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                {% if visi_misi and visi_misi.visi %}
+                <div class="summernote-content prose prose-sm max-w-none">
+                    {{ visi_misi.visi|safe }}
+                </div>
+                {% else %}
+                <p class="text-gray-500 italic">Belum ada visi yang diisi</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-500 mb-2">Misi</label>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                {% if visi_misi and visi_misi.misi %}
+                <div class="summernote-content prose prose-sm max-w-none">
+                    {{ visi_misi.misi|safe }}
+                </div>
+                {% else %}
+                <p class="text-gray-500 italic">Belum ada misi yang diisi</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if visi_misi %}
+        <div class="text-sm text-gray-500 pt-4 border-t border-gray-200">
+            <i class="fas fa-clock mr-2"></i>Terakhir diupdate: {{ visi_misi.updated_at|date:"d F Y, H:i" }}
+        </div>
+        {% endif %}
+        
+        <div class="flex justify-end pt-4">
+            <a href="{% url 'admin-panel:index' %}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+        </div>
+    </div>
+    
+    <!-- Mode Edit -->
+    <div x-show="editMode" x-cloak style="display: none;">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Visi *</label>
+                {{ form.visi }}
+                {% if form.visi.errors %}<p class="mt-1 text-sm text-red-600">{{ form.visi.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Misi *</label>
+                {{ form.misi }}
+                {% if form.misi.errors %}<p class="mt-1 text-sm text-red-600">{{ form.misi.errors.0 }}</p>{% endif %}
+                <p class="mt-1 text-xs text-gray-500">Gunakan editor untuk membuat daftar misi dengan format HTML</p>
+            </div>
+            {% if visi_misi and visi_misi.misi %}
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">Preview Misi:</h4>
+                <div class="summernote-content prose prose-sm max-w-none">
+                    {{ visi_misi.misi|safe }}
+                </div>
+            </div>
+            {% endif %}
+            <div class="flex justify-end space-x-3 pt-4">
+                <button 
+                    type="button"
+                    @click="editMode = false"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                    <i class="fas fa-times mr-2"></i>Batal
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i>Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if form %}{{ form.media.js }}{% endif %}
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'admin-panel/base.html' %}
+{% block title %}Catatan Bug - Admin Panel{% endblock %}
+{% block page_title %}Catatan Bug{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-4 md:p-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-900">Catatan Bug</h2>
+            <p class="text-sm text-gray-600">Dashboard ringkas catatan bug/notepad</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <form method="get" class="flex items-center gap-2">
+                <select name="status" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
+                    <option value="">Semua Status</option>
+                    <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
+                    <option value="progress" {% if status_filter == 'progress' %}selected{% endif %}>In Progress</option>
+                    <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+                <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Filter</button>
+            </form>
+            <a href="{% url 'admin-panel:bug_note_export' %}?format=txt" class="px-3 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm">
+                <i class="fas fa-file-alt mr-1"></i>Download TXT
+            </a>
+            <a href="{% url 'admin-panel:bug_note_export' %}?format=md" class="px-3 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 text-sm">
+                <i class="fas fa-file-code mr-1"></i>Download MD
+            </a>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Judul</th>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Halaman</th>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Dibuat</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for bug in bug_notes %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3">
+                        <div class="font-semibold text-gray-900">{{ bug.title }}</div>
+                        {% if bug.description %}
+                        <div class="text-xs text-gray-600 mt-1 whitespace-pre-line">{{ bug.description }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        {% if bug.status == 'open' %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Open</span>
+                        {% elif bug.status == 'progress' %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">In Progress</span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Closed</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        {% if bug.page_url %}
+                        <a href="{{ bug.page_url }}" target="_blank" class="text-blue-600 hover:underline break-all text-xs">{{ bug.page_url }}</a>
+                        {% else %}
+                        <span class="text-gray-400 text-xs">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-xs text-gray-600">
+                        {{ bug.created_at|date:"d M Y H:i" }}<br>
+                        <span class="text-gray-500">oleh {{ bug.created_by.get_full_name|default:"System" }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                        <i class="fas fa-bug text-2xl mb-2 text-gray-300"></i>
+                        <div>Belum ada catatan bug</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

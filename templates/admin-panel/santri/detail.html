@@ -1,0 +1,767 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Detail Santri - {{ santri.nama_lengkap }}{% endblock %}
+
+{% block page_title %}Detail Santri{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:santri_list' %}" class="hover:text-gray-900">Daftar Santri</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">{{ santri.nama_lengkap }}</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ showBuktiModal: false }">
+    <!-- Header dengan Actions -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">{{ santri.nama_lengkap }}</h2>
+                <p class="text-sm text-gray-600 mt-1">NISN: {{ santri.nisn }}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="px-4 py-2 text-sm font-medium rounded-full {{ santri.get_status_display_class }}">
+                    {{ santri.get_status_display }}
+                </span>
+                <a href="{% url 'admin-panel:santri_pdf' santri.id %}" target="_blank" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center space-x-2 transition-colors">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Download PDF</span>
+                </a>
+                <a href="{% url 'admin-panel:santri_update' santri.id %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Pribadi -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-user mr-2 text-green-600"></i>Data Pribadi
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Nama Lengkap</label>
+                <p class="text-base text-gray-900">{{ santri.nama_lengkap }}</p>
+            </div>
+            {% if santri.nama_panggilan %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Nama Panggilan</label>
+                <p class="text-base text-gray-900">{{ santri.nama_panggilan }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">NISN</label>
+                <p class="text-base text-gray-900">{{ santri.nisn }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tempat, Tanggal Lahir</label>
+                <p class="text-base text-gray-900">{{ santri.tempat_lahir }}, {{ santri.tanggal_lahir|date:"d F Y" }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Jenis Kelamin</label>
+                <p class="text-base text-gray-900">{{ santri.get_jenis_kelamin_display }}</p>
+            </div>
+            {% if santri.agama %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Agama</label>
+                <p class="text-base text-gray-900">{{ santri.agama }}</p>
+            </div>
+            {% endif %}
+            {% if santri.kewarganegaraan %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kewarganegaraan</label>
+                <p class="text-base text-gray-900">{{ santri.get_kewarganegaraan_display|default:santri.kewarganegaraan }}</p>
+            </div>
+            {% endif %}
+            {% if santri.anak_ke %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Anak Ke</label>
+                <p class="text-base text-gray-900">{{ santri.anak_ke }}</p>
+            </div>
+            {% endif %}
+            {% if santri.jumlah_saudara is not None %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Jumlah Saudara</label>
+                <p class="text-base text-gray-900">{{ santri.jumlah_saudara }}</p>
+            </div>
+            {% endif %}
+            {% if santri.bahasa_sehari_hari %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Bahasa Sehari-hari</label>
+                <p class="text-base text-gray-900">{{ santri.bahasa_sehari_hari }}</p>
+            </div>
+            {% endif %}
+            {% if santri.golongan_darah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Golongan Darah</label>
+                <p class="text-base text-gray-900">{{ santri.golongan_darah }}</p>
+            </div>
+            {% endif %}
+            {% if santri.tinggi_badan %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tinggi Badan</label>
+                <p class="text-base text-gray-900">{{ santri.tinggi_badan }} cm</p>
+            </div>
+            {% endif %}
+            {% if santri.berat_badan %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Berat Badan</label>
+                <p class="text-base text-gray-900">{{ santri.berat_badan }} kg</p>
+            </div>
+            {% endif %}
+            {% if santri.riwayat_penyakit %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Riwayat Penyakit</label>
+                <p class="text-base text-gray-900">{{ santri.riwayat_penyakit }}</p>
+            </div>
+            {% endif %}
+            {% if santri.tinggal_dengan %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tinggal Dengan</label>
+                <p class="text-base text-gray-900">{{ santri.tinggal_dengan }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Data Orang Tua -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-users mr-2 text-green-600"></i>Data Orang Tua
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Data Ayah -->
+            <div class="md:col-span-2">
+                <h4 class="text-md font-semibold text-gray-700 mb-3 border-b pb-2">Data Ayah</h4>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Nama Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.nama_ayah }}</p>
+            </div>
+            {% if santri.nik_ayah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">NIK Ayah (No. KTP)</label>
+                <p class="text-base text-gray-900">{{ santri.nik_ayah }}</p>
+            </div>
+            {% endif %}
+            {% if santri.tempat_lahir_ayah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tempat Lahir Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.tempat_lahir_ayah }}</p>
+            </div>
+            {% endif %}
+            {% if santri.tanggal_lahir_ayah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Lahir Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.tanggal_lahir_ayah|date:"d F Y" }}</p>
+            </div>
+            {% endif %}
+            {% if santri.agama_ayah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Agama Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.agama_ayah }}</p>
+            </div>
+            {% endif %}
+            {% if santri.kewarganegaraan_ayah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kewarganegaraan Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.get_kewarganegaraan_ayah_display|default:santri.kewarganegaraan_ayah }}</p>
+            </div>
+            {% endif %}
+            {% if santri.pendidikan_ayah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Pendidikan Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.pendidikan_ayah }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Pekerjaan Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.pekerjaan_ayah|default:"-" }}</p>
+            </div>
+            {% if santri.no_hp_ayah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">No. HP Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.no_hp_ayah }}</p>
+            </div>
+            {% endif %}
+            {% if santri.status_ayah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Status Ayah</label>
+                <p class="text-base text-gray-900">{{ santri.get_status_ayah_display|default:santri.status_ayah }}</p>
+            </div>
+            {% endif %}
+            
+            <!-- Data Ibu -->
+            <div class="md:col-span-2 mt-4">
+                <h4 class="text-md font-semibold text-gray-700 mb-3 border-b pb-2">Data Ibu</h4>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Nama Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.nama_ibu }}</p>
+            </div>
+            {% if santri.nik_ibu %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">NIK Ibu (No. KTP)</label>
+                <p class="text-base text-gray-900">{{ santri.nik_ibu }}</p>
+            </div>
+            {% endif %}
+            {% if santri.tempat_lahir_ibu %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tempat Lahir Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.tempat_lahir_ibu }}</p>
+            </div>
+            {% endif %}
+            {% if santri.tanggal_lahir_ibu %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Lahir Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.tanggal_lahir_ibu|date:"d F Y" }}</p>
+            </div>
+            {% endif %}
+            {% if santri.agama_ibu %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Agama Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.agama_ibu }}</p>
+            </div>
+            {% endif %}
+            {% if santri.kewarganegaraan_ibu %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kewarganegaraan Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.get_kewarganegaraan_ibu_display|default:santri.kewarganegaraan_ibu }}</p>
+            </div>
+            {% endif %}
+            {% if santri.pendidikan_ibu %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Pendidikan Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.pendidikan_ibu }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Pekerjaan Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.pekerjaan_ibu|default:"-" }}</p>
+            </div>
+            {% if santri.no_hp_ibu %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">No. HP Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.no_hp_ibu }}</p>
+            </div>
+            {% endif %}
+            {% if santri.status_ibu %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Status Ibu</label>
+                <p class="text-base text-gray-900">{{ santri.get_status_ibu_display|default:santri.status_ibu }}</p>
+            </div>
+            {% endif %}
+            {% if santri.alamat_orangtua %}
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-500 mb-1">Alamat Orang Tua</label>
+                <p class="text-base text-gray-900">{{ santri.alamat_orangtua }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Kontak -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-address-book mr-2 text-green-600"></i>Kontak
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-500 mb-1">Alamat Lengkap</label>
+                <p class="text-base text-gray-900">{{ santri.alamat }}</p>
+            </div>
+            {% if santri.desa %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Desa/Kelurahan</label>
+                <p class="text-base text-gray-900">{{ santri.desa }}</p>
+            </div>
+            {% endif %}
+            {% if santri.kecamatan %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kecamatan</label>
+                <p class="text-base text-gray-900">{{ santri.kecamatan }}</p>
+            </div>
+            {% endif %}
+            {% if santri.kabupaten %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kabupaten/Kota</label>
+                <p class="text-base text-gray-900">{{ santri.kabupaten }}</p>
+            </div>
+            {% endif %}
+            {% if santri.provinsi %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Provinsi</label>
+                <p class="text-base text-gray-900">{{ santri.provinsi }}</p>
+            </div>
+            {% endif %}
+            {% if santri.kode_pos %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kode Pos</label>
+                <p class="text-base text-gray-900">{{ santri.kode_pos }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">No. HP</label>
+                <p class="text-base text-gray-900">{{ santri.no_hp }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Email</label>
+                <p class="text-base text-gray-900">{{ santri.email|default:"-" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Sekolah -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-school mr-2 text-green-600"></i>Data Sekolah
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Asal Sekolah</label>
+                <p class="text-base text-gray-900">{{ santri.asal_sekolah }}</p>
+            </div>
+            {% if santri.npsn_sekolah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">NPSN Sekolah</label>
+                <p class="text-base text-gray-900">{{ santri.npsn_sekolah }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kelas Terakhir</label>
+                <p class="text-base text-gray-900">{{ santri.kelas_terakhir }}</p>
+            </div>
+            {% if santri.tahun_lulus %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tahun Lulus</label>
+                <p class="text-base text-gray-900">{{ santri.tahun_lulus }}</p>
+            </div>
+            {% endif %}
+            {% if santri.no_ijazah %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">No. Ijazah/SKHUN</label>
+                <p class="text-base text-gray-900">{{ santri.no_ijazah }}</p>
+            </div>
+            {% endif %}
+            {% if santri.kelas_diterima %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kelas Diterima (di Pesantren)</label>
+                <p class="text-base text-gray-900">{{ santri.kelas_diterima }}</p>
+            </div>
+            {% endif %}
+            {% if santri.tanggal_diterima %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Diterima</label>
+                <p class="text-base text-gray-900">{{ santri.tanggal_diterima|date:"d F Y" }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Dokumen -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-file-upload mr-2 text-green-600"></i>Dokumen Pendukung
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% if santri.foto_santri %}
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-500">Foto Santri</label>
+                    {% if santri.foto_santri_approved %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle"></i> Disetujui
+                    </span>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-clock"></i> Menunggu
+                    </span>
+                    {% endif %}
+                </div>
+                <img src="{{ santri.foto_santri.url }}" alt="Foto Santri" class="w-48 h-48 object-cover rounded-lg border border-gray-300 cursor-pointer hover:opacity-80 transition-opacity" onclick="openImageModal('{{ santri.foto_santri.url }}', 'Foto Santri')">
+            </div>
+            {% endif %}
+            {% if santri.foto_ktp %}
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-500">Foto KTP/Kartu Keluarga</label>
+                    {% if santri.foto_ktp_approved %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle"></i> Disetujui
+                    </span>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-clock"></i> Menunggu
+                    </span>
+                    {% endif %}
+                </div>
+                <img src="{{ santri.foto_ktp.url }}" alt="Foto KTP" class="w-full max-w-md h-auto rounded-lg border border-gray-300 hover:opacity-80 transition-opacity cursor-pointer" onclick="openImageModal('{{ santri.foto_ktp.url }}', 'Foto KTP/Kartu Keluarga')">
+            </div>
+            {% endif %}
+            {% if santri.foto_akta %}
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-500">Foto Akta Kelahiran</label>
+                    {% if santri.foto_akta_approved %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle"></i> Disetujui
+                    </span>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-clock"></i> Menunggu
+                    </span>
+                    {% endif %}
+                </div>
+                <img src="{{ santri.foto_akta.url }}" alt="Foto Akta" class="w-full max-w-md h-auto rounded-lg border border-gray-300 hover:opacity-80 transition-opacity cursor-pointer" onclick="openImageModal('{{ santri.foto_akta.url }}', 'Foto Akta Kelahiran')">
+            </div>
+            {% endif %}
+            {% if santri.foto_ijazah %}
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-500">Foto Ijazah/SKHUN</label>
+                    {% if santri.foto_ijazah_approved %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle"></i> Disetujui
+                    </span>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-clock"></i> Menunggu
+                    </span>
+                    {% endif %}
+                </div>
+                <img src="{{ santri.foto_ijazah.url }}" alt="Foto Ijazah" class="w-full max-w-md h-auto rounded-lg border border-gray-300 hover:opacity-80 transition-opacity cursor-pointer" onclick="openImageModal('{{ santri.foto_ijazah.url }}', 'Foto Ijazah/SKHUN')">
+            </div>
+            {% endif %}
+            {% if santri.surat_sehat %}
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-500">Surat Keterangan Sehat</label>
+                    {% if santri.surat_sehat_approved %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle"></i> Disetujui
+                    </span>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-clock"></i> Menunggu
+                    </span>
+                    {% endif %}
+                </div>
+                <img src="{{ santri.surat_sehat.url }}" alt="Surat Sehat" class="w-full max-w-md h-auto rounded-lg border border-gray-300 hover:opacity-80 transition-opacity cursor-pointer" onclick="openImageModal('{{ santri.surat_sehat.url }}', 'Surat Keterangan Sehat')">
+            </div>
+            {% endif %}
+            {% if not santri.foto_santri and not santri.foto_ktp and not santri.foto_akta and not santri.foto_ijazah and not santri.surat_sehat %}
+            <div class="md:col-span-2">
+                <p class="text-gray-500 text-center py-4">Belum ada dokumen yang diupload</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Catatan -->
+    {% if santri.catatan %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-sticky-note mr-2 text-green-600"></i>Catatan Tambahan
+        </h3>
+        <p class="text-base text-gray-900 whitespace-pre-line">{{ santri.catatan }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Informasi Pembayaran -->
+    {% if payment %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-money-bill-wave mr-2 text-green-600"></i>Informasi Pembayaran
+            </h3>
+            <span class="px-3 py-1 text-sm font-medium rounded-full {{ payment.get_status_display_class }}">
+                {{ payment.get_status_display }}
+            </span>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Jumlah Transfer</label>
+                <p class="text-base text-gray-900 font-semibold text-lg">Rp {{ payment.jumlah_transfer|floatformat:0 }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Bank Pengirim</label>
+                <p class="text-base text-gray-900">{{ payment.get_bank_pengirim_display }}</p>
+            </div>
+            {% if payment.no_rekening_pengirim %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">No. Rekening Pengirim</label>
+                <p class="text-base text-gray-900">{{ payment.no_rekening_pengirim }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Nama Pemilik Rekening</label>
+                <p class="text-base text-gray-900">{{ payment.nama_pemilik_rekening }}</p>
+            </div>
+            {% if payment.rekening_tujuan %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Rekening Tujuan</label>
+                <p class="text-base text-gray-900">{{ payment.rekening_tujuan }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Upload</label>
+                <p class="text-base text-gray-900">{{ payment.created_at|date:"d F Y, H:i" }}</p>
+            </div>
+            {% if payment.verified_by %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Diverifikasi Oleh</label>
+                <p class="text-base text-gray-900">{{ payment.verified_by.get_full_name|default:payment.verified_by.username }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Verifikasi</label>
+                <p class="text-base text-gray-900">{{ payment.verified_at|date:"d F Y, H:i" }}</p>
+            </div>
+            {% endif %}
+            {% if payment.catatan %}
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-500 mb-1">Catatan</label>
+                <p class="text-base text-gray-900 whitespace-pre-line">{{ payment.catatan }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Button Lihat Bukti Pembayaran -->
+        <div class="pt-4 border-t border-gray-200">
+            <button 
+                type="button" 
+                @click="showBuktiModal = true"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium flex items-center">
+                <i class="fas fa-image mr-2"></i>Lihat Bukti Pembayaran
+            </button>
+        </div>
+        
+        <!-- Action Buttons untuk Pembayaran -->
+        {% if payment.status == 'pending' %}
+        <div class="flex items-center space-x-3 pt-4 border-t border-gray-200">
+            <form method="post" action="{% url 'admin-panel:payment_verify' payment.id %}" class="flex-1">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="verified">
+                <button type="submit" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-check-circle mr-2"></i>Verifikasi Pembayaran
+                </button>
+            </form>
+            <form method="post" action="{% url 'admin-panel:payment_verify' payment.id %}" class="flex-1">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="rejected">
+                <button type="submit" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-times-circle mr-2"></i>Tolak Pembayaran
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Modal Bukti Pembayaran -->
+    <div 
+        x-show="showBuktiModal"
+        x-cloak
+        @click.away="showBuktiModal = false"
+        @keydown.escape.window="showBuktiModal = false"
+        class="fixed inset-0 z-50 overflow-y-auto"
+        style="display: none;"
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div 
+                class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+                @click="showBuktiModal = false">
+            </div>
+
+            <!-- Modal panel -->
+            <div 
+                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                <!-- Header -->
+                <div class="bg-green-600 px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-white flex items-center">
+                        <i class="fas fa-image mr-2"></i>Bukti Pembayaran
+                    </h3>
+                    <button 
+                        @click="showBuktiModal = false"
+                        class="text-white hover:text-gray-200 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Content -->
+                <div class="px-6 py-4">
+                    {% if payment.bukti_transfer %}
+                    <div class="text-center">
+                        <img 
+                            src="{{ payment.bukti_transfer.url }}" 
+                            alt="Bukti Transfer" 
+                            class="max-w-full h-auto rounded-lg border border-gray-300 mx-auto">
+                        <div class="mt-4">
+                            <a 
+                                href="{{ payment.bukti_transfer.url }}" 
+                                target="_blank" 
+                                class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                                <i class="fas fa-external-link-alt mr-2"></i>Buka di Tab Baru
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-file-image text-gray-400 text-6xl mb-4"></i>
+                        <p class="text-gray-600 text-lg font-medium">Tidak Ada File Dokumen</p>
+                        <p class="text-gray-500 text-sm mt-2">Bukti pembayaran belum diupload oleh orang tua.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Footer -->
+                <div class="bg-gray-50 px-6 py-4 flex justify-end">
+                    <button 
+                        @click="showBuktiModal = false"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
+            <p class="text-yellow-800">Santri ini belum mengupload bukti pembayaran.</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Action Buttons untuk Status Santri -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-tasks mr-2 text-green-600"></i>Update Status Santri
+            </h3>
+            <span class="px-3 py-1 text-sm font-medium rounded-full {{ santri.get_status_display_class }}">
+                Status: {{ santri.get_status_display }}
+            </span>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            {% if santri.status != 'accepted' %}
+            <form method="post" action="{% url 'admin-panel:santri_update_status' santri.id %}" class="flex-1 min-w-[150px]">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="accepted">
+                <button type="submit" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-check mr-2"></i>Terima Santri
+                </button>
+            </form>
+            {% endif %}
+            {% if santri.status != 'verified' %}
+            <form method="post" action="{% url 'admin-panel:santri_update_status' santri.id %}" class="flex-1 min-w-[150px]">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="verified">
+                <button type="submit" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-check-double mr-2"></i>Set Status Terverifikasi
+                </button>
+            </form>
+            {% endif %}
+            {% if santri.status != 'rejected' %}
+            <form method="post" action="{% url 'admin-panel:santri_update_status' santri.id %}" class="flex-1 min-w-[150px]">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="rejected">
+                <button type="submit" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-times mr-2"></i>Tolak Santri
+                </button>
+            </form>
+            {% endif %}
+            {% if santri.status == 'accepted' or santri.status == 'verified' or santri.status == 'rejected' %}
+            <div class="w-full mt-2">
+                <p class="text-sm text-gray-500 italic">Status saat ini: <strong>{{ santri.get_status_display }}</strong></p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Timestamps -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-clock mr-2 text-green-600"></i>Informasi Sistem
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Daftar</label>
+                <p class="text-base text-gray-900">{{ santri.created_at|date:"d F Y, H:i" }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Terakhir Diupdate</label>
+                <p class="text-base text-gray-900">{{ santri.updated_at|date:"d F Y, H:i" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-between">
+        <a href="{% url 'admin-panel:santri_list' %}" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+            <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
+        </a>
+        <div class="flex space-x-3">
+            <a href="{% url 'admin-panel:santri_pdf' santri.id %}" target="_blank" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium">
+                <i class="fas fa-file-pdf mr-2"></i>Download PDF
+            </a>
+            <a href="{% url 'admin-panel:santri_update' santri.id %}" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors font-medium">
+                <i class="fas fa-edit mr-2"></i>Edit Data
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4" onclick="closeImageModal()">
+    <div class="bg-white rounded-lg max-w-4xl max-h-full overflow-auto" onclick="event.stopPropagation()">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-900"></h3>
+            <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <img id="modalImage" src="" alt="" class="max-w-full h-auto rounded-lg">
+        </div>
+    </div>
+</div>
+
+<script>
+    // Image Modal Functions
+    function openImageModal(imageUrl, title) {
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('imageModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeImageModal() {
+        document.getElementById('imageModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Close modal on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+</script>
+{% endblock %}
+

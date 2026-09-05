@@ -1,0 +1,56 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Hasil Broadcast WhatsApp - Admin Panel{% endblock %}
+
+{% block page_title %}Hasil Broadcast WhatsApp{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'core:whatsapp_broadcast' %}" class="hover:text-gray-900">Broadcast WhatsApp</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Hasil</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-4xl">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Link WhatsApp Broadcast</h2>
+        <p class="text-sm text-gray-600">Klik link di bawah untuk membuka WhatsApp dengan pesan yang sudah disiapkan</p>
+    </div>
+    
+    <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold mb-2">Pesan Template:</h3>
+        <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ pesan }}</p>
+    </div>
+    
+    <div class="space-y-3">
+        {% for item in broadcast_links %}
+        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-medium text-gray-900">{{ item.santri.nama_lengkap }}</h4>
+                    <p class="text-sm text-gray-600">{{ item.santri.no_hp }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ item.pesan|truncatewords:10 }}</p>
+                </div>
+                <div class="ml-4">
+                    <a href="{{ item.link }}" target="_blank" 
+                       class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        <i class="fab fa-whatsapp mr-2"></i>Buka WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-inbox text-4xl mb-4"></i>
+            <p>Tidak ada link yang dihasilkan</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="mt-6 flex justify-end">
+        <a href="{% url 'core:whatsapp_broadcast' %}" class="px-4 py-2 bg-gray-200 rounded-lg">Kembali</a>
+    </div>
+</div>
+{% endblock %}
+

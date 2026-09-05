@@ -1,0 +1,187 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - User Panel{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-4 md:space-y-6">
+    <!-- Welcome Card -->
+    <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl shadow-lg p-4 md:p-6 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold mb-2">
+                    Selamat Datang, {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}!
+                </h2>
+                <p class="text-sm md:text-base text-white/90">Kelola pendaftaran dan informasi Anda di sini</p>
+            </div>
+            <div class="hidden md:block">
+                <i class="fas fa-user-circle text-6xl text-white/30"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Status</p>
+                    <p class="text-lg md:text-xl font-bold text-gray-900">Menunggu</p>
+                </div>
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-clock text-green-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Dokumen</p>
+                    <p class="text-lg md:text-xl font-bold text-gray-900">3/5</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-file-alt text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Pembayaran</p>
+                    <p class="text-lg md:text-xl font-bold text-gray-900">Rp 0</p>
+                </div>
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-orange-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Notifikasi</p>
+                    <p class="text-lg md:text-xl font-bold text-gray-900">3</p>
+                </div>
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-bell text-orange-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Aksi Cepat</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <a href="{% url 'users:pendaftaran' %}" class="flex flex-col items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-200">
+                <i class="fas fa-file-alt text-2xl text-green-600 mb-2"></i>
+                <span class="text-xs md:text-sm font-medium text-gray-900 text-center">Pendaftaran</span>
+            </a>
+            <a href="{% url 'users:dokumen' %}" class="flex flex-col items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
+                <i class="fas fa-upload text-2xl text-blue-600 mb-2"></i>
+                <span class="text-xs md:text-sm font-medium text-gray-900 text-center">Upload Dokumen</span>
+            </a>
+            <a href="{% url 'users:status' %}" class="flex flex-col items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200">
+                <i class="fas fa-clipboard-check text-2xl text-purple-600 mb-2"></i>
+                <span class="text-xs md:text-sm font-medium text-gray-900 text-center">Cek Status</span>
+            </a>
+            <a href="{% url 'users:pembayaran' %}" class="flex flex-col items-center justify-center p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors border border-orange-200">
+                <i class="fas fa-credit-card text-2xl text-orange-600 mb-2"></i>
+                <span class="text-xs md:text-sm font-medium text-gray-900 text-center">Pembayaran</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <!-- Status Pendaftaran -->
+        <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-clipboard-list mr-2 text-green-600"></i>
+                Status Pendaftaran
+            </h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Menunggu Verifikasi</p>
+                            <p class="text-xs text-gray-600">Dokumen sedang diperiksa</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'users:status' %}" class="block text-center py-2 text-sm text-green-600 hover:text-green-700 font-medium">
+                    Lihat Detail <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Notifikasi Terbaru -->
+        <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-bell mr-2 text-blue-600"></i>
+                Notifikasi Terbaru
+            </h3>
+            <div class="space-y-3">
+                <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-info-circle text-blue-600 mt-1"></i>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Dokumen diterima</p>
+                        <p class="text-xs text-gray-600">2 jam yang lalu</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
+                    <i class="fas fa-check-circle text-green-600 mt-1"></i>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Pendaftaran berhasil</p>
+                        <p class="text-xs text-gray-600">1 hari yang lalu</p>
+                    </div>
+                </div>
+                <a href="{% url 'users:notifikasi' %}" class="block text-center py-2 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Pendaftaran -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Progress Pendaftaran</h3>
+        <div class="space-y-4">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Lengkapi Profil</span>
+                    <span class="text-sm font-medium text-green-600">100%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Upload Dokumen</span>
+                    <span class="text-sm font-medium text-yellow-600">60%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-yellow-600 h-2 rounded-full" style="width: 60%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Pembayaran</span>
+                    <span class="text-sm font-medium text-gray-600">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

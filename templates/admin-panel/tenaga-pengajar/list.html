@@ -1,0 +1,198 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Tenaga Pengajar - Admin Panel{% endblock %}
+
+{% block page_title %}Tenaga Pengajar{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Tenaga Pengajar</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header dengan Actions -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Manajemen Tenaga Pengajar</h2>
+                <p class="text-sm text-gray-600 mt-1">Kelola data ustadz dan ustadzah</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'admin-panel:bagian_jabatan_list' %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-tags mr-2"></i>Kelola Bagian/Jabatan
+                </a>
+                <a href="{% url 'admin-panel:tenaga_pengajar_create' %}" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Tambah Pengajar
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter & Search -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cari</label>
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Nama, bidang keahlian..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bagian/Jabatan</label>
+                <select name="bagian" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white">
+                    <option value="">Semua</option>
+                    {% for bagian in bagian_list %}
+                    <option value="{{ bagian.id }}" {% if bagian_filter == bagian.id|stringformat:"s" %}selected{% endif %}>{{ bagian.nama }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                <select name="jenis_kelamin" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white">
+                    <option value="">Semua</option>
+                    <option value="L" {% if jenis_kelamin_filter == "L" %}selected{% endif %}>Laki-laki (Ustadz)</option>
+                    <option value="P" {% if jenis_kelamin_filter == "P" %}selected{% endif %}>Perempuan (Ustadzah)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="published" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white">
+                    <option value="">Semua</option>
+                    <option value="yes" {% if published_filter == "yes" %}selected{% endif %}>Published</option>
+                    <option value="no" {% if published_filter == "no" %}selected{% endif %}>Draft</option>
+                </select>
+            </div>
+            <div class="md:col-span-4 flex space-x-2">
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-search mr-2"></i>Cari
+                </button>
+                <a href="{% url 'admin-panel:tenaga_pengajar_list' %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors">
+                    <i class="fas fa-redo mr-2"></i>Reset
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- List Tenaga Pengajar -->
+    <div class="bg-white rounded-lg shadow p-6">
+        {% if page_obj %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {% for pengajar in page_obj %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                <!-- Header Card dengan Foto -->
+                <div class="relative bg-gradient-to-br from-green-500 to-blue-500 p-4">
+                    <div class="flex items-center justify-center">
+                        {% if pengajar.foto %}
+                        <img src="{{ pengajar.foto.url }}" alt="{{ pengajar.nama_lengkap }}" class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg">
+                        {% else %}
+                        <div class="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white shadow-lg flex items-center justify-center">
+                            <i class="fas fa-user text-3xl text-white"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <!-- Badge Featured -->
+                    {% if pengajar.is_featured %}
+                    <div class="absolute top-2 right-2">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-400 text-yellow-900 shadow-md">
+                            <i class="fas fa-star"></i> Featured
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Content Card -->
+                <div class="p-4">
+                    <!-- Nama -->
+                    <h3 class="font-bold text-gray-900 text-base mb-1 line-clamp-1">{{ pengajar.nama_lengkap }}</h3>
+                    {% if pengajar.nama_panggilan %}
+                    <p class="text-sm text-gray-600 mb-2">{{ pengajar.nama_panggilan }}</p>
+                    {% endif %}
+                    
+                    <!-- Badge Jenis Kelamin & Bagian -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full {% if pengajar.jenis_kelamin == 'L' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                            {{ pengajar.get_jenis_kelamin_display_short }}
+                        </span>
+                        {% if pengajar.bagian_jabatan %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            {{ pengajar.bagian_jabatan.nama }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Bidang Keahlian -->
+                    {% if pengajar.bidang_keahlian %}
+                    <div class="mb-3">
+                        <p class="text-xs text-gray-500 mb-1">
+                            <i class="fas fa-graduation-cap mr-1 text-green-600"></i>Bidang Keahlian
+                        </p>
+                        <p class="text-sm text-gray-700 line-clamp-2">{{ pengajar.bidang_keahlian }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Status -->
+                    <div class="mb-3 flex items-center gap-2">
+                        {% if pengajar.is_published %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>Published
+                        </span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            <i class="fas fa-clock mr-1"></i>Draft
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex items-center justify-between pt-3 border-t border-gray-200">
+                        <a href="{% url 'admin-panel:tenaga_pengajar_detail' pengajar.id %}" class="flex-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors text-center text-sm font-medium" title="Detail">
+                            <i class="fas fa-eye mr-1"></i>Detail
+                        </a>
+                        <a href="{% url 'admin-panel:tenaga_pengajar_update' pengajar.id %}" class="flex-1 px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors text-center text-sm font-medium ml-2" title="Edit">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </a>
+                        <form method="post" action="{% url 'admin-panel:tenaga_pengajar_delete' pengajar.id %}" onsubmit="return confirm('Yakin ingin menghapus {{ pengajar.nama_lengkap }}?');" class="ml-2">
+                            {% csrf_token %}
+                            <button type="submit" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors text-sm font-medium" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="mt-4 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Menampilkan {{ page_obj.start_index }} - {{ page_obj.end_index }} dari {{ page_obj.paginator.count }} pengajar
+            </div>
+            <div class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if bagian_filter %}&bagian={{ bagian_filter }}{% endif %}{% if jenis_kelamin_filter %}&jenis_kelamin={{ jenis_kelamin_filter }}{% endif %}{% if published_filter %}&published={{ published_filter }}{% endif %}" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+                <span class="px-3 py-1 bg-green-600 text-white rounded">Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if bagian_filter %}&bagian={{ bagian_filter }}{% endif %}{% if jenis_kelamin_filter %}&jenis_kelamin={{ jenis_kelamin_filter }}{% endif %}{% if published_filter %}&published={{ published_filter }}{% endif %}" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-users text-4xl mb-2"></i>
+            <p>Belum ada tenaga pengajar yang ditambahkan</p>
+            <a href="{% url 'admin-panel:tenaga_pengajar_create' %}" class="mt-4 inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-plus mr-2"></i>Tambah Pengajar Pertama
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,216 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block title %}{% if staff_obj %}Edit Staff{% else %}Tambah Staff Baru{% endif %} - Admin Panel{% endblock %}
+
+{% block page_title %}{% if staff_obj %}Edit Staff{% else %}Tambah Staff Baru{% endif %}{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">User Management</span></li>
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:staff_list' %}" class="text-gray-600 hover:text-gray-900">Kelola User</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">{% if staff_obj %}Edit{% else %}Tambah Baru{% endif %}</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Form Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Username -->
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.username.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Email -->
+            <div>
+                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.email.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- First Name -->
+            <div>
+                <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.first_name.label }}
+                </label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Last Name -->
+            <div>
+                <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.last_name.label }}
+                </label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Phone -->
+            <div>
+                <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.phone.label }}
+                </label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Role -->
+            <div>
+                <label for="{{ form.role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.role.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.role }}
+                {% if form.role.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.role.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>Pilih role untuk staff. Super Admin akan otomatis menjadi Superuser.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Password Fields -->
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Password</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.password1.label }} {% if not staff_obj %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                    {% if form.password1.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.password1.help_text }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.password2.label }} {% if not staff_obj %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                    {% if form.password2.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.password2.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Permissions -->
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Hak Akses</h3>
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <input type="hidden" name="is_staff" value="True">
+                    <input type="checkbox" checked disabled class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                    <label class="ml-2 text-sm font-medium text-gray-700">
+                        Staff
+                    </label>
+                    <span class="ml-2 text-xs text-gray-500">(Otomatis aktif untuk staff)</span>
+                </div>
+                {% if form.is_staff.errors %}
+                <p class="text-sm text-red-600">{{ form.is_staff.errors.0 }}</p>
+                {% endif %}
+                
+                <div class="flex items-center">
+                    {{ form.is_superuser }}
+                    <label for="{{ form.is_superuser.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700">
+                        {{ form.is_superuser.label }}
+                    </label>
+                    <span class="ml-2 text-xs text-gray-500">(Otomatis aktif jika role Super Admin)</span>
+                </div>
+                {% if form.is_superuser.errors %}
+                <p class="text-sm text-red-600">{{ form.is_superuser.errors.0 }}</p>
+                {% endif %}
+                
+                <div class="flex items-center">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700">
+                        {{ form.is_active.label }}
+                    </label>
+                </div>
+                {% if form.is_active.errors %}
+                <p class="text-sm text-red-600">{{ form.is_active.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Avatar -->
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Foto Profil</h3>
+            <div>
+                {% if staff_obj and staff_obj.avatar %}
+                <div class="mb-4">
+                    <img src="{{ staff_obj.avatar.url }}" alt="{{ staff_obj.username }}" class="w-24 h-24 rounded-full object-cover border-2 border-gray-300">
+                </div>
+                {% endif %}
+                <label for="{{ form.avatar.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.avatar.label }}
+                </label>
+                {{ form.avatar }}
+                {% if form.avatar.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.avatar.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Form Errors (Non-field) -->
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+            <div class="flex">
+                <i class="fas fa-exclamation-circle text-red-600 mr-2"></i>
+                <div>
+                    {% for error in form.non_field_errors %}
+                    <p class="text-sm text-red-800">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Submit Buttons -->
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <a 
+                href="{% url 'admin-panel:staff_list' %}" 
+                class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+                Batal
+            </a>
+            <button 
+                type="submit" 
+                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+            >
+                <i class="fas fa-save mr-2"></i>Simpan
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

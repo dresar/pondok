@@ -1,0 +1,408 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Dokumen - User Panel{% endblock %}
+{% block page_title %}Dokumen{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-4 md:space-y-6">
+    <!-- Info Card -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+        <div class="flex items-start">
+            <i class="fas fa-info-circle text-blue-600 mr-3 mt-0.5"></i>
+            <div class="text-sm text-blue-800">
+                <p class="font-medium mb-1">Upload Dokumen</p>
+                <p class="text-xs">Upload dokumen yang diperlukan. Format: JPG, PNG. Maksimal 5MB per file. Dokumen yang sudah diupload dapat diubah jika diperlukan.</p>
+            </div>
+        </div>
+    </div>
+    
+    {% if not santri %}
+    <!-- Belum Ada Data Santri -->
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
+        <div class="flex items-start">
+            <i class="fas fa-exclamation-triangle text-yellow-600 mr-3 mt-0.5"></i>
+            <div class="text-sm text-yellow-800">
+                <p class="font-medium mb-1">Data Santri Belum Tersedia</p>
+                <p class="text-xs">Silakan lengkapi pendaftaran santri terlebih dahulu untuk dapat mengupload dokumen.</p>
+                <a href="{% url 'users:pendaftaran' %}" class="mt-2 inline-block px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-medium transition-colors">
+                    <i class="fas fa-arrow-right mr-1"></i>Lengkapi Pendaftaran
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Dokumen List -->
+    <div class="space-y-4">
+        <!-- Foto Santri -->
+        <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-image text-pink-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm md:text-base font-semibold text-gray-900">Foto Santri</h3>
+                        <p class="text-xs text-gray-600">Wajib diupload</p>
+                    </div>
+                </div>
+                {% if santri.foto_santri %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Sudah Upload</span>
+                {% else %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Belum Upload</span>
+                {% endif %}
+            </div>
+            
+            {% if santri.foto_santri %}
+            <!-- Preview Dokumen -->
+            <div class="mb-4">
+                <div class="relative inline-block group">
+                    <img src="{{ santri.foto_santri.url }}" alt="Foto Santri" class="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg border-2 border-gray-300 shadow-sm cursor-pointer" onclick="openImageModal('{{ santri.foto_santri.url }}', 'Foto Santri')">
+                    <div class="absolute top-2 right-2 flex space-x-1">
+                        <a href="{{ santri.foto_santri.url }}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Preview">
+                            <i class="fas fa-expand text-xs"></i>
+                        </a>
+                        <a href="{% url 'users:dokumen_download' 'foto_santri' %}" class="bg-green-600 hover:bg-green-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Download">
+                            <i class="fas fa-download text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Form Upload/Edit -->
+            <form method="post" action="{% url 'users:dokumen_upload' 'foto_santri' %}" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                {% csrf_token %}
+                <input 
+                    type="file" 
+                    name="foto_santri" 
+                    accept="image/jpeg,image/jpg,image/png" 
+                    required
+                    class="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap">
+                    <i class="fas fa-upload mr-1"></i>{% if santri.foto_santri %}Ubah{% else %}Upload{% endif %}
+                </button>
+            </form>
+        </div>
+        
+        <!-- Foto KTP/Kartu Keluarga -->
+        <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-id-card text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm md:text-base font-semibold text-gray-900">Foto KTP/Kartu Keluarga</h3>
+                        <p class="text-xs text-gray-600">Wajib diupload</p>
+                    </div>
+                </div>
+                {% if santri.foto_ktp %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Sudah Upload</span>
+                {% else %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Belum Upload</span>
+                {% endif %}
+            </div>
+            
+            {% if santri.foto_ktp %}
+            <!-- Preview Dokumen -->
+            <div class="mb-4">
+                <div class="relative inline-block group">
+                    <img src="{{ santri.foto_ktp.url }}" alt="Foto KTP" class="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg border-2 border-gray-300 shadow-sm cursor-pointer" onclick="openImageModal('{{ santri.foto_ktp.url }}', 'Foto KTP/Kartu Keluarga')">
+                    <div class="absolute top-2 right-2 flex space-x-1">
+                        <a href="{{ santri.foto_ktp.url }}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Preview">
+                            <i class="fas fa-expand text-xs"></i>
+                        </a>
+                        <a href="{% url 'users:dokumen_download' 'foto_ktp' %}" class="bg-green-600 hover:bg-green-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Download">
+                            <i class="fas fa-download text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Form Upload/Edit -->
+            <form method="post" action="{% url 'users:dokumen_upload' 'foto_ktp' %}" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                {% csrf_token %}
+                <input 
+                    type="file" 
+                    name="foto_ktp" 
+                    accept="image/jpeg,image/jpg,image/png" 
+                    required
+                    class="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap">
+                    <i class="fas fa-upload mr-1"></i>{% if santri.foto_ktp %}Ubah{% else %}Upload{% endif %}
+                </button>
+            </form>
+        </div>
+        
+        <!-- Foto Akta Kelahiran -->
+        <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-certificate text-purple-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm md:text-base font-semibold text-gray-900">Foto Akta Kelahiran</h3>
+                        <p class="text-xs text-gray-600">Wajib diupload</p>
+                    </div>
+                </div>
+                {% if santri.foto_akta %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Sudah Upload</span>
+                {% else %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Belum Upload</span>
+                {% endif %}
+            </div>
+            
+            {% if santri.foto_akta %}
+            <!-- Preview Dokumen -->
+            <div class="mb-4">
+                <div class="relative inline-block group">
+                    <img src="{{ santri.foto_akta.url }}" alt="Foto Akta" class="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg border-2 border-gray-300 shadow-sm cursor-pointer" onclick="openImageModal('{{ santri.foto_akta.url }}', 'Foto Akta Kelahiran')">
+                    <div class="absolute top-2 right-2 flex space-x-1">
+                        <a href="{{ santri.foto_akta.url }}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Preview">
+                            <i class="fas fa-expand text-xs"></i>
+                        </a>
+                        <a href="{% url 'users:dokumen_download' 'foto_akta' %}" class="bg-green-600 hover:bg-green-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Download">
+                            <i class="fas fa-download text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Form Upload/Edit -->
+            <form method="post" action="{% url 'users:dokumen_upload' 'foto_akta' %}" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                {% csrf_token %}
+                <input 
+                    type="file" 
+                    name="foto_akta" 
+                    accept="image/jpeg,image/jpg,image/png" 
+                    required
+                    class="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap">
+                    <i class="fas fa-upload mr-1"></i>{% if santri.foto_akta %}Ubah{% else %}Upload{% endif %}
+                </button>
+            </form>
+        </div>
+        
+        <!-- Foto Ijazah/SKHUN -->
+        <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-orange-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm md:text-base font-semibold text-gray-900">Foto Ijazah/SKHUN</h3>
+                        <p class="text-xs text-gray-600">Wajib diupload</p>
+                    </div>
+                </div>
+                {% if santri.foto_ijazah %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Sudah Upload</span>
+                {% else %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Belum Upload</span>
+                {% endif %}
+            </div>
+            
+            {% if santri.foto_ijazah %}
+            <!-- Preview Dokumen -->
+            <div class="mb-4">
+                <div class="relative inline-block group">
+                    <img src="{{ santri.foto_ijazah.url }}" alt="Foto Ijazah" class="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg border-2 border-gray-300 shadow-sm cursor-pointer" onclick="openImageModal('{{ santri.foto_ijazah.url }}', 'Foto Ijazah/SKHUN')">
+                    <div class="absolute top-2 right-2 flex space-x-1">
+                        <a href="{{ santri.foto_ijazah.url }}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Preview">
+                            <i class="fas fa-expand text-xs"></i>
+                        </a>
+                        <a href="{% url 'users:dokumen_download' 'foto_ijazah' %}" class="bg-green-600 hover:bg-green-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Download">
+                            <i class="fas fa-download text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Form Upload/Edit -->
+            <form method="post" action="{% url 'users:dokumen_upload' 'foto_ijazah' %}" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                {% csrf_token %}
+                <input 
+                    type="file" 
+                    name="foto_ijazah" 
+                    accept="image/jpeg,image/jpg,image/png" 
+                    required
+                    class="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap">
+                    <i class="fas fa-upload mr-1"></i>{% if santri.foto_ijazah %}Ubah{% else %}Upload{% endif %}
+                </button>
+            </form>
+        </div>
+        
+        <!-- Surat Keterangan Sehat -->
+        <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-file-medical text-green-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm md:text-base font-semibold text-gray-900">Surat Keterangan Sehat</h3>
+                        <p class="text-xs text-gray-600">Wajib diupload</p>
+                    </div>
+                </div>
+                {% if santri.surat_sehat %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Sudah Upload</span>
+                {% else %}
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Belum Upload</span>
+                {% endif %}
+            </div>
+            
+            {% if santri.surat_sehat %}
+            <!-- Preview Dokumen -->
+            <div class="mb-4">
+                <div class="relative inline-block group">
+                    <img src="{{ santri.surat_sehat.url }}" alt="Surat Sehat" class="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg border-2 border-gray-300 shadow-sm cursor-pointer" onclick="openImageModal('{{ santri.surat_sehat.url }}', 'Surat Keterangan Sehat')">
+                    <div class="absolute top-2 right-2 flex space-x-1">
+                        <a href="{{ santri.surat_sehat.url }}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Preview">
+                            <i class="fas fa-expand text-xs"></i>
+                        </a>
+                        <a href="{% url 'users:dokumen_download' 'surat_sehat' %}" class="bg-green-600 hover:bg-green-700 text-white p-1.5 rounded-full shadow-lg transition-colors" title="Download">
+                            <i class="fas fa-download text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Form Upload/Edit -->
+            <form method="post" action="{% url 'users:dokumen_upload' 'surat_sehat' %}" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                {% csrf_token %}
+                <input 
+                    type="file" 
+                    name="surat_sehat" 
+                    accept="image/jpeg,image/jpg,image/png" 
+                    required
+                    class="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap">
+                    <i class="fas fa-upload mr-1"></i>{% if santri.surat_sehat %}Ubah{% else %}Upload{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Progress -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <h3 class="text-sm font-semibold text-gray-900 mb-3">Progress Upload Dokumen</h3>
+        {% with total=5 %}
+            {% with uploaded=0 %}
+                {% if santri.foto_santri %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+                {% if santri.foto_ktp %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+                {% if santri.foto_akta %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+                {% if santri.foto_ijazah %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+                {% if santri.surat_sehat %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+            {% endwith %}
+        {% endwith %}
+        
+        {% comment %} Calculate uploaded count {% endcomment %}
+        {% with uploaded=0 %}
+            {% if santri.foto_santri %}{{ uploaded|add:1 }}{% endif %}
+            {% if santri.foto_ktp %}{{ uploaded|add:1 }}{% endif %}
+            {% if santri.foto_akta %}{{ uploaded|add:1 }}{% endif %}
+            {% if santri.foto_ijazah %}{{ uploaded|add:1 }}{% endif %}
+            {% if santri.surat_sehat %}{{ uploaded|add:1 }}{% endif %}
+        {% endwith %}
+        
+        {% comment %} Simple calculation {% endcomment %}
+        {% with uploaded=0 %}
+            {% if santri.foto_santri %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+        {% endwith %}
+        
+        {% comment %} Use a simple approach {% endcomment %}
+        {% with uploaded=0 %}
+            {% if santri.foto_santri %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+            {% if santri.foto_ktp %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+            {% if santri.foto_akta %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+            {% if santri.foto_ijazah %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+            {% if santri.surat_sehat %}{% with uploaded=uploaded|add:1 %}{% endwith %}{% endif %}
+        {% endwith %}
+        
+        {% comment %} Calculate properly {% endcomment %}
+        {% with total=5 %}
+            {% with count=0 %}
+                {% if santri.foto_santri %}{% with count=count|add:1 %}{% endwith %}{% endif %}
+                {% if santri.foto_ktp %}{% with count=count|add:1 %}{% endwith %}{% endif %}
+                {% if santri.foto_akta %}{% with count=count|add:1 %}{% endwith %}{% endif %}
+                {% if santri.foto_ijazah %}{% with count=count|add:1 %}{% endwith %}{% endif %}
+                {% if santri.surat_sehat %}{% with count=count|add:1 %}{% endwith %}{% endif %}
+            {% endwith %}
+        {% endwith %}
+        
+        {% comment %} Use JavaScript to calculate {% endcomment %}
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-gray-600" id="uploaded-count">Menghitung...</span>
+            <span class="text-xs font-semibold text-green-600" id="uploaded-percent">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-green-600 h-2 rounded-full transition-all duration-300" id="progress-bar" style="width: 0%"></div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4" onclick="closeImageModal()">
+    <div class="bg-white rounded-lg max-w-4xl max-h-full overflow-auto" onclick="event.stopPropagation()">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-900"></h3>
+            <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <img id="modalImage" src="" alt="" class="max-w-full h-auto rounded-lg">
+        </div>
+    </div>
+</div>
+
+<script>
+    // Calculate uploaded documents
+    document.addEventListener('DOMContentLoaded', function() {
+        const total = 5;
+        let uploaded = 0;
+        
+        {% if santri %}
+        {% if santri.foto_santri %}uploaded++;{% endif %}
+        {% if santri.foto_ktp %}uploaded++;{% endif %}
+        {% if santri.foto_akta %}uploaded++;{% endif %}
+        {% if santri.foto_ijazah %}uploaded++;{% endif %}
+        {% if santri.surat_sehat %}uploaded++;{% endif %}
+        {% endif %}
+        
+        const percent = Math.round((uploaded / total) * 100);
+        
+        document.getElementById('uploaded-count').textContent = `${uploaded} dari ${total} dokumen`;
+        document.getElementById('uploaded-percent').textContent = `${percent}%`;
+        document.getElementById('progress-bar').style.width = `${percent}%`;
+    });
+    
+    // Image Modal Functions
+    function openImageModal(imageUrl, title) {
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('imageModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeImageModal() {
+        document.getElementById('imageModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Close modal on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+</script>
+{% endblock %}

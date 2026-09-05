@@ -1,0 +1,92 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Verifikasi Pembayaran - {{ payment.santri.nama_lengkap }}{% endblock %}
+
+{% block page_title %}Verifikasi Pembayaran{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:payment_list' %}" class="hover:text-gray-900">Daftar Pembayaran</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:payment_detail' payment.id %}" class="hover:text-gray-900">Detail</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Verifikasi</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Verifikasi Pembayaran</h2>
+        <p class="text-sm text-gray-600">Santri: <strong>{{ payment.santri.nama_lengkap }}</strong> (NISN: {{ payment.santri.nisn }})</p>
+        <p class="text-sm text-gray-600">Jumlah: <strong>Rp {{ payment.jumlah_transfer|floatformat:0 }}</strong></p>
+    </div>
+    
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Status -->
+        <div>
+            <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.status.label }} <span class="text-red-500">*</span>
+            </label>
+            {{ form.status }}
+            {% if form.status.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-2 text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>
+                Pilih status verifikasi pembayaran. Status santri akan otomatis diupdate sesuai status pembayaran.
+            </p>
+        </div>
+        
+        <!-- Catatan -->
+        <div>
+            <label for="{{ form.catatan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.catatan.label }}
+            </label>
+            {{ form.catatan }}
+            {% if form.catatan.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.catatan.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-2 text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>
+                Tambahkan catatan verifikasi jika diperlukan (opsional).
+            </p>
+        </div>
+        
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <ul class="list-disc list-inside text-sm text-red-800">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Preview Bukti Transfer -->
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Preview Bukti Transfer</h3>
+            {% if payment.bukti_transfer %}
+            <div class="flex justify-center">
+                <img src="{{ payment.bukti_transfer.url }}" alt="Bukti Transfer" class="max-w-md w-full h-auto rounded-lg shadow border border-gray-200">
+            </div>
+            {% else %}
+            <p class="text-center text-gray-500 py-8">Bukti transfer tidak tersedia</p>
+            {% endif %}
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+            <a href="{% url 'admin-panel:payment_detail' payment.id %}" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                <i class="fas fa-check-double mr-2"></i>Simpan Verifikasi
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

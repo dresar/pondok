@@ -1,0 +1,198 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}{{ pengajar.nama_lengkap }} - Admin Panel{% endblock %}
+
+{% block page_title %}{{ pengajar.nama_lengkap }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:tenaga_pengajar_list' %}" class="text-gray-600 hover:text-gray-900">Tenaga Pengajar</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Detail</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Actions -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-4">
+                {% if pengajar.foto %}
+                <img src="{{ pengajar.foto.url }}" alt="{{ pengajar.nama_lengkap }}" class="w-20 h-20 rounded-full object-cover">
+                {% else %}
+                <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
+                    <i class="fas fa-user text-3xl text-gray-400"></i>
+                </div>
+                {% endif %}
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">{{ pengajar.nama_lengkap }}</h2>
+                    {% if pengajar.nama_panggilan %}
+                    <p class="text-gray-600">{{ pengajar.nama_panggilan }}</p>
+                    {% endif %}
+                    <div class="flex items-center space-x-2 mt-2">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full {% if pengajar.jenis_kelamin == 'L' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                            {{ pengajar.get_jenis_kelamin_display_short }}
+                        </span>
+                        {% if pengajar.bagian_jabatan %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            {{ pengajar.bagian_jabatan.nama }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'admin-panel:tenaga_pengajar_update' pengajar.id %}" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Edit
+                </a>
+                <a href="{% url 'admin-panel:tenaga_pengajar_list' %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Kembali
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Biodata -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Biodata</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-500">Tempat & Tanggal Lahir</label>
+                <p class="text-gray-900">
+                    {% if pengajar.tempat_lahir %}{{ pengajar.tempat_lahir }}{% endif %}
+                    {% if pengajar.tanggal_lahir %}, {{ pengajar.tanggal_lahir|date:"d F Y" }}{% endif %}
+                    {% if not pengajar.tempat_lahir and not pengajar.tanggal_lahir %}-{% endif %}
+                </p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Alamat</label>
+                <p class="text-gray-900">{{ pengajar.alamat|default:"-" }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">No. HP</label>
+                <p class="text-gray-900">{{ pengajar.no_hp|default:"-" }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Email</label>
+                <p class="text-gray-900">{{ pengajar.email|default:"-" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pendidikan -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Pendidikan</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-500">Pendidikan Terakhir</label>
+                <p class="text-gray-900">{{ pengajar.pendidikan_terakhir|default:"-" }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Universitas/Institusi</label>
+                <p class="text-gray-900">{{ pengajar.universitas|default:"-" }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Tahun Lulus</label>
+                <p class="text-gray-900">{{ pengajar.tahun_lulus|default:"-" }}</p>
+            </div>
+            {% if pengajar.riwayat_pendidikan %}
+            <div class="md:col-span-2">
+                <label class="text-sm font-medium text-gray-500">Riwayat Pendidikan</label>
+                <p class="text-gray-900 whitespace-pre-line">{{ pengajar.riwayat_pendidikan }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Keahlian -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Keahlian & Bidang</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-500">Bidang Keahlian</label>
+                <p class="text-gray-900">{{ pengajar.bidang_keahlian|default:"-" }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Mata Pelajaran yang Diampu</label>
+                <p class="text-gray-900">{{ pengajar.mata_pelajaran|default:"-" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pengalaman & Prestasi -->
+    {% if pengajar.pengalaman_mengajar or pengajar.prestasi %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Pengalaman & Prestasi</h3>
+        {% if pengajar.pengalaman_mengajar %}
+        <div class="mb-4">
+            <label class="text-sm font-medium text-gray-500">Pengalaman Mengajar</label>
+            <p class="text-gray-900 whitespace-pre-line">{{ pengajar.pengalaman_mengajar }}</p>
+        </div>
+        {% endif %}
+        {% if pengajar.prestasi %}
+        <div>
+            <label class="text-sm font-medium text-gray-500">Prestasi</label>
+            <p class="text-gray-900 whitespace-pre-line">{{ pengajar.prestasi }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Biodata Tambahan -->
+    {% if pengajar.organisasi or pengajar.karya_tulis or pengajar.motto %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Biodata Tambahan</h3>
+        {% if pengajar.organisasi %}
+        <div class="mb-4">
+            <label class="text-sm font-medium text-gray-500">Organisasi</label>
+            <p class="text-gray-900 whitespace-pre-line">{{ pengajar.organisasi }}</p>
+        </div>
+        {% endif %}
+        {% if pengajar.karya_tulis %}
+        <div class="mb-4">
+            <label class="text-sm font-medium text-gray-500">Karya Tulis</label>
+            <p class="text-gray-900 whitespace-pre-line">{{ pengajar.karya_tulis }}</p>
+        </div>
+        {% endif %}
+        {% if pengajar.motto %}
+        <div>
+            <label class="text-sm font-medium text-gray-500">Motto</label>
+            <p class="text-gray-900 italic">"{{ pengajar.motto }}"</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Pengaturan -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Pengaturan</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-500">Urutan</label>
+                <p class="text-gray-900">{{ pengajar.order }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Status</label>
+                <p>
+                    {% if pengajar.is_published %}
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Published</span>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Draft</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Unggulan</label>
+                <p>
+                    {% if pengajar.is_featured %}
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Ya</span>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Tidak</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

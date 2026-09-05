@@ -1,0 +1,805 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}{% if santri %}Edit Santri{% else %}Tambah Santri Baru{% endif %} - Admin Panel{% endblock %}
+
+{% block page_title %}{% if santri %}Edit Santri{% else %}Tambah Santri Baru{% endif %}{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:santri_list' %}" class="hover:text-gray-900">Daftar Santri</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">{% if santri %}Edit{% else %}Tambah Baru{% endif %}</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Data Pribadi -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-5">
+                <i class="fas fa-user mr-2 text-green-600"></i>Data Pribadi
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.nama_lengkap.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.nama_lengkap.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.nama_lengkap }}
+                    {% if form.nama_lengkap.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.nama_lengkap.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.nama_panggilan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.nama_panggilan.label }}
+                    </label>
+                    {{ form.nama_panggilan }}
+                    {% if form.nama_panggilan.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.nama_panggilan.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.nisn.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.nisn.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.nisn }}
+                    {% if form.nisn.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.nisn.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tempat_lahir.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tempat_lahir.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.tempat_lahir }}
+                    {% if form.tempat_lahir.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tempat_lahir.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tanggal_lahir.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tanggal_lahir.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.tanggal_lahir }}
+                    {% if form.tanggal_lahir.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tanggal_lahir.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.jenis_kelamin.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.jenis_kelamin.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.jenis_kelamin }}
+                    {% if form.jenis_kelamin.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.jenis_kelamin.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Agama selalu Islam (hidden field) -->
+                {{ form.agama }}
+                
+                <div>
+                    <label for="{{ form.kewarganegaraan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.kewarganegaraan.label }}
+                    </label>
+                    {{ form.kewarganegaraan }}
+                    {% if form.kewarganegaraan.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.kewarganegaraan.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.anak_ke.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.anak_ke.label }}
+                    </label>
+                    {{ form.anak_ke }}
+                    {% if form.anak_ke.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.anak_ke.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.jumlah_saudara.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.jumlah_saudara.label }}
+                    </label>
+                    {{ form.jumlah_saudara }}
+                    {% if form.jumlah_saudara.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.jumlah_saudara.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.bahasa_sehari_hari.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.bahasa_sehari_hari.label }}
+                    </label>
+                    {{ form.bahasa_sehari_hari }}
+                    {% if form.bahasa_sehari_hari.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.bahasa_sehari_hari.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.golongan_darah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.golongan_darah.label }}
+                    </label>
+                    {{ form.golongan_darah }}
+                    {% if form.golongan_darah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.golongan_darah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tinggi_badan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tinggi_badan.label }}
+                    </label>
+                    {{ form.tinggi_badan }}
+                    {% if form.tinggi_badan.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tinggi_badan.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.berat_badan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.berat_badan.label }}
+                    </label>
+                    {{ form.berat_badan }}
+                    {% if form.berat_badan.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.berat_badan.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.riwayat_penyakit.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.riwayat_penyakit.label }}
+                    </label>
+                    {{ form.riwayat_penyakit }}
+                    {% if form.riwayat_penyakit.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.riwayat_penyakit.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tinggal_dengan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tinggal_dengan.label }}
+                    </label>
+                    {{ form.tinggal_dengan }}
+                    {% if form.tinggal_dengan.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tinggal_dengan.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Orang Tua -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-5">
+                <i class="fas fa-users mr-2 text-green-600"></i>Data Orang Tua
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.nama_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.nama_ayah.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.nama_ayah }}
+                    {% if form.nama_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.nama_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.nik_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.nik_ayah.label }}
+                    </label>
+                    {{ form.nik_ayah }}
+                    {% if form.nik_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.nik_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tempat_lahir_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tempat_lahir_ayah.label }}
+                    </label>
+                    {{ form.tempat_lahir_ayah }}
+                    {% if form.tempat_lahir_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tempat_lahir_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tanggal_lahir_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tanggal_lahir_ayah.label }}
+                    </label>
+                    {{ form.tanggal_lahir_ayah }}
+                    {% if form.tanggal_lahir_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tanggal_lahir_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.agama_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.agama_ayah.label }}
+                    </label>
+                    {{ form.agama_ayah }}
+                    {% if form.agama_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.agama_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.kewarganegaraan_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.kewarganegaraan_ayah.label }}
+                    </label>
+                    {{ form.kewarganegaraan_ayah }}
+                    {% if form.kewarganegaraan_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.kewarganegaraan_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.pendidikan_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.pendidikan_ayah.label }}
+                    </label>
+                    {{ form.pendidikan_ayah }}
+                    {% if form.pendidikan_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.pendidikan_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.nama_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.nama_ibu.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.nama_ibu }}
+                    {% if form.nama_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.nama_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.nik_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.nik_ibu.label }}
+                    </label>
+                    {{ form.nik_ibu }}
+                    {% if form.nik_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.nik_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tempat_lahir_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tempat_lahir_ibu.label }}
+                    </label>
+                    {{ form.tempat_lahir_ibu }}
+                    {% if form.tempat_lahir_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tempat_lahir_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tanggal_lahir_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tanggal_lahir_ibu.label }}
+                    </label>
+                    {{ form.tanggal_lahir_ibu }}
+                    {% if form.tanggal_lahir_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tanggal_lahir_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.agama_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.agama_ibu.label }}
+                    </label>
+                    {{ form.agama_ibu }}
+                    {% if form.agama_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.agama_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.kewarganegaraan_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.kewarganegaraan_ibu.label }}
+                    </label>
+                    {{ form.kewarganegaraan_ibu }}
+                    {% if form.kewarganegaraan_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.kewarganegaraan_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.pendidikan_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.pendidikan_ibu.label }}
+                    </label>
+                    {{ form.pendidikan_ibu }}
+                    {% if form.pendidikan_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.pendidikan_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.pekerjaan_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.pekerjaan_ayah.label }}
+                    </label>
+                    {{ form.pekerjaan_ayah }}
+                    {% if form.pekerjaan_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.pekerjaan_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.pekerjaan_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.pekerjaan_ibu.label }}
+                    </label>
+                    {{ form.pekerjaan_ibu }}
+                    {% if form.pekerjaan_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.pekerjaan_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.no_hp_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.no_hp_ayah.label }}
+                    </label>
+                    {{ form.no_hp_ayah }}
+                    {% if form.no_hp_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.no_hp_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.no_hp_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.no_hp_ibu.label }}
+                    </label>
+                    {{ form.no_hp_ibu }}
+                    {% if form.no_hp_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.no_hp_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.status_ayah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.status_ayah.label }}
+                    </label>
+                    {{ form.status_ayah }}
+                    {% if form.status_ayah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.status_ayah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.status_ibu.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.status_ibu.label }}
+                    </label>
+                    {{ form.status_ibu }}
+                    {% if form.status_ibu.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.status_ibu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="{{ form.alamat_orangtua.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.alamat_orangtua.label }}
+                    </label>
+                    {{ form.alamat_orangtua }}
+                    {% if form.alamat_orangtua.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.alamat_orangtua.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Kontak -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-5">
+                <i class="fas fa-address-book mr-2 text-green-600"></i>Kontak & Alamat
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label for="{{ form.alamat.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.alamat.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.alamat }}
+                    {% if form.alamat.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.alamat.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.desa.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.desa.label }}
+                    </label>
+                    {{ form.desa }}
+                    {% if form.desa.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.desa.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.kecamatan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.kecamatan.label }}
+                    </label>
+                    {{ form.kecamatan }}
+                    {% if form.kecamatan.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.kecamatan.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.kabupaten.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.kabupaten.label }}
+                    </label>
+                    {{ form.kabupaten }}
+                    {% if form.kabupaten.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.kabupaten.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.provinsi.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.provinsi.label }}
+                    </label>
+                    {{ form.provinsi }}
+                    {% if form.provinsi.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.provinsi.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.kode_pos.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.kode_pos.label }}
+                    </label>
+                    {{ form.kode_pos }}
+                    {% if form.kode_pos.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.kode_pos.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.no_hp.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.no_hp.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.no_hp }}
+                    {% if form.no_hp.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.no_hp.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">
+                        {{ form.email.label }} <span class="text-xs text-gray-500">(opsional)</span>
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <p class="mt-1.5 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Sekolah -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-5">
+                <i class="fas fa-school mr-2 text-green-600"></i>Data Sekolah
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.asal_sekolah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.asal_sekolah.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.asal_sekolah }}
+                    {% if form.asal_sekolah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.asal_sekolah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.npsn_sekolah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.npsn_sekolah.label }}
+                    </label>
+                    {{ form.npsn_sekolah }}
+                    {% if form.npsn_sekolah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.npsn_sekolah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.kelas_terakhir.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.kelas_terakhir.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.kelas_terakhir }}
+                    {% if form.kelas_terakhir.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.kelas_terakhir.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tahun_lulus.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tahun_lulus.label }}
+                    </label>
+                    {{ form.tahun_lulus }}
+                    {% if form.tahun_lulus.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tahun_lulus.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.no_ijazah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.no_ijazah.label }}
+                    </label>
+                    {{ form.no_ijazah }}
+                    {% if form.no_ijazah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.no_ijazah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.kelas_diterima.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.kelas_diterima.label }}
+                    </label>
+                    {{ form.kelas_diterima }}
+                    {% if form.kelas_diterima.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.kelas_diterima.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.tanggal_diterima.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.tanggal_diterima.label }}
+                    </label>
+                    {{ form.tanggal_diterima }}
+                    {% if form.tanggal_diterima.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.tanggal_diterima.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dokumen -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-5">
+                <i class="fas fa-file-upload mr-2 text-green-600"></i>Dokumen Pendukung
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.foto_santri.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.foto_santri.label }}
+                    </label>
+                    {% if santri and santri.foto_santri %}
+                    <div class="mb-2">
+                        <img src="{{ santri.foto_santri.url }}" alt="Foto Santri" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                        <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                    </div>
+                    {% endif %}
+                    {{ form.foto_santri }}
+                    {% if form.foto_santri.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.foto_santri.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.foto_ktp.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.foto_ktp.label }}
+                    </label>
+                    {% if santri and santri.foto_ktp %}
+                    <div class="mb-2">
+                        <a href="{{ santri.foto_ktp.url }}" target="_blank" class="text-blue-600 hover:underline text-sm">
+                            <i class="fas fa-file-image mr-1"></i>Lihat dokumen saat ini
+                        </a>
+                    </div>
+                    {% endif %}
+                    {{ form.foto_ktp }}
+                    {% if form.foto_ktp.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.foto_ktp.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.foto_akta.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.foto_akta.label }}
+                    </label>
+                    {% if santri and santri.foto_akta %}
+                    <div class="mb-2">
+                        <a href="{{ santri.foto_akta.url }}" target="_blank" class="text-blue-600 hover:underline text-sm">
+                            <i class="fas fa-file-image mr-1"></i>Lihat dokumen saat ini
+                        </a>
+                    </div>
+                    {% endif %}
+                    {{ form.foto_akta }}
+                    {% if form.foto_akta.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.foto_akta.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.foto_ijazah.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.foto_ijazah.label }}
+                    </label>
+                    {% if santri and santri.foto_ijazah %}
+                    <div class="mb-2">
+                        <a href="{{ santri.foto_ijazah.url }}" target="_blank" class="text-blue-600 hover:underline text-sm">
+                            <i class="fas fa-file-image mr-1"></i>Lihat dokumen saat ini
+                        </a>
+                    </div>
+                    {% endif %}
+                    {{ form.foto_ijazah }}
+                    {% if form.foto_ijazah.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.foto_ijazah.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.surat_sehat.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.surat_sehat.label }}
+                    </label>
+                    {% if santri and santri.surat_sehat %}
+                    <div class="mb-2">
+                        <a href="{{ santri.surat_sehat.url }}" target="_blank" class="text-blue-600 hover:underline text-sm">
+                            <i class="fas fa-file-image mr-1"></i>Lihat dokumen saat ini
+                        </a>
+                    </div>
+                    {% endif %}
+                    {{ form.surat_sehat }}
+                    {% if form.surat_sehat.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.surat_sehat.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Catatan -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-5">
+                <i class="fas fa-sticky-note mr-2 text-green-600"></i>Catatan
+            </h3>
+            <div>
+                <label for="{{ form.catatan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.catatan.label }}
+                </label>
+                {{ form.catatan }}
+                {% if form.catatan.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.catatan.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Informasi Pembayaran -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-5">
+                <i class="fas fa-money-bill-wave mr-2 text-green-600"></i>Informasi Pembayaran
+            </h3>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p class="text-sm text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>Isi informasi pembayaran jika santri sudah melakukan pembayaran. Jika belum, bagian ini bisa dikosongkan.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ payment_form.rekening_tujuan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ payment_form.rekening_tujuan.label }}
+                    </label>
+                    {{ payment_form.rekening_tujuan }}
+                    {% if payment_form.rekening_tujuan.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ payment_form.rekening_tujuan.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>Pilih rekening tujuan pembayaran dari daftar rekening yang tersedia
+                    </p>
+                </div>
+                
+                <div>
+                    <label for="{{ payment_form.bank_pengirim.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ payment_form.bank_pengirim.label }}
+                    </label>
+                    {{ payment_form.bank_pengirim }}
+                    {% if payment_form.bank_pengirim.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ payment_form.bank_pengirim.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ payment_form.nama_pemilik_rekening.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ payment_form.nama_pemilik_rekening.label }}
+                    </label>
+                    {{ payment_form.nama_pemilik_rekening }}
+                    {% if payment_form.nama_pemilik_rekening.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ payment_form.nama_pemilik_rekening.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ payment_form.jumlah_transfer.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ payment_form.jumlah_transfer.label }}
+                    </label>
+                    {{ payment_form.jumlah_transfer }}
+                    {% if payment_form.jumlah_transfer.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ payment_form.jumlah_transfer.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ payment_form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ payment_form.status.label }}
+                    </label>
+                    {{ payment_form.status }}
+                    {% if payment_form.status.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ payment_form.status.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="{{ payment_form.bukti_transfer.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ payment_form.bukti_transfer.label }}
+                    </label>
+                    {% if santri and santri.payment and santri.payment.bukti_transfer %}
+                    <div class="mb-2">
+                        <a href="{{ santri.payment.bukti_transfer.url }}" target="_blank" class="text-blue-600 hover:underline text-sm">
+                            <i class="fas fa-file-image mr-1"></i>Lihat bukti pembayaran saat ini
+                        </a>
+                    </div>
+                    {% endif %}
+                    {{ payment_form.bukti_transfer }}
+                    {% if payment_form.bukti_transfer.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ payment_form.bukti_transfer.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status (Hanya untuk Edit) -->
+        {% if santri %}
+        <div class="pb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-5">
+                <i class="fas fa-info-circle mr-2 text-green-600"></i>Status
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.status.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <ul class="list-disc list-inside text-sm text-red-800">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+            <a href="{% if santri %}{% url 'admin-panel:santri_detail' santri.id %}{% else %}{% url 'admin-panel:santri_list' %}{% endif %}" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+            <div class="flex items-center space-x-3">
+                {% if santri %}
+                <a href="{% url 'admin-panel:santri_pdf' santri.id %}" target="_blank" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-file-pdf mr-2"></i>Download PDF
+                </a>
+                {% endif %}
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i>Simpan
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

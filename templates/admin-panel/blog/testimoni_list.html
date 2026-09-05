@@ -1,0 +1,336 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Testimoni - Admin Panel{% endblock %}
+
+{% block extra_css %}
+{% if form %}{{ form.media.css }}{% endif %}
+<style>
+    /* Summernote Content Styling */
+    .summernote-content {
+        line-height: 1.8;
+    }
+    .summernote-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .summernote-content p {
+        margin-bottom: 1rem;
+    }
+    .summernote-content ul, .summernote-content ol {
+        margin: 1rem 0;
+        padding-left: 2rem;
+    }
+    .summernote-content li {
+        margin: 0.5rem 0;
+    }
+    .summernote-content h1, .summernote-content h2, .summernote-content h3,
+    .summernote-content h4, .summernote-content h5, .summernote-content h6 {
+        font-weight: 600;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .summernote-content a {
+        color: #059669;
+        text-decoration: underline;
+    }
+    .summernote-content a:hover {
+        color: #047857;
+    }
+    .summernote-content blockquote {
+        border-left: 4px solid #10b981;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: #6b7280;
+    }
+    .summernote-content code {
+        background-color: #f3f4f6;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+    .summernote-content pre {
+        background-color: #1f2937;
+        color: #f9fafb;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+    .summernote-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+    }
+    .summernote-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+    .summernote-content table th,
+    .summernote-content table td {
+        border: 1px solid #e5e7eb;
+        padding: 0.5rem;
+    }
+    .summernote-content table th {
+        background-color: #f9fafb;
+        font-weight: 600;
+    }
+    
+    /* Line clamp untuk truncate text */
+    .line-clamp-4 {
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Testimoni{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'blog:list' %}" class="hover:text-gray-900">Blog</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Testimoni</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    deleteModal: false, 
+    deleteId: null, 
+    deleteName: '',
+    formModal: false
+}">
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-gray-900">Testimoni</h2>
+            <button @click="formModal = true" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <i class="fas fa-plus mr-2"></i>Tambah
+            </button>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="get" class="mb-6">
+            <input type="text" name="search" value="{{ search }}" placeholder="Cari testimoni..." 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        </form>
+        
+        {% if testimoni %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for t in testimoni %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+                <!-- Header dengan Foto dan Info -->
+                <div class="p-4 border-b border-gray-100">
+                    <div class="flex items-start gap-4">
+                        <!-- Foto -->
+                        <div class="flex-shrink-0">
+                            {% if t.foto %}
+                            <img src="{{ t.foto.url }}" alt="{{ t.nama }}" 
+                                 class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
+                            {% else %}
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold text-xl">
+                                {{ t.nama|first|upper }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Info -->
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 text-lg truncate">{{ t.nama }}</h3>
+                            {% if t.jabatan %}
+                            <p class="text-sm text-gray-600 mt-1 truncate">{{ t.jabatan }}</p>
+                            {% endif %}
+                            
+                            <!-- Rating -->
+                            <div class="flex items-center gap-1 mt-2">
+                                {% for i in "12345"|make_list %}
+                                <i class="fas fa-star text-xs {% if forloop.counter <= t.rating %}text-yellow-400{% else %}text-gray-300{% endif %}"></i>
+                                {% endfor %}
+                                <span class="text-xs text-gray-500 ml-1">({{ t.rating }}/5)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimoni Content dengan Summernote Support -->
+                <div class="p-4 flex-1">
+                    {% if t.testimoni %}
+                    <div class="summernote-content text-sm text-gray-700 line-clamp-4">
+                        {{ t.testimoni|safe }}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-400 italic">Tidak ada testimoni</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Footer dengan Status dan Aksi -->
+                <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                    <span class="px-2 py-1 text-xs rounded-full font-medium {% if t.is_published %}bg-green-100 text-green-800{% else %}bg-gray-200 text-gray-700{% endif %}">
+                        {% if t.is_published %}
+                        <i class="fas fa-check-circle mr-1"></i>Published
+                        {% else %}
+                        <i class="fas fa-clock mr-1"></i>Draft
+                        {% endif %}
+                    </span>
+                    
+                    <div class="flex items-center gap-2">
+                        <button @click="formModal = true; window.location.href = '?edit={{ t.id }}'" 
+                                class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button @click="deleteModal = true; deleteId = {{ t.id }}; deleteName = '{{ t.nama }}'" 
+                                class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Tidak ada testimoni ditemukan</p>
+        </div>
+        {% endif %}
+        
+        {% if testimoni.has_other_pages %}
+        <div class="mt-4 flex justify-center">
+            {% if testimoni.has_previous %}
+            <a href="?page={{ testimoni.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded-lg mr-2">Sebelumnya</a>
+            {% endif %}
+            <span class="px-4 py-2">{{ testimoni.number }} / {{ testimoni.paginator.num_pages }}</span>
+            {% if testimoni.has_next %}
+            <a href="?page={{ testimoni.next_page_number }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded-lg ml-2">Selanjutnya</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Form Modal -->
+    <div x-show="formModal || {% if testimoni_obj %}true{% else %}false{% endif %}" 
+         x-cloak 
+         @click.away="formModal = false; window.location.href = '{% url 'blog:testimoni_list' %}'" 
+         class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">{% if testimoni_obj %}Edit Testimoni{% else %}Tambah Testimoni{% endif %}</h3>
+                <button @click="formModal = false; window.location.href = '{% url 'blog:testimoni_list' %}'" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{% if testimoni_obj %}{% url 'blog:testimoni_update' testimoni_obj.id %}{% else %}{% url 'blog:testimoni_create' %}{% endif %}">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama *</label>
+                            {{ form.nama }}
+                            {% if form.nama.errors %}<p class="mt-1 text-sm text-red-600">{{ form.nama.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Jabatan</label>
+                            {{ form.jabatan }}
+                            {% if form.jabatan.errors %}<p class="mt-1 text-sm text-red-600">{{ form.jabatan.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Foto</label>
+                        <div class="flex gap-2 mb-2">
+                            <button type="button" onclick="openImagePicker({
+                                targetPreviewId: 'testimoni-image-preview',
+                                onSelect: function(imageId, imageUrl, imageTitle) {
+                                    const preview = document.getElementById('testimoni-image-preview');
+                                    if (preview) {
+                                        preview.innerHTML = `<img src='${imageUrl}' alt='${imageTitle}' class='w-32 h-32 object-cover rounded-lg mb-2'>`;
+                                        preview.style.display = 'block';
+                                    }
+                                    let hiddenInput = document.getElementById('selected_image_id');
+                                    if (!hiddenInput) {
+                                        hiddenInput = document.createElement('input');
+                                        hiddenInput.type = 'hidden';
+                                        hiddenInput.id = 'selected_image_id';
+                                        hiddenInput.name = 'selected_image_id';
+                                        document.querySelector('form').appendChild(hiddenInput);
+                                    }
+                                    hiddenInput.value = imageId;
+                                }
+                            })" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm">
+                                <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                            </button>
+                            <span class="text-xs text-gray-500 self-center">atau</span>
+                        </div>
+                        {% if testimoni_obj and testimoni_obj.foto %}
+                        <div id="testimoni-image-preview">
+                            <img src="{{ testimoni_obj.foto.url }}" alt="{{ testimoni_obj.nama }}" class="w-32 h-32 object-cover rounded-lg mb-2">
+                        </div>
+                        {% else %}
+                        <div id="testimoni-image-preview" class="hidden"></div>
+                        {% endif %}
+                        {{ form.foto }}
+                        <p class="mt-1 text-xs text-gray-500">Upload manual atau pilih dari gallery yang sudah dikompres WebP</p>
+                        {% if form.foto.errors %}<p class="mt-1 text-sm text-red-600">{{ form.foto.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Testimoni *</label>
+                        {{ form.testimoni }}
+                        {% if form.testimoni.errors %}<p class="mt-1 text-sm text-red-600">{{ form.testimoni.errors.0 }}</p>{% endif %}
+                        {% if testimoni_obj and testimoni_obj.testimoni %}
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Preview Testimoni:</h4>
+                            <div class="summernote-content prose prose-sm max-w-none">
+                                {{ testimoni_obj.testimoni|safe }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                            {{ form.rating }}
+                            {% if form.rating.errors %}<p class="mt-1 text-sm text-red-600">{{ form.rating.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-2">
+                                {{ form.is_published }}
+                                <span class="text-sm font-medium text-gray-700">Published</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" @click="formModal = false; window.location.href = '{% url 'blog:testimoni_list' %}'" class="px-4 py-2 bg-gray-200 rounded-lg">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Modal -->
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold mb-4">Hapus Testimoni</h3>
+            <p class="text-gray-700 mb-6">Hapus "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="deleteModal = false" class="px-4 py-2 bg-gray-200 rounded-lg">Batal</button>
+                <form method="post" action="{% url 'blog:testimoni_delete' 0 %}" x-bind:action="'/admin-panel/blog/testimoni/' + deleteId + '/delete/'">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if form %}{{ form.media.js }}{% endif %}
+{% endblock %}

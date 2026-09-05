@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Pendaftaran Santri</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin-top: 0;
+            margin-bottom: 2cm;
+            margin-left: 2cm;
+            margin-right: 2cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+            background: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Kop Surat - Full Width */
+        .header {
+            margin-left: -2cm;
+            margin-right: -2cm;
+            margin-top: 0;
+            margin-bottom: 20px;
+            padding: 0;
+            text-align: center;
+            background: #fff;
+        }
+        
+        .header img {
+            width: 100%;
+            max-height: 120px;
+            object-fit: contain;
+            display: block;
+            margin: 0;
+        }
+        
+        /* Title Banner */
+        .title {
+            text-align: center;
+            margin: 20px 0;
+            padding: 12px;
+            background: #16a34a;
+            color: white;
+            font-size: 14pt;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        
+        /* Section */
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .section-title {
+            background: #f0fdf4;
+            padding: 8px 12px;
+            font-size: 11pt;
+            font-weight: bold;
+            color: #16a34a;
+            border-bottom: 2px solid #16a34a;
+        }
+        
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        .data-table tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .data-table tr:last-child {
+            border-bottom: none;
+        }
+        
+        .data-table td {
+            padding: 6px 10px;
+            vertical-align: top;
+            font-size: 10pt;
+        }
+        
+        .data-table td.label {
+            width: 35%;
+            font-weight: 600;
+            color: #4b5563;
+            background: #f9fafb;
+            border-right: 1px solid #e5e7eb;
+        }
+        
+        .data-table td.value {
+            width: 65%;
+            color: #111827;
+        }
+        
+        /* Lampiran */
+        .lampiran-item {
+            padding: 4px 0;
+            font-size: 10pt;
+        }
+        
+        .lampiran-check {
+            color: #16a34a;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            font-size: 9pt;
+            color: #6b7280;
+        }
+        
+        /* Status Badge */
+        .status {
+            font-weight: bold;
+        }
+        .status.accepted { color: #16a34a; }
+        .status.rejected { color: #dc2626; }
+        .status.verified { color: #2563eb; }
+        .status.pending { color: #d97706; }
+    </style>
+</head>
+<body>
+    <!-- Kop Surat -->
+    <div class="header">
+        {% if settings and settings.header_mobile_image %}
+            <img src="{{ request.scheme }}://{{ request.get_host }}{{ settings.header_mobile_image.url }}" alt="Kop Surat" style="width: 100%; max-height: 120px; object-fit: contain; display: block;">
+        {% elif settings and settings.logo %}
+            <img src="{{ request.scheme }}://{{ request.get_host }}{{ settings.logo.url }}" alt="Logo" style="width: 100%; max-height: 120px; object-fit: contain; display: block;">
+        {% endif %}
+    </div>
+    
+    <!-- Title Banner -->
+    <div class="title">
+        FORMULIR PENDAFTARAN SANTRI BARU
+    </div>
+    
+    <!-- Data Pribadi Santri -->
+    <div class="section">
+        <div class="section-title">DATA PRIBADI SANTRI</div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Nama Lengkap</td>
+                <td class="value">{{ santri.nama_lengkap }}</td>
+            </tr>
+            <tr>
+                <td class="label">NISN</td>
+                <td class="value">{{ santri.nisn }}</td>
+            </tr>
+            <tr>
+                <td class="label">Tempat, Tanggal Lahir</td>
+                <td class="value">{{ santri.tempat_lahir }}, {{ santri.tanggal_lahir|date:"d F Y" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Jenis Kelamin</td>
+                <td class="value">{{ santri.get_jenis_kelamin_display }}</td>
+            </tr>
+            <tr>
+                <td class="label">Agama</td>
+                <td class="value">{{ santri.agama }}</td>
+            </tr>
+            {% if santri.golongan_darah %}
+            <tr>
+                <td class="label">Golongan Darah</td>
+                <td class="value">{{ santri.golongan_darah }}</td>
+            </tr>
+            {% endif %}
+            {% if santri.tinggi_badan %}
+            <tr>
+                <td class="label">Tinggi Badan</td>
+                <td class="value">{{ santri.tinggi_badan }} cm</td>
+            </tr>
+            {% endif %}
+            {% if santri.berat_badan %}
+            <tr>
+                <td class="label">Berat Badan</td>
+                <td class="value">{{ santri.berat_badan }} kg</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+    
+    <!-- Data Orang Tua -->
+    <div class="section">
+        <div class="section-title">DATA ORANG TUA</div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Nama Ayah</td>
+                <td class="value">{{ santri.nama_ayah }}</td>
+            </tr>
+            <tr>
+                <td class="label">Nama Ibu</td>
+                <td class="value">{{ santri.nama_ibu }}</td>
+            </tr>
+            {% if santri.nik_ayah %}
+            <tr>
+                <td class="label">NIK Ayah</td>
+                <td class="value">{{ santri.nik_ayah }}</td>
+            </tr>
+            {% endif %}
+            {% if santri.nik_ibu %}
+            <tr>
+                <td class="label">NIK Ibu</td>
+                <td class="value">{{ santri.nik_ibu }}</td>
+            </tr>
+            {% endif %}
+            {% if santri.pekerjaan_ayah %}
+            <tr>
+                <td class="label">Pekerjaan Ayah</td>
+                <td class="value">{{ santri.pekerjaan_ayah }}</td>
+            </tr>
+            {% endif %}
+            {% if santri.pekerjaan_ibu %}
+            <tr>
+                <td class="label">Pekerjaan Ibu</td>
+                <td class="value">{{ santri.pekerjaan_ibu }}</td>
+            </tr>
+            {% endif %}
+            {% if santri.no_hp_ayah %}
+            <tr>
+                <td class="label">No. HP Ayah</td>
+                <td class="value">{{ santri.no_hp_ayah }}</td>
+            </tr>
+            {% endif %}
+            {% if santri.no_hp_ibu %}
+            <tr>
+                <td class="label">No. HP Ibu</td>
+                <td class="value">{{ santri.no_hp_ibu }}</td>
+            </tr>
+            {% endif %}
+            {% if santri.alamat_orangtua %}
+            <tr>
+                <td class="label">Alamat Orang Tua</td>
+                <td class="value">{{ santri.alamat_orangtua }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+    
+    <!-- Kontak & Alamat -->
+    <div class="section">
+        <div class="section-title">KONTAK & ALAMAT</div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Alamat Lengkap</td>
+                <td class="value">{{ santri.alamat }}</td>
+            </tr>
+            <tr>
+                <td class="label">No. HP</td>
+                <td class="value">{{ santri.no_hp }}</td>
+            </tr>
+            {% if santri.email %}
+            <tr>
+                <td class="label">Email</td>
+                <td class="value">{{ santri.email }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+    
+    <!-- Data Sekolah -->
+    <div class="section">
+        <div class="section-title">DATA SEKOLAH</div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Asal Sekolah</td>
+                <td class="value">{{ santri.asal_sekolah }}</td>
+            </tr>
+            <tr>
+                <td class="label">Kelas Terakhir</td>
+                <td class="value">{{ santri.kelas_terakhir }}</td>
+            </tr>
+            {% if santri.tahun_lulus %}
+            <tr>
+                <td class="label">Tahun Lulus</td>
+                <td class="value">{{ santri.tahun_lulus }}</td>
+            </tr>
+            {% endif %}
+            {% if santri.no_ijazah %}
+            <tr>
+                <td class="label">No. Ijazah/SKHUN</td>
+                <td class="value">{{ santri.no_ijazah }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+    
+    <!-- Catatan -->
+    {% if santri.catatan %}
+    <div class="section">
+        <div class="section-title">CATATAN TAMBAHAN</div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Catatan</td>
+                <td class="value">{{ santri.catatan }}</td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+    
+    <!-- Lampiran -->
+    <div class="section">
+        <div class="section-title">LAMPIRAN</div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Dokumen yang Diupload</td>
+                <td class="value">
+                    <div class="lampiran-item">
+                        {% if santri.foto_santri %}
+                        <span class="lampiran-check">✓</span>Foto Santri
+                        {% else %}
+                        <span style="color: #9ca3af;">-</span> Foto Santri
+                        {% endif %}
+                    </div>
+                    <div class="lampiran-item">
+                        {% if santri.foto_ktp %}
+                        <span class="lampiran-check">✓</span>Foto KTP/Kartu Keluarga
+                        {% else %}
+                        <span style="color: #9ca3af;">-</span> Foto KTP/Kartu Keluarga
+                        {% endif %}
+                    </div>
+                    <div class="lampiran-item">
+                        {% if santri.foto_akta %}
+                        <span class="lampiran-check">✓</span>Foto Akta Kelahiran
+                        {% else %}
+                        <span style="color: #9ca3af;">-</span> Foto Akta Kelahiran
+                        {% endif %}
+                    </div>
+                    <div class="lampiran-item">
+                        {% if santri.foto_ijazah %}
+                        <span class="lampiran-check">✓</span>Foto Ijazah/SKHUN
+                        {% else %}
+                        <span style="color: #9ca3af;">-</span> Foto Ijazah/SKHUN
+                        {% endif %}
+                    </div>
+                    <div class="lampiran-item">
+                        {% if santri.surat_sehat %}
+                        <span class="lampiran-check">✓</span>Surat Keterangan Sehat
+                        {% else %}
+                        <span style="color: #9ca3af;">-</span> Surat Keterangan Sehat
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Status -->
+    <div class="section">
+        <div class="section-title">STATUS PENDAFTARAN</div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Status</td>
+                <td class="value">
+                    <span class="status {{ santri.status }}">
+                        {{ santri.get_status_display }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Tanggal Daftar</td>
+                <td class="value">{{ santri.created_at|date:"d F Y, H:i" }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <p>Dokumen ini dicetak pada: {{ "now"|date:"d F Y, H:i" }}</p>
+        <p>Formulir Pendaftaran Santri - {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren Modern Raudhatussalam{% endif %}</p>
+    </div>
+</body>
+</html>

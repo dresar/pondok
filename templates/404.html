@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Halaman Tidak Ditemukan</title>
+    <link rel="stylesheet" href="{% static 'public/css/tailwind.css' %}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <canvas id="three-canvas" class="fixed inset-0 -z-10 pointer-events-none"></canvas>
+    <div class="min-h-screen flex items-center justify-center px-6">
+        <div class="text-center max-w-xl">
+            <div class="text-7xl font-extrabold text-green-700">404</div>
+            <h1 class="mt-4 text-2xl font-semibold text-gray-900">Halaman Tidak Ditemukan</h1>
+            <p class="mt-2 text-gray-600">Maaf, halaman yang Anda cari tidak tersedia atau telah dipindahkan.</p>
+            <div class="mt-6 flex items-center justify-center gap-4">
+                <a href="{% url 'public:home' %}" class="px-5 py-2.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition">Kembali ke Beranda</a>
+                <a href="{% url 'users:login' %}" class="px-5 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Login Admin</a>
+            </div>
+        </div>
+    </div>
+    <script src="{% static 'public/js/vendor/three.min.js' %}"></script>
+    <script src="{% static 'public/js/three-animations.js' %}"></script>
+</body>
+</html>
+

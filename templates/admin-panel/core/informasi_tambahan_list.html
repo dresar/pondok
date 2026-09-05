@@ -1,0 +1,123 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Informasi Tambahan - Admin Panel{% endblock %}
+
+{% block page_title %}Informasi Tambahan{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Informasi Tambahan</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ deleteModal: false, deleteId: null, deleteName: '', formModal: false }">
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 class="text-2xl font-bold text-gray-900">Informasi Tambahan</h2>
+            <a href="{% url 'core:informasi_tambahan_create' %}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                <i class="fas fa-plus mr-2"></i>Tambah
+            </a>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="get" class="mb-6">
+            <input type="text" name="search" value="{{ search }}" placeholder="Cari informasi tambahan..." 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        </form>
+        
+        {% if informasi_list %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for info in informasi_list %}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+                <div class="p-4">
+                    <div class="flex items-center mb-3">
+                        <div class="w-12 h-12 bg-gradient-to-br 
+                            {% if info.warna == 'green' %}from-green-500 to-green-600
+                            {% elif info.warna == 'blue' %}from-blue-500 to-blue-600
+                            {% elif info.warna == 'purple' %}from-purple-500 to-purple-600
+                            {% elif info.warna == 'orange' %}from-orange-500 to-orange-600
+                            {% elif info.warna == 'red' %}from-red-500 to-red-600
+                            {% elif info.warna == 'teal' %}from-teal-500 to-teal-600
+                            {% elif info.warna == 'pink' %}from-pink-500 to-pink-600
+                            {% else %}from-green-500 to-green-600{% endif %}
+                            rounded-full flex items-center justify-center flex-shrink-0 mr-3">
+                            <i class="{{ info.icon|default:'fas fa-info-circle' }} text-xl text-white"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 text-sm flex-1 line-clamp-1">{{ info.judul }}</h3>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-xs text-gray-600 line-clamp-3">{{ info.deskripsi }}</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-xs px-2 py-1 rounded-full 
+                            {% if info.warna == 'green' %}bg-green-100 text-green-700
+                            {% elif info.warna == 'blue' %}bg-blue-100 text-blue-700
+                            {% elif info.warna == 'purple' %}bg-purple-100 text-purple-700
+                            {% elif info.warna == 'orange' %}bg-orange-100 text-orange-700
+                            {% elif info.warna == 'red' %}bg-red-100 text-red-700
+                            {% elif info.warna == 'teal' %}bg-teal-100 text-teal-700
+                            {% elif info.warna == 'pink' %}bg-pink-100 text-pink-700
+                            {% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ info.get_warna_display }}
+                        </span>
+                        <span class="text-xs text-gray-500">Urutan: #{{ info.order }}</span>
+                        {% if info.is_published %}
+                        <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Published</span>
+                        {% else %}
+                        <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">Draft</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                        <a href="{% url 'core:informasi_tambahan_update' info.id %}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                            <i class="fas fa-edit text-sm"></i>
+                        </a>
+                        <button @click="deleteModal = true; deleteId = {{ info.id }}; deleteName = '{{ info.judul }}'" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if informasi_list.has_other_pages %}
+        <div class="mt-6 flex justify-center items-center gap-2">
+            {% if informasi_list.has_previous %}
+            <a href="?page={{ informasi_list.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            <span class="px-4 py-2 text-sm text-gray-700">Halaman {{ informasi_list.number }} dari {{ informasi_list.paginator.num_pages }}</span>
+            {% if informasi_list.has_next %}
+            <a href="?page={{ informasi_list.next_page_number }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-info-circle text-4xl mb-4 text-gray-300"></i>
+            <p>Tidak ada data informasi tambahan</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Delete Modal -->
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Hapus Informasi Tambahan</h3>
+            <p class="text-gray-700 mb-6">Hapus "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="deleteModal = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
+                <form method="post" action="{% url 'core:informasi_tambahan_delete' 0 %}" x-bind:action="'/admin-panel/core/informasi-tambahan/' + deleteId + '/delete/'">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

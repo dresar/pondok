@@ -1,0 +1,364 @@
+{% extends 'admin-panel/base.html' %}
+{% load humanize %}
+
+{% block title %}Pengelola Media Files - Admin Panel{% endblock %}
+
+{% block page_title %}Pengelola Media Files{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Tools</span></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Pengelola Media Files</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Statistik -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Statistik Media Files</h2>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="bg-blue-50 rounded-lg p-4">
+                <p class="text-xs text-blue-700 mb-1">Total Files</p>
+                <p class="text-2xl font-bold text-blue-900">{{ total_files|intcomma }}</p>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4">
+                <p class="text-xs text-green-700 mb-1">File Terpakai</p>
+                <p class="text-2xl font-bold text-green-900">{{ total_used|intcomma }}</p>
+            </div>
+            <div class="bg-red-50 rounded-lg p-4">
+                <p class="text-xs text-red-700 mb-1">File Tidak Terpakai</p>
+                <p class="text-2xl font-bold text-red-900">{{ total_unused|intcomma }}</p>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-4">
+                <p class="text-xs text-purple-700 mb-1">Total Ukuran</p>
+                <p class="text-2xl font-bold text-purple-900">{{ total_size_mb }} MB</p>
+            </div>
+            <div class="bg-orange-50 rounded-lg p-4">
+                <p class="text-xs text-orange-700 mb-1">Ukuran Cache</p>
+                <p class="text-2xl font-bold text-orange-900">{{ unused_size_mb }} MB</p>
+                <p class="text-xs text-orange-600">({{ unused_size_kb }} KB)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- File Tidak Terpakai (Cache) -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">File Tidak Terpakai (Cache)</h2>
+                <p class="text-sm text-gray-600">File yang tidak tersambung ke model manapun dan bisa dihapus</p>
+            </div>
+            {% if total_unused > 0 %}
+            <form method="post" action="{% url 'admin-panel:delete_unused_files' %}" id="delete-form" onsubmit="return confirmDelete()">
+                {% csrf_token %}
+                <input type="hidden" name="files[]" id="files-to-delete" value="">
+                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center">
+                    <i class="fas fa-trash mr-2"></i>Hapus File Terpilih
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        
+        {% if unused_files %}
+        <div class="mb-4 flex items-center gap-4">
+            <label class="flex items-center">
+                <input type="checkbox" id="select-all" onchange="toggleSelectAll()" class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                <span class="ml-2 text-sm text-gray-700">Pilih Semua</span>
+            </label>
+            <span class="text-sm text-gray-600" id="selected-count">0 file dipilih</span>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {% for file in unused_files %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                <!-- Preview Image -->
+                <div class="relative aspect-square bg-gray-100 overflow-hidden">
+                    {% if '.jpg' in file.path|lower or '.png' in file.path|lower or '.webp' in file.path|lower or '.gif' in file.path|lower or '.jpeg' in file.path|lower %}
+                    <img src="{{ file.url }}" alt="{{ file.path }}" 
+                         class="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-300"
+                         onclick="openPreview('{{ file.url }}', '{{ file.path }}')">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <i class="fas fa-file text-4xl text-gray-300"></i>
+                    </div>
+                    {% endif %}
+                    <div class="absolute top-2 right-2">
+                        <input type="checkbox" name="file-checkbox" value="{{ file.path }}" 
+                               onchange="updateSelectedCount()" 
+                               class="file-checkbox w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500 bg-white">
+                    </div>
+                </div>
+                
+                <!-- Info -->
+                <div class="p-3">
+                    <p class="text-xs font-mono text-gray-900 mb-2 line-clamp-2" title="{{ file.path }}">
+                        {{ file.path|truncatechars:40 }}
+                    </p>
+                    <div class="flex items-center justify-between text-xs mb-2">
+                        <span class="text-gray-600">Ukuran:</span>
+                        <span class="font-semibold text-gray-900">{{ file.size_mb }} MB</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                            Tidak Terpakai
+                        </span>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{{ file.url }}" target="_blank" class="flex-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors text-center">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        <button onclick="deleteSingleFile('{{ file.path }}')" class="flex-1 px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if unused_files.has_other_pages %}
+        <div class="mt-6 flex justify-center items-center gap-2">
+            {% if unused_files.has_previous %}
+            <a href="?page={{ unused_files.previous_page_number }}" 
+               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            <span class="px-4 py-2 text-sm text-gray-700">
+                Halaman {{ unused_files.number }} dari {{ unused_files.paginator.num_pages }}
+            </span>
+            {% if unused_files.has_next %}
+            <a href="?page={{ unused_files.next_page_number }}" 
+               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-check-circle text-6xl mb-4 text-green-300"></i>
+            <p class="text-lg font-semibold mb-2">Tidak ada file yang tidak terpakai</p>
+            <p class="text-sm text-gray-400">Semua file media sedang digunakan</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- File Terpakai -->
+    {% if used_files %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">File Terpakai</h2>
+            <p class="text-sm text-gray-600">File yang sedang digunakan oleh model (tidak bisa dihapus)</p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {% for file in used_files %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                <!-- Preview Image -->
+                <div class="relative aspect-square bg-gray-100 overflow-hidden">
+                    {% if '.jpg' in file.path|lower or '.png' in file.path|lower or '.webp' in file.path|lower or '.gif' in file.path|lower or '.jpeg' in file.path|lower %}
+                    <img src="{{ file.url }}" alt="{{ file.path }}" 
+                         class="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-300"
+                         onclick="openPreview('{{ file.url }}', '{{ file.path }}')">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <i class="fas fa-file text-4xl text-gray-300"></i>
+                    </div>
+                    {% endif %}
+                    <div class="absolute top-2 right-2">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-600 text-white">
+                            Terpakai
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Info -->
+                <div class="p-3">
+                    <p class="text-xs font-mono text-gray-900 mb-2 line-clamp-2" title="{{ file.path }}">
+                        {{ file.path|truncatechars:40 }}
+                    </p>
+                    <div class="flex items-center justify-between text-xs mb-2">
+                        <span class="text-gray-600">Ukuran:</span>
+                        <span class="font-semibold text-gray-900">{{ file.size_mb }} MB</span>
+                    </div>
+                    
+                    <!-- Usage Info -->
+                    {% if file.usage %}
+                    <div class="mb-2 p-2 bg-green-50 rounded text-xs">
+                        <p class="font-semibold text-green-900 mb-1">Digunakan di:</p>
+                        {% for usage in file.usage|slice:":2" %}
+                        <p class="text-green-700">
+                            <i class="fas fa-database mr-1"></i>{{ usage.model }}.{{ usage.field }}
+                        </p>
+                        {% endfor %}
+                        {% if file.usage|length > 2 %}
+                        <p class="text-green-600">+{{ file.usage|length|add:"-2" }} lainnya</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="flex gap-2">
+                        <a href="{{ file.url }}" target="_blank" class="flex-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors text-center">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        <button disabled class="flex-1 px-2 py-1 bg-gray-300 text-gray-500 rounded text-xs cursor-not-allowed" title="File sedang digunakan, tidak bisa dihapus">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Preview -->
+<div id="preview-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4" onclick="closePreview()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full" onclick="event.stopPropagation()">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900" id="preview-title">Preview File</h3>
+                <button onclick="closePreview()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <img id="preview-image" src="" alt="Preview" class="w-full h-auto rounded-lg">
+            </div>
+            <div class="flex gap-2">
+                <a id="preview-link" href="" target="_blank" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center text-sm font-medium">
+                    <i class="fas fa-external-link-alt mr-2"></i>Buka di Tab Baru
+                </a>
+                <button onclick="closePreview()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedFiles = new Set();
+
+function toggleSelectAll() {
+    const checkboxes = document.querySelectorAll('.file-checkbox');
+    const selectAll = document.getElementById('select-all').checked;
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll;
+        if (selectAll) {
+            selectedFiles.add(checkbox.value);
+        } else {
+            selectedFiles.delete(checkbox.value);
+        }
+    });
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    selectedFiles.clear();
+    document.querySelectorAll('.file-checkbox:checked').forEach(checkbox => {
+        selectedFiles.add(checkbox.value);
+    });
+    
+    const count = selectedFiles.size;
+    document.getElementById('selected-count').textContent = `${count} file dipilih`;
+    
+    // Update select all checkbox
+    const allChecked = document.querySelectorAll('.file-checkbox').length === document.querySelectorAll('.file-checkbox:checked').length;
+    document.getElementById('select-all').checked = allChecked && count > 0;
+}
+
+function confirmDelete() {
+    if (selectedFiles.size === 0) {
+        alert('Pilih file yang ingin dihapus terlebih dahulu!');
+        return false;
+    }
+    
+    return confirm(`Hapus ${selectedFiles.size} file yang dipilih? Tindakan ini tidak dapat dibatalkan!`);
+}
+
+// Update form sebelum submit
+const deleteForm = document.getElementById('delete-form');
+if (deleteForm) {
+    deleteForm.addEventListener('submit', function(e) {
+        const filesArray = Array.from(selectedFiles);
+        if (filesArray.length === 0) {
+            e.preventDefault();
+            alert('Pilih file yang ingin dihapus terlebih dahulu!');
+            return false;
+        }
+        // Set multiple hidden inputs instead of comma-separated
+        const filesInput = document.getElementById('files-to-delete');
+        if (filesInput) {
+            // Remove existing file inputs
+            document.querySelectorAll('input[name="files[]"]').forEach(input => {
+                if (input.id !== 'files-to-delete') {
+                    input.remove();
+                }
+            });
+            // Add each file as separate input
+            filesArray.forEach(filePath => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'files[]';
+                input.value = filePath;
+                deleteForm.appendChild(input);
+            });
+        }
+    });
+}
+
+function deleteSingleFile(filePath) {
+    if (confirm(`Hapus file "${filePath}"? Tindakan ini tidak dapat dibatalkan!`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "admin-panel:delete_unused_files" %}';
+        
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = '{{ csrf_token }}';
+        form.appendChild(csrf);
+        
+        const fileInput = document.createElement('input');
+        fileInput.type = 'hidden';
+        fileInput.name = 'files[]';
+        fileInput.value = filePath;
+        form.appendChild(fileInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function openPreview(url, path) {
+    document.getElementById('preview-image').src = url;
+    document.getElementById('preview-link').href = url;
+    document.getElementById('preview-title').textContent = path;
+    document.getElementById('preview-modal').classList.remove('hidden');
+}
+
+function closePreview() {
+    document.getElementById('preview-modal').classList.add('hidden');
+}
+
+// Close modal dengan ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closePreview();
+    }
+});
+
+// Initialize
+document.querySelectorAll('.file-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedCount);
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,3101 @@
+{% extends 'public/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Beranda - {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren Modern Raudhatussalam{% endif %}{% endblock %}
+
+{% block content %}
+{% load static %}
+
+<!-- Hero Section with Slideshow -->
+<section class="hero-section relative min-h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-0" id="beranda">
+    <div class="hero-slideshow absolute inset-0 w-full h-full">
+        {% if hero_images %}
+            {% for hero in hero_images %}
+                {% if hero.image %}
+                    <div class="hero-slide {% if forloop.first %}active{% endif %}" data-title="{{ hero.title|default:'' }}" data-subtitle="{{ hero.subtitle|default:'' }}">
+                        <img src="{{ hero.image.url }}" alt="{{ hero.title|default:'Hero Image' }}" class="w-full h-full object-cover object-center" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+                    </div>
+                {% endif %}
+            {% endfor %}
+            {% if not hero_images %}
+            <div class="hero-slide active" data-title="Pendaftaran Santri Baru" data-subtitle="2025/2026">
+                <div class="w-full h-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                    <div class="text-center text-gray-900">
+                        <i class="fas fa-image text-4xl md:text-6xl mb-2 opacity-50"></i>
+                        <p class="text-sm md:text-base">Gambar hero belum tersedia</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="hero-slide active" data-title="Pendaftaran Santri Baru" data-subtitle="2025/2026">
+                <div class="w-full h-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                    <div class="text-center text-gray-900">
+                        <i class="fas fa-image text-4xl md:text-6xl mb-2 opacity-50"></i>
+                        <p class="text-sm md:text-base">Gambar hero belum tersedia</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Hero Content -->
+    <div class="hero-content relative z-10 text-center text-gray-900 px-4 py-4 md:py-6 max-w-5xl mx-auto -mt-16 md:-mt-20">
+        <h1 class="hero-title text-2xl md:text-3xl lg:text-4xl font-extrabold mb-2 md:mb-3 drop-shadow-2xl leading-tight">
+            <span id="hero-title-text">{% if hero_images and hero_images.0.title %}{{ hero_images.0.title }}{% elif settings and settings.hero_title %}{{ settings.hero_title }}{% else %}Pendaftaran Santri Baru{% endif %}</span>
+        </h1>
+        <h2 class="hero-subtitle text-lg md:text-xl lg:text-2xl mb-3 md:mb-4 drop-shadow-xl font-semibold">
+            <span id="hero-subtitle-text">{% if hero_images and hero_images.0.subtitle %}{{ hero_images.0.subtitle }}{% elif settings and settings.hero_subtitle %}{{ settings.hero_subtitle }}{% else %}2025/2026{% endif %}</span>
+        </h2>
+        <p class="hero-tagline text-sm md:text-base lg:text-lg mb-8 md:mb-10 drop-shadow-lg max-w-3xl mx-auto leading-relaxed">
+            {% if settings and settings.hero_tagline %}{{ settings.hero_tagline }}{% else %}Membentuk Generasi Unggul yang Berkarakter Islami{% endif %}
+        </p>
+        <div class="cta-buttons flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
+            <a href="{% url 'users:login' %}" class="cta-button primary bg-white text-green-600 hover:bg-green-50 px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-bold rounded-full shadow-2xl hover:shadow-green-500/50 transition-all duration-300 flex items-center transform hover:scale-105">
+                <i class="fas fa-sign-in-alt mr-2 text-lg"></i>
+                <span>DAFTAR SEKARANG!</span>
+            </a>
+            <a href="{% url 'public:home' %}#alur" class="cta-button secondary bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-bold rounded-full shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 flex items-center transform hover:scale-105">
+                <i class="fas fa-download mr-2 text-lg"></i>
+                <span>ALUR PENDAFTARAN</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Pagination Dots -->
+    {% if hero_images|length > 1 %}
+    <div class="hero-pagination absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2 md:gap-3">
+        {% for hero in hero_images %}
+            {% if hero.image %}
+            <button class="hero-dot w-2.5 h-2.5 md:w-3 md:h-3 rounded-full {% if forloop.first %}bg-white shadow-lg{% else %}bg-white/50{% endif %} transition-all duration-300 hover:bg-white/80" data-slide="{{ forloop.counter0 }}" aria-label="Slide {{ forloop.counter }}"></button>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+
+<!-- Contact Bar Section -->
+<section class="bg-gradient-to-r from-green-100 to-green-200 text-gray-900 py-2 md:py-3">
+    <div class="container mx-auto px-3">
+        <h3 class="text-sm md:text-sm font-bold text-center mb-2 md:mb-3">Hubungi Panitia Pendaftaran</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 max-w-4xl mx-auto">
+            {% for contact in contact_persons %}
+            <div class="bg-white/90 backdrop-blur-sm rounded-lg p-3 md:p-4 hover:bg-white transition-all shadow-sm border border-gray-100">
+                <div class="flex items-center space-x-3">
+                    {% if contact.foto and contact.foto.url %}
+                    <img src="{{ contact.foto.url }}" alt="{{ contact.nama }}" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border border-green-100 flex-shrink-0" loading="lazy">
+                    {% else %}
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 text-white">
+                        <i class="fas fa-user text-sm md:text-base"></i>
+                    </div>
+                    {% endif %}
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold text-sm md:text-base text-gray-900 truncate">{{ contact.nama }}</div>
+                        <a href="https://wa.me/{{ contact.get_whatsapp_number|default:contact.no_hp|urlencode }}" target="_blank" rel="noopener noreferrer"
+                           class="text-green-700 hover:text-green-800 transition-colors flex items-center mt-1 text-xs md:text-sm">
+                            <i class="fab fa-whatsapp mr-1"></i>
+                            <span class="truncate">{{ contact.no_hp|default:"-" }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-1 sm:col-span-2 text-center py-4 text-gray-700">
+                <i class="fas fa-user-circle text-sm md:text-sm mb-2"></i>
+                <p class="text-xs md:text-sm">Data contact person belum tersedia</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Sejarah Section -->
+<section class="section bg-white py-4 md:py-6" id="sejarah">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4 md:mb-6">
+            <h2 class="section-title text-lg md:text-2xl font-bold text-gray-900 mb-2">Sejarah Singkat</h2>
+            <p class="section-subtitle text-sm md:text-base text-gray-600">Perjalanan Pendirian {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren{% endif %}</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            {% if sejarah %}
+            <!-- Mobile: Timeline View -->
+            <div class="md:hidden">
+                <div class="timeline-mobile relative pl-6">
+                {% for item in sejarah %}
+                    <div class="timeline-item-mobile relative mb-4 pb-4 {% if not forloop.last %}border-l-2 border-green-500{% endif %}">
+                        <div class="absolute -left-4 top-0 w-8 h-8 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white shadow-md z-10">
+                            <i class="{{ item.icon|default:'fas fa-history' }} text-xs"></i>
+                    </div>
+                        <div class="bg-white rounded-lg shadow-sm p-3 ml-2 border-l-3 border-green-500">
+                            <h3 class="text-sm font-bold text-gray-900 mb-2">{{ item.judul }}</h3>
+                            <p class="text-xs text-gray-600 leading-relaxed">{{ item.deskripsi|linebreaks }}</p>
+                </div>
+                </div>
+                {% endfor %}
+            </div>
+            </div>
+            
+            <!-- Desktop: Card Grid View -->
+            <div class="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                {% for item in sejarah %}
+                <div class="timeline-card fade-in bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border-l-4 border-green-500">
+                    <div class="p-4 md:p-5">
+                        <div class="flex items-center mb-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white shadow-lg mr-3 flex-shrink-0">
+                                <i class="{{ item.icon|default:'fas fa-history' }}"></i>
+                            </div>
+                            <h3 class="text-base md:text-lg font-bold text-gray-900 flex-1">{{ item.judul }}</h3>
+                        </div>
+                        <div class="text-sm text-gray-600 leading-relaxed">
+                            {{ item.deskripsi|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 md:py-12 text-gray-500">
+                <i class="fas fa-history text-4xl md:text-6xl mb-3 text-gray-300"></i>
+                <p class="text-sm md:text-base">Data sejarah belum tersedia</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Sejarah Gallery Slideshow Section -->
+{% if sejarah %}
+    {% for item in sejarah %}
+        {% if item.gambar.all %}
+            {% if forloop.first %}
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="sejarah-gallery">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4 md:mb-6">
+            <h2 class="section-title text-lg md:text-2xl font-bold text-gray-900 mb-2">Galeri Sejarah</h2>
+            <p class="section-subtitle text-sm md:text-base text-gray-600">Dokumentasi Perjalanan {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren{% endif %}</p>
+        </div>
+        
+        <div class="max-w-4xl mx-auto -mx-2 sm:mx-auto sm:px-2 md:px-4">
+            <div class="relative">
+                <!-- Slideshow Container -->
+                <div class="sejarah-gallery-slideshow relative overflow-hidden rounded-lg sm:rounded-xl shadow-lg sm:shadow-xl bg-white">
+                    <div class="sejarah-gallery-track flex transition-transform duration-500 ease-in-out" style="transform: translateX(0);">
+                        {% for timeline_item in sejarah %}
+                            {% for gambar in timeline_item.gambar.all %}
+                            <div class="sejarah-gallery-slide min-w-full flex-shrink-0 px-2 sm:px-0">
+                                <div class="relative w-full mx-auto sejarah-gallery-image-wrapper cursor-pointer z-0" data-image-url="{{ gambar.gambar.url }}" data-image-title="{{ timeline_item.judul }}" style="position: relative;">
+                                    <img src="{{ gambar.gambar.url }}" alt="{{ timeline_item.judul }}" class="absolute inset-0 w-full h-full object-cover object-center rounded-lg pointer-events-none" loading="lazy">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg z-10"></div>
+                                    <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-white/95 backdrop-blur-sm text-gray-900 transform translate-y-full hover:translate-y-0 transition-transform duration-300 pointer-events-none rounded-b-lg z-20">
+                                        <p class="text-sm sm:text-base font-semibold">{{ timeline_item.judul }}</p>
+                                        <p class="text-xs text-gray-700 mt-1">Klik untuk memperbesar</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Navigation Arrows -->
+                    <button class="sejarah-gallery-prev absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white backdrop-blur-sm text-gray-800 p-2 sm:p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110">
+                        <i class="fas fa-chevron-left text-sm sm:text-base"></i>
+                    </button>
+                    <button class="sejarah-gallery-next absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white backdrop-blur-sm text-gray-800 p-2 sm:p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110">
+                        <i class="fas fa-chevron-right text-sm sm:text-base"></i>
+                    </button>
+                    
+                    <!-- Pagination Dots -->
+                    <div class="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 flex-wrap justify-center max-w-full px-2">
+                        {% for timeline_item in sejarah %}
+                            {% for gambar in timeline_item.gambar.all %}
+                            <button class="sejarah-gallery-dot w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-white/50 hover:bg-white/80 transition-all duration-300 {% if forloop.parentloop.first and forloop.first %}bg-white{% endif %}" data-slide-index="{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}"></button>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+<!-- Why Choose Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="why-choose">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Mengapa Memilih Raudhatussalam?</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Keunggulan {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren{% endif %}</p>
+        </div>
+        
+        <div class="max-w-4xl mx-auto grid grid-cols-1 gap-4 md:gap-6">
+            <div class="card fade-in bg-white rounded-lg shadow-md p-4 md:p-6 hover:shadow-lg transition-all duration-300">
+                <div class="feature-icon w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white text-xl md:text-2xl mb-4 mx-auto">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 text-center">Kualitas Pendidikan dan Pengajaran</h3>
+                <ul class="space-y-3 text-sm md:text-base text-gray-600">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Memadukan Tripusat Pendidikan dalam satu lingkungan</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Kurikulum modern yang mencakup perkembangan moral dan spiritual</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Kompetensi Al-Qur'an, bahasa Arab dan pengetahuan agama</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Program dan kegiatan yang berimbang</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card fade-in bg-white rounded-lg shadow-md p-4 md:p-6 hover:shadow-lg transition-all duration-300">
+                <div class="feature-icon w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xl md:text-2xl mb-4 mx-auto">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 text-center">Kualitas Lulusan</h3>
+                <ul class="space-y-3 text-sm md:text-base text-gray-600">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Mencetak generasi Qur'ani yang bertaqwa</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Lulusan mandiri dan bertanggung jawab</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Karakter kepemimpinan profesional dan islami</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Mampu melanjutkan ke jenjang yang lebih tinggi</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card fade-in bg-white rounded-lg shadow-md p-4 md:p-6 hover:shadow-lg transition-all duration-300">
+                <div class="feature-icon w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl md:text-2xl mb-4 mx-auto">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 text-center">Kualitas Lokasi</h3>
+                <ul class="space-y-3 text-sm md:text-base text-gray-600">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Lingkungan yang luas, bersih, asri dan nyaman</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Lokasi strategis di pinggir jalan raya</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Sumber air yang memadai</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                        <span>Sarana prasarana yang memadai</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Visi Misi Section -->
+<section class="section bg-white py-4 md:py-6" id="visi-misi">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4 md:mb-6">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Visi dan Misi</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Landasan dan Arah Pendidikan</p>
+        </div>
+        
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <div class="visi-box fade-in bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-sm p-4 md:p-6 text-white">
+                <div class="visi-icon w-12 h-12 md:w-16 md:h-16 bg-white/20 rounded-full flex items-center justify-center text-white text-lg md:text-xl mb-3 mx-auto">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h3 class="text-base md:text-xl font-bold mb-3 md:mb-4 text-center">Visi</h3>
+                {% if visi_misi and visi_misi.visi %}
+                <div class="visi-content text-xs md:text-base leading-relaxed prose prose-invert max-w-none">{{ visi_misi.visi|safe }}</div>
+                {% else %}
+                <p class="text-xs md:text-base leading-relaxed">Sebagai lembaga pendidikan pencetak kader-kader pemimpin umat, menjadi tempat ibadah talabul 'ilmi dan pengetahuan islam, bahasa Al-Qur'an dan pengetahuan umum, dengan jiwa tetap berjiwa pondok.</p>
+                {% endif %}
+            </div>
+            
+            <div class="misi-box fade-in bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm p-4 md:p-6 text-white">
+                <div class="misi-icon w-12 h-12 md:w-16 md:h-16 bg-white/20 rounded-full flex items-center justify-center text-white text-lg md:text-xl mb-3 mx-auto">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <h3 class="text-base md:text-xl font-bold mb-3 md:mb-4 text-center">Misi</h3>
+                {% if visi_misi and visi_misi.misi %}
+                <div class="misi-content text-xs md:text-base leading-relaxed space-y-2 prose prose-invert max-w-none">{{ visi_misi.misi|safe }}</div>
+                {% else %}
+                <ul class="space-y-2 text-xs md:text-base">
+                    <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">1</span>
+                        <span>Mempersiapkan pribadi umat yang berilmu pengetahuan, berakhlak mulia dan berkhidmat kepada agama, masyarakat, dan negara.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">2</span>
+                        <span>Mendidik dan mengembangkan generasi mu'min muslimin yang berbudi tinggi, berbadan sehat, berpengetahuan luas, dan berfikiran bebas.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">3</span>
+                        <span>Mengajarkan ilmu pengetahuan agama dan umum secara seimbang menuju terbentuknya ulama yang intelek</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">4</span>
+                        <span>Mewujudkan warga negara Indonesia yang berkepribadian Indonesia dan bertaqwa kepada Allah SWT</span>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Program Unggulan Pesantren Section (dengan Tab) -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="program">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-6">
+            <h2 class="section-title section-title-spaced text-xl md:text-3xl font-bold text-gray-900 mb-2">Program Unggulan Pesantren</h2>
+            <p class="section-subtitle section-subtitle-spaced text-sm md:text-lg text-gray-600">Lembaga Pendidikan & Kegiatan</p>
+        </div>
+        
+        <div class="max-w-7xl mx-auto">
+            <!-- Tab Buttons -->
+            <div class="flex justify-center items-center mb-6 border-b-2 border-gray-300 gap-2 bg-white rounded-lg p-2 shadow-lg">
+                <button 
+                    onclick="switchProgramTab('pendidikan')"
+                    id="tab-pendidikan"
+                    class="px-6 py-3 text-sm md:text-base font-bold transition-all duration-300 border-b-4 border-green-500 text-green-700 bg-green-100 hover:bg-green-200 rounded-lg shadow-md min-w-[200px] cursor-pointer">
+                    <i class="fas fa-school mr-2 text-green-600"></i>Program Pendidikan
+                </button>
+                <button 
+                    onclick="switchProgramTab('kegiatan')"
+                    id="tab-kegiatan"
+                    class="px-6 py-3 text-sm md:text-base font-semibold transition-all duration-300 text-gray-700 hover:text-green-700 hover:bg-gray-100 rounded-lg border-b-4 border-transparent hover:border-gray-400 shadow-md bg-white min-w-[150px] cursor-pointer">
+                    <i class="fas fa-calendar-alt mr-2"></i>Kegiatan
+                </button>
+            </div>
+            
+            <!-- Notification Toast -->
+            <div id="tab-notification" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 opacity-0 transform -translate-y-4 transition-all duration-300 pointer-events-none">
+                <div class="bg-green-600 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 min-w-[250px]">
+                    <i class="fas fa-check-circle text-lg"></i>
+                    <span id="tab-notification-text" class="font-medium"></span>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Program Pendidikan -->
+            <div id="content-pendidikan" class="tab-content opacity-100 transform translate-y-0 transition-all duration-300">
+                <div class="max-w-5xl mx-auto">
+                    <!-- Icon Header -->
+                    <div class="flex justify-center mb-6">
+                        <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl shadow-lg">
+                            <i class="fas fa-school"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Program List -->
+                    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 fade-in">
+                        <h3 class="text-base md:text-lg font-bold text-gray-900 mb-4 text-center">Program Reguler</h3>
+                        <ol class="program-list space-y-2">
+                            {% for program in programs %}
+                            <li class="flex items-center justify-between p-3 md:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all duration-300 border border-gray-200">
+                                <div class="flex items-center gap-3 md:gap-4 flex-1">
+                                    <div class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base flex-shrink-0">
+                                        {{ forloop.counter }}
+                                    </div>
+                                    <span class="program-title font-semibold text-gray-900 text-sm md:text-base">{{ program.nama }}</span>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                                {% if program.akreditasi %}
+                                    <span class="program-badge bg-blue-600 text-white px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold">
+                                        Akreditasi {{ program.akreditasi }}
+                                    </span>
+                                {% endif %}
+                                    {% if program.gambar_program.all %}
+                                    <button class="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center program-gallery-btn" 
+                                            title="Lihat Galeri"
+                                            data-program-id="{{ program.id }}">
+                                        <i class="fas fa-images text-xs md:text-sm"></i>
+                                    </button>
+                                    <script type="application/json" class="program-images-data" data-program-id="{{ program.id }}">
+                                    [{% for img in program.gambar_program.all %}{"url": "{{ img.gambar.url|escapejs }}", "alt": "{{ img.alt_text|default:program.nama|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+                                    </script>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="flex items-center justify-center p-6 text-gray-500">
+                                <i class="fas fa-school text-2xl mr-3"></i>
+                                <span class="text-sm md:text-base">Data program pendidikan belum tersedia</span>
+                            </li>
+                            {% endfor %}
+                        </ol>
+                        
+                        <div class="mt-4 md:mt-6 p-3 md:p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                            <div class="flex items-start">
+                                <i class="fas fa-chalkboard-teacher text-base md:text-lg text-blue-600 mr-3 mt-1 flex-shrink-0"></i>
+                                <div>
+                                    <h4 class="text-sm md:text-base font-bold text-gray-900 mb-2">Tenaga Pendidik</h4>
+                                    <p class="text-xs md:text-sm text-gray-700 leading-relaxed">Tenaga pendidik adalah mereka yang bertugas mengemban amanat untuk melakukan transformasi fikir, sikap, dan moralitas kepada santri/wati dan masyarakat sekitar, mereka berasal dari lulusan {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}pesantren{% endif %}, Pondok Modern Darussalam Gontor Ponorogo dan Mantingan, Universitas Al-Azhar Kairo dan perguruan-perguruan tinggi swasta/negeri di Indonesia</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Program/Kegiatan -->
+            <div id="content-kegiatan" class="tab-content hidden opacity-0 translate-y-4 transition-all duration-300">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Grid Program/Kegiatan -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                        {% for program in program_kegiatan %}
+                        <div class="program-kegiatan-card bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 cursor-pointer transform hover:scale-105 group" data-program-id="{{ program.id }}">
+                            <!-- Gambar -->
+                            <div class="relative h-28 sm:h-32 md:h-40 bg-gradient-to-br from-green-500 to-blue-500 overflow-hidden">
+                                {% if program.gambar %}
+                                <img src="{{ program.gambar.url }}" alt="{{ program.nama }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy">
+                                {% else %}
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <i class="fas fa-calendar-alt text-4xl md:text-5xl text-white/50"></i>
+                                </div>
+                                {% endif %}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                {% if program.is_featured %}
+                                <div class="absolute top-2 right-2 z-10">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-400 text-yellow-900 shadow-md">
+                                        <i class="fas fa-star"></i> Unggulan
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% if program.tanggal_mulai %}
+                                <div class="absolute bottom-2 left-2 right-2 z-10 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                    <div class="bg-white/90 backdrop-blur-sm rounded-lg p-2 text-center">
+                                        <p class="text-xs font-semibold text-gray-900">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            {{ program.tanggal_mulai|date:"d M Y" }}
+                                            {% if program.tanggal_selesai %}
+                                            - {{ program.tanggal_selesai|date:"d M Y" }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Content -->
+                            <div class="p-3 md:p-4">
+                                <h3 class="font-bold text-gray-900 text-sm md:text-base mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">{{ program.nama }}</h3>
+                                {% if program.deskripsi %}
+                                <p class="text-xs text-gray-600 line-clamp-2 mb-3">{{ program.deskripsi|striptags|truncatewords:15 }}</p>
+                                {% endif %}
+                                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                    <span class="text-xs text-gray-500">
+                                        <i class="fas fa-eye mr-1"></i>Detail
+                                    </span>
+                                    <i class="fas fa-arrow-right text-xs text-green-600 group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- JSON Data untuk Modal -->
+                        <script type="application/json" class="program-kegiatan-data" data-program-json-id="{{ program.id }}">
+                        {
+                            "id": {{ program.id }},
+                            "nama": "{{ program.nama|escapejs }}",
+                            "deskripsi": "{{ program.deskripsi|striptags|escapejs|truncatewords:100 }}",
+                            "gambar": {% if program.gambar %}"{{ program.gambar.url|escapejs }}"{% else %}""{% endif %},
+                            "tanggal_mulai": {% if program.tanggal_mulai %}"{{ program.tanggal_mulai|date:'d M Y' }}"{% else %}""{% endif %},
+                            "tanggal_selesai": {% if program.tanggal_selesai %}"{{ program.tanggal_selesai|date:'d M Y' }}"{% else %}""{% endif %},
+                            "meta_description": "{{ program.meta_description|escapejs }}"
+                        }
+                        </script>
+                        {% empty %}
+                        <div class="col-span-full text-center py-12 text-gray-500">
+                            <i class="fas fa-calendar-alt text-4xl mb-4 text-gray-300"></i>
+                            <p class="text-sm md:text-base">Data program/kegiatan belum tersedia</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Program Gallery Modal -->
+    <div id="program-gallery-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-4" onclick="closeProgramGallery()">
+        <div class="relative modal-container w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto" onclick="event.stopPropagation()">
+            <!-- Close Button -->
+            <button onclick="closeProgramGallery()" class="absolute top-4 right-4 z-20 bg-gray-800 hover:bg-gray-900 text-white p-2 rounded-full transition-colors shadow-lg">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <!-- Main Image -->
+            <div class="relative bg-gray-100 rounded-lg">
+                <img id="program-gallery-main-img" src="" alt="" class="w-full h-auto max-h-[50vh] sm:max-h-[60vh] md:max-h-[70vh] lg:max-h-[75vh] xl:max-h-[80vh] object-contain rounded-lg shadow-2xl">
+                
+                <!-- Navigation Arrows -->
+                <button id="program-gallery-prev" onclick="changeProgramImage(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors hidden shadow-lg">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="program-gallery-next" onclick="changeProgramImage(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors hidden shadow-lg">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <!-- Thumbnails -->
+            <div id="program-gallery-thumbnails" class="flex justify-center gap-2 mt-4 overflow-x-auto pb-2">
+            </div>
+            
+            <!-- Image Counter -->
+            <div class="text-center mt-2 text-gray-900">
+                <span id="program-gallery-counter"></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Program/Kegiatan Detail Modal -->
+    <div id="program-kegiatan-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-3 md:p-4" onclick="closeProgramKegiatanModal(event)">
+        <div class="relative modal-container w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto max-h-[85vh] sm:max-h-[90vh] overflow-hidden bg-white rounded-lg sm:rounded-xl shadow-2xl flex flex-col" onclick="event.stopPropagation()">
+            <!-- Modal Content -->
+            <div id="program-kegiatan-modal-content" class="overflow-y-auto flex-1">
+                <!-- Content akan diisi oleh JavaScript -->
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+                    <p class="mt-4 text-gray-600">Memuat data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Tenaga Pengajar Section -->
+{% if featured_pengajar %}
+<section class="section bg-white py-4 md:py-6" id="tenaga-pengajar">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4 md:mb-6">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Tenaga Pengajar</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Ustadz dan Ustadzah {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren{% endif %}</p>
+        </div>
+        
+        <div class="max-w-7xl mx-auto">
+            <!-- Mobile: Grid Layout -->
+            <div class="md:hidden grid grid-cols-2 gap-3 mb-4">
+                {% for pengajar in featured_pengajar %}
+                <div class="pengajar-card bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 cursor-pointer transform active:scale-95" onclick="openPengajarModal({{ pengajar.id }})">
+                    <!-- Foto Full Card -->
+                    <div class="relative w-full h-32 overflow-hidden bg-gradient-to-br from-green-400 to-blue-500">
+                        {% if pengajar.foto %}
+                        <img src="{{ pengajar.foto.url }}" alt="{{ pengajar.nama_lengkap }}" class="pengajar-foto w-full h-full object-cover" loading="lazy">
+                        {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                            <i class="fas fa-user text-4xl text-white/50"></i>
+                        </div>
+                        {% endif %}
+                        <!-- Social Media Icons - Selalu Tampil -->
+                        {% if pengajar.whatsapp or pengajar.facebook or pengajar.instagram %}
+                        <div class="absolute bottom-1 left-0 right-0 flex justify-center gap-1 z-10">
+                            <div class="bg-white/95 backdrop-blur-sm rounded px-1.5 py-0.5 flex gap-1 shadow-md">
+                                {% if pengajar.whatsapp %}
+                                <a href="https://wa.me/{{ pengajar.whatsapp }}" target="_blank" rel="noopener noreferrer" class="text-green-600 hover:text-green-700 transition-colors" onclick="event.stopPropagation();" title="WhatsApp">
+                                    <i class="fab fa-whatsapp text-xs"></i>
+                                </a>
+                                {% endif %}
+                                {% if pengajar.facebook %}
+                                <a href="{{ pengajar.facebook }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 transition-colors" onclick="event.stopPropagation();" title="Facebook">
+                                    <i class="fab fa-facebook-f text-xs"></i>
+                                </a>
+                                {% endif %}
+                                {% if pengajar.instagram %}
+                                <a href="{{ pengajar.instagram }}" target="_blank" rel="noopener noreferrer" class="text-pink-600 hover:text-pink-700 transition-colors" onclick="event.stopPropagation();" title="Instagram">
+                                    <i class="fab fa-instagram text-xs"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-2">
+                        <!-- Nama -->
+                        <h3 class="font-bold text-gray-900 text-xs mb-1 text-center line-clamp-1">{{ pengajar.nama_lengkap }}</h3>
+                        
+                        <!-- Divider -->
+                        <div class="border-t border-gray-200 my-1"></div>
+                        
+                        <!-- Bagian/Jabatan -->
+                        {% if pengajar.bagian_jabatan %}
+                        <p class="text-xs text-gray-700 mb-1 text-center font-medium line-clamp-1">{{ pengajar.bagian_jabatan.nama }}</p>
+                        {% endif %}
+                        
+                        <!-- Badge Jenis Kelamin -->
+                        <div class="flex justify-center mb-1">
+                            <span class="px-1.5 py-0.5 text-xs font-semibold rounded-full {% if pengajar.jenis_kelamin == 'L' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                                {{ pengajar.get_jenis_kelamin_display_short }}
+                            </span>
+                        </div>
+                        
+                        <!-- Motto -->
+                        {% if pengajar.motto %}
+                        <p class="text-xs text-gray-600 italic text-center line-clamp-2 mt-1">"{{ pengajar.motto|truncatewords:8 }}"</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Desktop: Grid Layout (6 pengajar) -->
+            <div class="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 mb-6">
+                {% for pengajar in featured_pengajar %}
+                <div class="pengajar-card bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 cursor-pointer transform hover:scale-105 active:scale-95" onclick="openPengajarModal({{ pengajar.id }})">
+                    <!-- Foto Full Card -->
+                    <div class="relative w-full h-40 md:h-48 overflow-hidden bg-gradient-to-br from-green-400 to-blue-500">
+                        {% if pengajar.foto %}
+                        <img src="{{ pengajar.foto.url }}" alt="{{ pengajar.nama_lengkap }}" class="pengajar-foto w-full h-full object-cover" loading="lazy">
+                        {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                            <i class="fas fa-user text-5xl md:text-6xl text-white/50"></i>
+                        </div>
+                        {% endif %}
+                        <!-- Social Media Icons - Selalu Tampil -->
+                        {% if pengajar.whatsapp or pengajar.facebook or pengajar.instagram %}
+                        <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
+                            <div class="bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 flex gap-1.5 shadow-md">
+                                {% if pengajar.whatsapp %}
+                                <a href="https://wa.me/{{ pengajar.whatsapp }}" target="_blank" rel="noopener noreferrer" class="text-green-600 hover:text-green-700 transition-colors" onclick="event.stopPropagation();" title="WhatsApp">
+                                    <i class="fab fa-whatsapp text-xs"></i>
+                                </a>
+                                {% endif %}
+                                {% if pengajar.facebook %}
+                                <a href="{{ pengajar.facebook }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 transition-colors" onclick="event.stopPropagation();" title="Facebook">
+                                    <i class="fab fa-facebook-f text-xs"></i>
+                                </a>
+                                {% endif %}
+                                {% if pengajar.instagram %}
+                                <a href="{{ pengajar.instagram }}" target="_blank" rel="noopener noreferrer" class="text-pink-600 hover:text-pink-700 transition-colors" onclick="event.stopPropagation();" title="Instagram">
+                                    <i class="fab fa-instagram text-xs"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-3 md:p-4">
+                        <!-- Nama -->
+                        <h3 class="font-bold text-gray-900 text-sm md:text-base mb-1 text-center line-clamp-1">{{ pengajar.nama_lengkap }}</h3>
+                        
+                        <!-- Divider -->
+                        <div class="border-t border-gray-200 my-2"></div>
+                        
+                        <!-- Bagian/Jabatan -->
+                        {% if pengajar.bagian_jabatan %}
+                        <p class="text-xs text-gray-700 mb-2 text-center font-medium">{{ pengajar.bagian_jabatan.nama }}</p>
+                        {% endif %}
+                        
+                        <!-- Badge Jenis Kelamin -->
+                        <div class="flex justify-center mb-2">
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full {% if pengajar.jenis_kelamin == 'L' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                                {{ pengajar.get_jenis_kelamin_display_short }}
+                            </span>
+                        </div>
+                        
+                        <!-- Motto -->
+                        {% if pengajar.motto %}
+                        <p class="text-xs text-gray-600 italic text-center line-clamp-2 mt-2">"{{ pengajar.motto|truncatewords:10 }}"</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Button Lihat Semua -->
+            <div class="text-center">
+                <a href="{% url 'public:tenaga_pengajar_list' %}" class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm md:text-base font-semibold shadow-md hover:shadow-lg">
+                    <i class="fas fa-users mr-2"></i>
+                    <span>Lihat Semua Tenaga Pengajar</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pengajar Detail Modal -->
+    <div id="pengajar-modal" class="fixed inset-0 bg-black/60 z-50 hidden overflow-y-auto" onclick="closePengajarModal(event)">
+        <div class="w-full min-h-full md:min-h-0 md:flex md:items-center md:justify-center md:p-4" onclick="event.stopPropagation()">
+            <div class="bg-white w-full md:max-w-lg lg:max-w-xl xl:max-w-2xl md:mx-auto md:rounded-xl shadow-2xl h-screen md:h-auto md:max-h-[90vh] overflow-hidden flex flex-col">
+                <!-- Modal Content -->
+                <div id="pengajar-modal-content" class="overflow-y-auto flex-1 -webkit-overflow-scrolling-touch">
+                    <!-- Content akan diisi oleh JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- KMI Section -->
+<section class="section bg-white py-4 md:py-6" id="kmi">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4 md:mb-6">
+            <h2 class="section-title text-2xl md:text-4xl font-bold text-gray-900 mb-2">KMI</h2>
+            <p class="section-subtitle text-base md:text-xl text-gray-600 arabic-text">Kulliyatu-l-Mua'llimin wal mua'llimat Al-Islamiyah</p>
+        </div>
+        
+        <div class="max-w-4xl mx-auto">
+            <!-- Visi KMI -->
+            <div class="visi-box fade-in bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6 text-white">
+                <div class="kmi-icon w-12 h-12 md:w-16 md:h-16 bg-white/20 rounded-full flex items-center justify-center text-white text-lg md:text-xl mb-3 mx-auto">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                <h3 class="text-base md:text-xl font-bold mb-3 md:mb-4 text-center">Visi KMI</h3>
+                    {% if kmi and kmi.visi_kmi %}
+                <div class="kmi-visi-content text-xs md:text-base leading-relaxed prose prose-invert max-w-none">{{ kmi.visi_kmi|safe }}</div>
+                    {% else %}
+                <p class="text-xs md:text-base leading-relaxed text-center">Mewujudkan generasi beriman dan berilmu pengetahuan serta mampu menghadapi tantangan global</p>
+                    {% endif %}
+                </div>
+                
+            <!-- Profil KMI -->
+            <div class="profile-kmi fade-in bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-4 md:p-6 text-white">
+                <div class="kmi-icon w-12 h-12 md:w-16 md:h-16 bg-white/20 rounded-full flex items-center justify-center text-white text-lg md:text-xl mb-3 mx-auto">
+                        <i class="fas fa-users"></i>
+                    </div>
+                <h3 class="text-base md:text-xl font-bold mb-3 md:mb-4 text-center">Profil KMI Raudhatussalam</h3>
+                    {% if kmi and kmi.profil_kmi %}
+                <div class="kmi-profil-content text-xs md:text-base leading-relaxed prose prose-invert max-w-none">{{ kmi.profil_kmi|safe }}</div>
+                    {% else %}
+                <ul class="space-y-3 text-xs md:text-base">
+                        <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">1</span>
+                            <span><strong>Kulliyatu-l-Mu'allimin wal Mu'alliat Al-Islamiyah (KMI)</strong> menawarkan program pendidikan 6 tahun untuk lulusan SD/MI, dan 3 tahun untuk lulusan SMP/MTs.</span>
+                        </li>
+                        <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">2</span>
+                            <span><strong>Kurikulum terpadu.</strong> Mengintegrasikan kurikulum pesantren dengan kurikulum nasional, memberikan pendidikan seimbang dan berkualitas.</span>
+                        </li>
+                        <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">3</span>
+                            <span><strong>Pengelolaan santri 24 jam.</strong> Dengan sistem pengelolaan santri selama 24 jam, KMI memastikan pendidikan yang menyeluruh.</span>
+                        </li>
+                        <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">4</span>
+                            <span><strong>Menyiapkan generasi berkualitas.</strong> Kami berkomitmen untuk menyiapkan generasi yang beraqidah shohihah, berakhlak mulia, gemar beribadah, berilmu, dan berjiwa terampil.</span>
+                        </li>
+                        <li class="flex items-start">
+                        <span class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs md:text-sm">5</span>
+                            <span><strong>Lulusan siap melanjutkan atau mengabdi.</strong> Lulusan KMI Raudhatussalam diharapkan mampu melanjutkan pendidikan ke perguruan tinggi ataupun aktif berperan di masyarakat.</span>
+                        </li>
+                    </ul>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Fasilitas Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="fasilitas">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Fasilitas Pendukung</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Sarana dan Prasarana Pesantren</p>
+        </div>
+        
+        <div class="max-w-5xl mx-auto">
+            <!-- Notification/Panduan -->
+            <div id="fasilitas-notification" class="mb-4 bg-blue-50 border-l-4 border-blue-500 p-3 md:p-4 rounded-lg fade-in">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-blue-500 text-lg mr-3 mt-0.5 flex-shrink-0"></i>
+                    <div class="flex-1">
+                        <p class="text-sm md:text-base text-gray-700">
+                            <strong>Panduan:</strong> Klik pada icon fasilitas untuk melihat gambar.
+                        </p>
+                    </div>
+                    <button onclick="closeFasilitasNotification()" class="text-gray-400 hover:text-gray-600 ml-2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {% for fasil in fasilitas %}
+                <div class="facility-item fade-in bg-white rounded-lg shadow-sm p-2 md:p-3 text-center hover:shadow-md transition-all duration-300 {% if fasil.gambar and fasil.gambar.url %}cursor-pointer{% endif %}" 
+                     {% if fasil.gambar and fasil.gambar.url %}onclick="openFasilitasModal('{{ fasil.gambar.url }}', '{{ fasil.nama }}')"{% endif %}>
+                    <div class="facility-icon w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs md:text-sm mb-1.5 mx-auto {% if fasil.gambar and fasil.gambar.url %}hover:scale-110 transition-transform{% endif %}">
+                        <i class="{{ fasil.icon|default:'fas fa-building' }}"></i>
+                    </div>
+                    <div class="facility-name font-semibold text-gray-900 text-xs">{{ fasil.nama }}</div>
+                    {% if not fasil.gambar or not fasil.gambar.url %}
+                    <div class="text-xs text-gray-400 mt-1">Tidak ada gambar</div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-6 text-gray-500">
+                    <i class="fas fa-building text-4xl mb-2 text-gray-300"></i>
+                    <p class="text-sm">Data fasilitas belum tersedia</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+            </div>
+            
+    <!-- Fasilitas Image Modal -->
+    <div id="fasilitas-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-4" onclick="closeFasilitasModal()">
+        <div class="relative modal-container w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl mx-auto" onclick="event.stopPropagation()">
+            <!-- Close Button (Outside Modal) -->
+            <button onclick="closeFasilitasModal()" class="absolute top-4 right-4 z-30 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors shadow-lg flex items-center justify-center w-12 h-12">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            
+            <!-- Modal Content -->
+            <div class="bg-white rounded-lg overflow-hidden shadow-2xl">
+                <div class="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                    <h3 id="fasilitas-modal-title" class="text-sm sm:text-base md:text-lg font-bold text-gray-900"></h3>
+                    <button onclick="closeFasilitasModal()" class="text-gray-500 hover:text-gray-700 transition-colors p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg">
+                        <i class="fas fa-times text-lg sm:text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-2 sm:p-4">
+                    <img id="fasilitas-modal-img" src="" alt="" class="w-full h-auto max-h-[45vh] sm:max-h-[55vh] md:max-h-[60vh] lg:max-h-[65vh] object-contain rounded-lg">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Ekstrakurikuler Section -->
+<section class="section bg-white py-4 md:py-6" id="ekstrakurikuler">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Ekstrakurikuler</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Pengembangan Bakat dan Minat Santri</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4">
+                {% for ekstra in ekstrakurikuler %}
+                <div class="extra-item fade-in bg-gradient-to-br from-green-500 to-blue-500 rounded-lg shadow-sm p-2 md:p-3 text-center text-white hover:shadow-md transition-all duration-300 {% if ekstra.gambar_ekstrakurikuler.all %}cursor-pointer{% endif %}" 
+                     {% if ekstra.gambar_ekstrakurikuler.all %}onclick="openEkstrakurikulerModal({{ ekstra.id }})"{% endif %}>
+                    <div class="extra-icon text-base md:text-lg mb-1.5">
+                        <i class="{{ ekstra.icon|default:'fas fa-star' }}"></i>
+                    </div>
+                    <div class="extra-name font-semibold text-xs">{{ ekstra.nama }}</div>
+                    {% if ekstra.gambar_ekstrakurikuler.all %}
+                    <div class="mt-1 text-xs opacity-75">
+                        <i class="fas fa-images mr-1"></i>{{ ekstra.gambar_ekstrakurikuler.all|length }} gambar
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-12 text-gray-500">
+                    <i class="fas fa-star text-6xl mb-4 text-gray-300"></i>
+                    <p class="text-lg">Data ekstrakurikuler belum tersedia</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Ekstrakurikuler Images Data (Hidden) -->
+            {% for ekstra in ekstrakurikuler %}
+                {% if ekstra.gambar_ekstrakurikuler.all %}
+                <script type="application/json" class="ekstrakurikuler-images-data" data-ekstra-id="{{ ekstra.id }}">
+                {
+                    "id": {{ ekstra.id }},
+                    "nama": "{{ ekstra.nama|escapejs }}",
+                    "images": [{% for img in ekstra.gambar_ekstrakurikuler.all %}{"url": "{{ img.gambar.url|escapejs }}", "alt": "{{ img.alt_text|default:ekstra.nama|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+                }
+                </script>
+                {% endif %}
+            {% endfor %}
+            
+            <!-- Seragam Table -->
+            <div class="uniform-table bg-white rounded-lg shadow-md p-3 md:p-4 fade-in">
+                <h3 class="text-sm md:text-lg font-bold text-gray-900 mb-3 md:mb-4 text-center">Pakaian/seragam di Pesantren Raudhatussalam</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full data-table text-xs md:text-sm">
+                        <thead>
+                            <tr>
+                                <th class="px-2 py-2 md:px-3 md:py-3 text-left">Hari</th>
+                                <th class="px-2 py-2 md:px-3 md:py-3 text-left">Putra</th>
+                                <th class="px-2 py-2 md:px-3 md:py-3 text-left">Putri</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if seragam_santri %}
+                                {% for hari in seragam_santri %}
+                                <tr>
+                                    <td class="px-2 py-2 md:px-3 md:py-3 font-semibold">{{ hari.hari }}</td>
+                                    <td class="px-2 py-2 md:px-3 md:py-3">{{ hari.seragam }}</td>
+                                    <td class="px-2 py-2 md:px-3 md:py-3">
+                                        {% for s in seragam_santriwati %}
+                                            {% if s.hari == hari.hari %}{{ s.seragam }}{% endif %}
+                                        {% empty %}-{% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="px-2 py-2 md:px-3 md:py-3 text-center text-gray-500">Data seragam belum tersedia</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Ekstrakurikuler Images Data (Hidden) -->
+            {% for ekstra in ekstrakurikuler %}
+                {% if ekstra.gambar_ekstrakurikuler.all %}
+                <script type="application/json" class="ekstrakurikuler-images-data" data-ekstra-id="{{ ekstra.id }}">
+                {
+                    "id": {{ ekstra.id }},
+                    "nama": "{{ ekstra.nama|escapejs }}",
+                    "images": [{% for img in ekstra.gambar_ekstrakurikuler.all %}{"url": "{{ img.gambar.url|escapejs }}", "alt": "{{ img.alt_text|default:ekstra.nama|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+                }
+                </script>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Ekstrakurikuler Gallery Modal -->
+    <div id="ekstrakurikuler-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-4" onclick="closeEkstrakurikulerModal()">
+        <div class="relative modal-container w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto" onclick="event.stopPropagation()">
+            <!-- Close Button -->
+            <button onclick="closeEkstrakurikulerModal()" class="absolute top-4 right-4 z-30 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors shadow-lg">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            
+            <!-- Modal Header -->
+            <div class="bg-white rounded-t-lg p-3 sm:p-4 md:p-6 border-b border-gray-200">
+                <h3 id="ekstrakurikuler-modal-title" class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900"></h3>
+            </div>
+            
+            <!-- Main Image -->
+            <div class="relative bg-gray-100">
+                <img id="ekstrakurikuler-modal-main-img" src="" alt="" class="w-full h-auto max-h-[50vh] sm:max-h-[60vh] md:max-h-[65vh] lg:max-h-[70vh] object-contain">
+                
+                <!-- Navigation Arrows -->
+                <button id="ekstrakurikuler-modal-prev" onclick="changeEkstrakurikulerImage(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors hidden">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="ekstrakurikuler-modal-next" onclick="changeEkstrakurikulerImage(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors hidden">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <!-- Thumbnails -->
+            <div id="ekstrakurikuler-modal-thumbnails" class="bg-white rounded-b-lg p-2 sm:p-4 flex justify-center gap-1.5 sm:gap-2 overflow-x-auto pb-2">
+            </div>
+            
+            <!-- Image Counter -->
+            <div class="text-center mt-2 text-gray-900">
+                <span id="ekstrakurikuler-modal-counter"></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Timing Kegiatan Harian Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="timing-kegiatan">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-6">
+            <h2 class="section-title section-title-spaced text-xl md:text-3xl font-bold text-gray-900 mb-2">Timing Kegiatan Harian</h2>
+            <p class="section-subtitle section-subtitle-spaced text-sm md:text-lg text-gray-600">Jadwal Aktivitas Harian Santri</p>
+        </div>
+        
+        <div class="max-w-7xl mx-auto">
+            <!-- Tab Buttons -->
+            <div class="flex justify-center items-center mb-6 border-b-2 border-gray-300 gap-2 bg-white rounded-lg p-2 shadow-lg">
+                <button 
+                    onclick="switchTimingTab('putra')"
+                    id="tab-timing-putra"
+                    class="px-6 py-3 text-sm md:text-base font-bold transition-all duration-300 border-b-4 border-green-500 text-green-700 bg-green-100 hover:bg-green-200 rounded-lg shadow-md min-w-[200px] cursor-pointer">
+                    <i class="fas fa-male mr-2 text-green-600"></i>Santri Putra
+                </button>
+                <button 
+                    onclick="switchTimingTab('putri')"
+                    id="tab-timing-putri"
+                    class="px-6 py-3 text-sm md:text-base font-semibold transition-all duration-300 text-gray-700 hover:text-green-700 hover:bg-gray-100 rounded-lg border-b-4 border-transparent hover:border-gray-400 shadow-md bg-white min-w-[200px] cursor-pointer">
+                    <i class="fas fa-female mr-2"></i>Santri Putri
+                </button>
+            </div>
+            
+            <!-- Tab Content: Santri Putra -->
+            <div id="content-timing-putra" class="timing-tab-content opacity-100 transform translate-y-0 transition-all duration-300">
+                <div class="max-w-5xl mx-auto">
+                    <!-- Icon Header -->
+                    <div class="flex justify-center mb-6">
+                        <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl shadow-lg">
+                            <i class="fas fa-male"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Jadwal List -->
+                    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 fade-in">
+                        <h3 class="text-base md:text-lg font-bold text-gray-900 mb-4 text-center">Jadwal Harian Santri Putra</h3>
+                        {% if jadwal_santri %}
+                        <div class="space-y-3">
+                            {% for jadwal in jadwal_santri %}
+                            <div class="timing-item flex items-start gap-3 md:gap-4 p-3 md:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all duration-300 border-l-4 border-green-500">
+                                <div class="flex-shrink-0 w-20 md:w-24 text-center">
+                                    <div class="bg-gradient-to-br from-green-500 to-blue-500 text-white rounded-lg p-2 md:p-3 shadow-md">
+                                        <div class="text-xs md:text-sm font-bold">{{ jadwal.waktu }}</div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm md:text-base font-bold text-gray-900 mb-1">{{ jadwal.judul }}</h4>
+                                    {% if jadwal.deskripsi %}
+                                    <p class="text-xs md:text-sm text-gray-600 leading-relaxed">{{ jadwal.deskripsi|linebreaks }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-clock text-4xl mb-3 text-gray-300"></i>
+                            <p class="text-sm md:text-base">Data jadwal harian santri putra belum tersedia</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Santri Putri -->
+            <div id="content-timing-putri" class="timing-tab-content hidden opacity-0 translate-y-4 transition-all duration-300">
+                <div class="max-w-5xl mx-auto">
+                    <!-- Icon Header -->
+                    <div class="flex justify-center mb-6">
+                        <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl shadow-lg">
+                            <i class="fas fa-female"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Jadwal List -->
+                    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 fade-in">
+                        <h3 class="text-base md:text-lg font-bold text-gray-900 mb-4 text-center">Jadwal Harian Santri Putri</h3>
+                        {% if jadwal_santriwati %}
+                        <div class="space-y-3">
+                            {% for jadwal in jadwal_santriwati %}
+                            <div class="timing-item flex items-start gap-3 md:gap-4 p-3 md:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all duration-300 border-l-4 border-pink-500">
+                                <div class="flex-shrink-0 w-20 md:w-24 text-center">
+                                    <div class="bg-gradient-to-br from-pink-500 to-purple-500 text-white rounded-lg p-2 md:p-3 shadow-md">
+                                        <div class="text-xs md:text-sm font-bold">{{ jadwal.waktu }}</div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm md:text-base font-bold text-gray-900 mb-1">{{ jadwal.judul }}</h4>
+                                    {% if jadwal.deskripsi %}
+                                    <p class="text-xs md:text-sm text-gray-600 leading-relaxed">{{ jadwal.deskripsi|linebreaks }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-clock text-4xl mb-3 text-gray-300"></i>
+                            <p class="text-sm md:text-base">Data jadwal harian santri putri belum tersedia</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Persyaratan & Alur Pendaftaran Section -->
+<section class="section bg-white py-4 md:py-6" id="administrasi">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Administrasi</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Persyaratan Pendaftaran</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
+                <!-- Persyaratan -->
+                <div class="persyaratan-box fade-in bg-white rounded-lg shadow-md p-3 md:p-4 border-l-4 border-green-500">
+                    <div class="admin-icon w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white text-sm md:text-lg mb-3">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h3 class="text-sm md:text-lg font-bold text-gray-900 mb-3">Untuk Santri Putra</h3>
+                    {% if persyaratan and persyaratan.persyaratan_santri %}
+                    <div class="persyaratan-content text-xs md:text-base text-gray-700 leading-relaxed prose max-w-none">{{ persyaratan.persyaratan_santri|safe }}</div>
+                    {% else %}
+                    <ul class="space-y-2 text-xs md:text-sm text-gray-700">
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">1</span>
+                            <span>Fotokopi kartu keluarga (KK) dan KTP kedua orangtua (dua lembar)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">2</span>
+                            <span>Fotokopi akte kelahiran (dua lembar)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">3</span>
+                            <span>Fotokopi ijazah/Surat keterangan lulus (SKL) dua lembar</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">4</span>
+                            <span>Pasfoto 3x4 background merah (tiga lembar)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">5</span>
+                            <span>Berbadan sehat jasmani dan rohani</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">6</span>
+                            <span>Sanggup bertempat tinggal di asrama yang telah disediakan</span>
+                        </li>
+                    </ul>
+                    {% endif %}
+                </div>
+                
+                <!-- Persyaratan Santriwati -->
+                <div class="persyaratan-santriwati-box fade-in bg-white rounded-lg shadow-md p-3 md:p-4 border-l-4 border-pink-500">
+                    <div class="admin-icon w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center text-white text-sm md:text-lg mb-3">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <h3 class="text-sm md:text-lg font-bold text-gray-900 mb-3">Untuk Santriwati</h3>
+                    {% if persyaratan and persyaratan.persyaratan_santriwati %}
+                    <div class="persyaratan-content text-xs md:text-base text-gray-700 leading-relaxed prose max-w-none">{{ persyaratan.persyaratan_santriwati|safe }}</div>
+                    {% else %}
+                    <ul class="space-y-2 text-xs md:text-sm text-gray-700">
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-pink-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">1</span>
+                            <span>Fotokopi kartu keluarga (KK) dan KTP kedua orangtua (dua lembar)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-pink-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">2</span>
+                            <span>Fotokopi akte kelahiran (dua lembar)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-pink-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">3</span>
+                            <span>Fotokopi ijazah/Surat keterangan lulus (SKL) dua lembar</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-pink-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">4</span>
+                            <span>Pasfoto 3x4 background merah (tiga lembar)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-pink-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">5</span>
+                            <span>Berbadan sehat jasmani dan rohani</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-5 h-5 md:w-6 md:h-6 bg-pink-500 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0 text-xs">6</span>
+                            <span>Sanggup bertempat tinggal di asrama yang telah disediakan</span>
+                        </li>
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Alur Pendaftaran -->
+            <div class="alur-pendaftaran fade-in bg-gradient-to-br from-green-500 to-blue-500 rounded-lg shadow-md p-2 md:p-3 text-white">
+                <div class="flex items-center justify-center mb-2 md:mb-3">
+                    <div class="admin-icon w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-full flex items-center justify-center text-white text-xs md:text-sm">
+                        <i class="fas fa-stream"></i>
+                    </div>
+                </div>
+                <h3 class="text-sm md:text-base font-bold mb-2 md:mb-3 text-center">Alur Pendaftaran</h3>
+                {% if alur and alur.alur_pendaftaran %}
+                <div class="alur-content text-xs md:text-sm leading-relaxed mb-2 md:mb-3 prose prose-invert max-w-none">{{ alur.alur_pendaftaran|safe }}</div>
+                {% else %}
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4">
+                    <div class="alur-item bg-white/20 backdrop-blur-sm rounded-lg p-3 md:p-4 text-center">
+                        <div class="alur-number w-10 h-10 md:w-12 md:h-14 bg-white text-green-500 rounded-full flex items-center justify-center text-sm md:text-lg font-bold mx-auto mb-2">1</div>
+                        <div class="alur-desc text-xs md:text-sm">Calon santri mendaftar secara langsung/online</div>
+                    </div>
+                    <div class="alur-item bg-white/20 backdrop-blur-sm rounded-lg p-3 md:p-4 text-center">
+                        <div class="alur-number w-10 h-10 md:w-12 md:h-14 bg-white text-green-500 rounded-full flex items-center justify-center text-sm md:text-lg font-bold mx-auto mb-2">2</div>
+                        <div class="alur-desc text-xs md:text-sm">Membayar dana formulir/uang pangkal</div>
+                    </div>
+                    <div class="alur-item bg-white/20 backdrop-blur-sm rounded-lg p-3 md:p-4 text-center">
+                        <div class="alur-number w-10 h-10 md:w-12 md:h-14 bg-white text-green-500 rounded-full flex items-center justify-center text-sm md:text-lg font-bold mx-auto mb-2">3</div>
+                        <div class="alur-desc text-xs md:text-sm">Melengkapi formulir pendaftaran</div>
+                    </div>
+                    <div class="alur-item bg-white/20 backdrop-blur-sm rounded-lg p-3 md:p-4 text-center">
+                        <div class="alur-number w-10 h-10 md:w-12 md:h-14 bg-white text-green-500 rounded-full flex items-center justify-center text-sm md:text-lg font-bold mx-auto mb-2">4</div>
+                        <div class="alur-desc text-xs md:text-sm">Menyerahkan persyaratan dokumen ketika validasi di kantor PPSB</div>
+                    </div>
+                </div>
+                {% endif %}
+                <p class="text-center text-white/90 text-xs italic mt-2">*Pendaftaran online melalui admin whatsapp panitia penerimaan santri baru (PPSB)</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Biaya Pendidikan Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="biaya">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title section-title-spaced text-xl md:text-3xl font-bold text-gray-900 mb-2">Biaya Pendidikan Pesantren</h2>
+            <p class="section-subtitle section-subtitle-spaced text-sm md:text-lg text-gray-600">Rincian Biaya dan Perlengkapan</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4">
+                <!-- Biaya Tahunan -->
+                <div class="biaya-tahunan fade-in bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="biaya-icon w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white text-lg md:text-xl mr-3">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                        <h3 class="text-lg md:text-xl font-bold text-gray-900">Biaya Tahunan</h3>
+                    </div>
+                    <div class="overflow-x-auto -mx-2 sm:mx-0">
+                        <table class="w-full data-table text-xs sm:text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 text-left bg-green-50 text-gray-900 font-bold whitespace-nowrap">No</th>
+                                    <th class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 text-left bg-green-50 text-gray-900 font-bold">Rincian Biaya</th>
+                                    <th class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 text-left bg-green-50 text-gray-900 font-bold whitespace-nowrap">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        {% for biaya in biaya_tahunan %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 font-semibold text-gray-900 whitespace-nowrap">{{ forloop.counter }}</td>
+                                    <td class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 text-gray-900">
+                                        <div class="font-semibold text-xs sm:text-sm">{{ biaya.nama }}</div>
+                            {% if biaya.keterangan %}
+                                        <div class="text-xs text-gray-500 mt-0.5 sm:mt-1 leading-tight">{{ biaya.keterangan }}</div>
+                            {% endif %}
+                                    </td>
+                                    <td class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 font-bold text-green-600 whitespace-nowrap text-xs sm:text-sm"><span class="format-rupiah" data-amount="{{ biaya.jumlah }}">Rp {{ biaya.jumlah|floatformat:0|intcomma }}</span></td>
+                                </tr>
+                        {% empty %}
+                                <tr>
+                                    <td colspan="3" class="px-3 py-4 md:px-4 md:py-6 text-center text-gray-500">
+                                        <i class="fas fa-calendar-alt text-2xl mb-2 text-gray-300"></i>
+                                        <p class="text-sm">Data biaya tahunan belum tersedia</p>
+                                    </td>
+                                </tr>
+                        {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Biaya Bulanan -->
+                <div class="biaya-bulanan fade-in bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="biaya-icon w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-lg md:text-xl mr-3">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                        <h3 class="text-lg md:text-xl font-bold text-gray-900">Biaya Bulanan</h3>
+                    </div>
+                    <div class="overflow-x-auto -mx-2 sm:mx-0">
+                        <table class="w-full data-table text-xs sm:text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 text-left bg-blue-50 text-gray-900 font-bold whitespace-nowrap">No</th>
+                                    <th class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 text-left bg-blue-50 text-gray-900 font-bold">Rincian Biaya</th>
+                                    <th class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 text-left bg-blue-50 text-gray-900 font-bold whitespace-nowrap">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        {% for biaya in biaya_bulanan %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 font-semibold text-gray-900 whitespace-nowrap">{{ forloop.counter }}</td>
+                                    <td class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 text-gray-900">
+                                        <div class="font-semibold text-xs sm:text-sm">{{ biaya.nama }}</div>
+                            {% if biaya.keterangan %}
+                                        <div class="text-xs text-gray-500 mt-0.5 sm:mt-1 leading-tight">{{ biaya.keterangan }}</div>
+                            {% endif %}
+                                    </td>
+                                    <td class="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 font-bold text-green-600 whitespace-nowrap text-xs sm:text-sm"><span class="format-rupiah" data-amount="{{ biaya.jumlah }}">Rp {{ biaya.jumlah|floatformat:0|intcomma }}</span></td>
+                                </tr>
+                        {% empty %}
+                                <tr>
+                                    <td colspan="3" class="px-3 py-4 md:px-4 md:py-6 text-center text-gray-500">
+                                        <i class="fas fa-money-bill-wave text-2xl mb-2 text-gray-300"></i>
+                                        <p class="text-sm">Data biaya bulanan belum tersedia</p>
+                                    </td>
+                                </tr>
+                        {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Perlengkapan -->
+            <div class="perlengkapan-santri fade-in bg-white rounded-lg shadow-md p-3 md:p-4">
+                <div class="biaya-icon w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm md:text-lg mb-3">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3 class="text-sm md:text-lg font-bold text-gray-900 mb-3">Rincian Perlengkapan</h3>
+                
+                <!-- Tabs -->
+                <div class="flex justify-center mb-4 border-b-2 border-gray-200">
+                    <button 
+                        onclick="switchPerlengkapanTab('putra')"
+                        id="tab-perlengkapan-putra"
+                        class="px-3 py-2 md:px-6 md:py-3 font-bold text-xs md:text-sm border-b-4 border-green-500 text-green-600 bg-green-50 rounded-lg transition-all duration-300">
+                        Santri Putra
+                    </button>
+                    <button 
+                        onclick="switchPerlengkapanTab('putri')"
+                        id="tab-perlengkapan-putri"
+                        class="px-3 py-2 md:px-6 md:py-3 font-semibold text-xs md:text-sm text-gray-600 hover:text-green-600 border-b-4 border-transparent hover:border-gray-400 transition-all duration-300">
+                        Santri Putri
+                    </button>
+                </div>
+                
+                <!-- Perlengkapan Putra -->
+                <div id="content-perlengkapan-putra" class="perlengkapan-tab-content opacity-100 transform translate-y-0 transition-all duration-300">
+                    <div class="overflow-x-auto -mx-2 sm:mx-0">
+                        <table class="w-full data-table text-xs sm:text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 text-left whitespace-nowrap">No</th>
+                                    <th class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 text-left">Rincian perlengkapan santri putra</th>
+                                    <th class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 text-left whitespace-nowrap">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if biaya_perlengkapan_putra %}
+                                    {% for biaya in biaya_perlengkapan_putra %}
+                                    <tr>
+                                        <td class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 whitespace-nowrap">{{ forloop.counter }}</td>
+                                        <td class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 text-xs sm:text-sm">{{ biaya.nama }}</td>
+                                        <td class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 font-semibold text-green-600 whitespace-nowrap text-xs sm:text-sm"><span class="format-rupiah" data-amount="{{ biaya.jumlah }}">Rp {{ biaya.jumlah|floatformat:0|intcomma }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" class="px-2 py-2 md:px-3 md:py-3 text-center text-gray-500 py-6">
+                                            <div class="flex flex-col items-center justify-center">
+                                                <i class="fas fa-box-open text-3xl mb-3 text-gray-300"></i>
+                                                <p class="text-sm font-medium">Data perlengkapan putra belum tersedia</p>
+                                                <p class="text-xs text-gray-400 mt-1">Silakan hubungi admin untuk informasi lebih lanjut</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Perlengkapan Putri -->
+                <div id="content-perlengkapan-putri" class="perlengkapan-tab-content hidden opacity-0 translate-y-4 transition-all duration-300">
+                    <div class="overflow-x-auto -mx-2 sm:mx-0">
+                        <table class="w-full data-table text-xs sm:text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 text-left whitespace-nowrap">No</th>
+                                    <th class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 text-left">Rincian perlengkapan santri putri</th>
+                                    <th class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 text-left whitespace-nowrap">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if biaya_perlengkapan_putri %}
+                                    {% for biaya in biaya_perlengkapan_putri %}
+                                    <tr>
+                                        <td class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 whitespace-nowrap">{{ forloop.counter }}</td>
+                                        <td class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 text-xs sm:text-sm">{{ biaya.nama }}</td>
+                                        <td class="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-3 md:py-3 font-semibold text-green-600 whitespace-nowrap text-xs sm:text-sm"><span class="format-rupiah" data-amount="{{ biaya.jumlah }}">Rp {{ biaya.jumlah|floatformat:0|intcomma }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" class="px-2 py-2 md:px-3 md:py-3 text-center text-gray-500 py-6">
+                                            <div class="flex flex-col items-center justify-center">
+                                                <i class="fas fa-box-open text-3xl mb-3 text-gray-300"></i>
+                                                <p class="text-sm font-medium">Data perlengkapan putri belum tersedia</p>
+                                                <p class="text-xs text-gray-400 mt-1">Silakan hubungi admin untuk informasi lebih lanjut</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            {% if settings.deskripsi %}
+            <div class="mt-4 md:mt-6 p-3 md:p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-sm md:text-lg text-yellow-500 mr-2 md:mr-3"></i>
+                    <p class="text-xs md:text-sm text-gray-700"><strong>Informasi Penting: {{ settings.deskripsi|truncatewords:20 }}</strong></p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Contact & Registration Section with Google Maps -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="daftar">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Info Lebih Lanjut</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Hubungi Kami</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 mb-4">
+                <!-- Contact Info -->
+                <div class="contact-info fade-in bg-white rounded-lg shadow-md p-3 md:p-4">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white text-sm md:text-sm mr-3">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h3 class="text-sm md:text-sm font-bold text-gray-900">Hubungi Panitia Pendaftaran</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        {% for contact in contact_persons %}
+                        <div class="bg-gray-50 rounded-lg p-3 flex items-center space-x-3">
+                            {% if contact.foto and contact.foto.url %}
+                            <img src="{{ contact.foto.url }}" alt="{{ contact.nama }}" class="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full object-cover flex-shrink-0" loading="lazy">
+                            {% else %}
+                            <div class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-sm md:text-sm">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                            <div class="flex-1">
+                                <h4 class="text-sm md:text-sm font-semibold text-gray-900">{{ contact.nama }}</h4>
+                                                <button onclick="openWhatsAppModal()" class="text-xs md:text-sm text-green-600 hover:text-green-700 flex items-center mt-1 cursor-pointer">
+                                    <i class="fab fa-whatsapp mr-1"></i>
+                                    {{ contact.no_hp|default:"-" }}
+                                </button>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 text-gray-500 text-sm">
+                            <i class="fas fa-user-circle text-2xl mb-2"></i>
+                            <p>Data contact person belum tersedia</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Location Info -->
+                <div class="location-info fade-in bg-white rounded-lg shadow-md p-3 md:p-4">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm md:text-sm mr-3">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <h3 class="text-sm md:text-sm font-bold text-gray-900">Lokasi Pendaftaran</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <p class="text-xs md:text-sm text-gray-700 leading-relaxed">
+                            {% if settings and settings.lokasi_pendaftaran %}
+                                {{ settings.lokasi_pendaftaran|linebreaks }}
+                            {% else %}
+                                <span class="text-gray-500">Lokasi pendaftaran belum diatur</span>
+                            {% endif %}
+                        </p>
+                        
+                        {% if settings and settings.google_maps_link %}
+                        <a href="{{ settings.google_maps_link }}" target="_blank" class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs md:text-sm">
+                            <i class="fas fa-map-marker-alt mr-2"></i> Buka di Google Maps
+                        </a>
+                        {% endif %}
+                        
+                        {% if settings and settings.qr_code_image and settings.qr_code_image.url %}
+                        <div class="mt-4 text-center">
+                            <img src="{{ settings.qr_code_image.url }}" alt="QR Code" class="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto rounded-lg border-2 border-gray-200" loading="lazy">
+                            <p class="text-xs text-gray-600 mt-2">Scan untuk Alamat Pendaftaran</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Social Media -->
+            <div class="social-media fade-in bg-white rounded-lg shadow-md p-3 md:p-4">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm md:text-sm mr-3">
+                        <i class="fas fa-hashtag"></i>
+                    </div>
+                    <h3 class="text-sm md:text-sm font-bold text-gray-900">Media Sosial</h3>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+                    {% if social_media %}
+                        {% for sm in social_media %}
+                            {% if sm.platform == 'instagram' %}
+                            <a href="{{ sm.url }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:from-pink-600 hover:to-pink-700 transition-colors text-xs md:text-sm">
+                                <i class="fab fa-instagram mr-2"></i> Instagram
+                            </a>
+                            {% elif sm.platform == 'facebook' %}
+                            <a href="{{ sm.url }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-colors text-xs md:text-sm">
+                                <i class="fab fa-facebook mr-2"></i> Facebook
+                            </a>
+                            {% elif sm.platform == 'tiktok' %}
+                            <a href="{{ sm.url }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg hover:from-gray-900 hover:to-black transition-colors text-xs md:text-sm">
+                                <i class="fab fa-tiktok mr-2"></i> TikTok
+                            </a>
+                            {% elif sm.platform == 'twitter' %}
+                            <a href="{{ sm.url }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-colors text-xs md:text-sm">
+                                <i class="fab fa-twitter mr-2"></i> Twitter
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% if settings and settings.instagram %}
+                        <a href="{{ settings.instagram }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:from-pink-600 hover:to-pink-700 transition-colors text-xs md:text-sm">
+                            <i class="fab fa-instagram mr-2"></i> Instagram
+                        </a>
+                        {% endif %}
+                        {% if settings and settings.facebook %}
+                        <a href="{{ settings.facebook }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-colors text-xs md:text-sm">
+                            <i class="fab fa-facebook mr-2"></i> Facebook
+                        </a>
+                        {% endif %}
+                        {% if settings and settings.tiktok %}
+                        <a href="{{ settings.tiktok }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg hover:from-gray-900 hover:to-black transition-colors text-xs md:text-sm">
+                            <i class="fab fa-tiktok mr-2"></i> TikTok
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="section bg-white py-4 md:py-6" id="faq">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Pertanyaan Umum</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Frequently Asked Questions</p>
+        </div>
+        
+        <div class="max-w-4xl mx-auto">
+            <div class="faq-container space-y-2 md:space-y-3">
+                {% for faq in faqs %}
+                <div class="faq-item fade-in bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="faq-question flex items-center justify-between p-3 md:p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div class="faq-question-text font-semibold text-gray-900 text-sm md:text-sm">{{ faq.pertanyaan }}</div>
+                        <div class="faq-toggle text-green-600">
+                            <i class="fas fa-plus text-xs md:text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="faq-answer hidden p-3 md:p-4 pt-0 text-gray-700 leading-relaxed text-xs md:text-sm">
+                        {{ faq.jawaban|linebreaks }}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-6 text-gray-500">
+                    <i class="fas fa-question-circle text-xl md:text-4xl mb-2 text-gray-300"></i>
+                    <p class="text-sm md:text-sm">Data FAQ belum tersedia</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="statistik">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4 md:mb-6">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Prestasi & Statistik</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Pencapaian {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren{% endif %}</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            {% if statistik %}
+            <!-- Main Slide/Carousel untuk Prestasi Pertama -->
+            {% if statistik|length > 0 %}
+            <div class="prestasi-main-slide mb-6 md:mb-8">
+                <div class="relative bg-white rounded-xl shadow-xl overflow-hidden">
+                    {% with first_stat=statistik.0 %}
+                    <div class="prestasi-card cursor-pointer" 
+                         data-stat-id="{{ first_stat.id }}"
+                         data-stat-judul="{{ first_stat.judul }}"
+                         data-stat-nilai="{{ first_stat.nilai }}"
+                         data-stat-deskripsi="{{ first_stat.deskripsi|default:'' }}"
+                         data-stat-icon="{{ first_stat.icon }}"
+                         data-stat-warna="{{ first_stat.warna }}">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+                            <div class="relative h-48 md:h-64 lg:h-80 overflow-hidden bg-gradient-to-br 
+                                {% if first_stat.warna == 'green' %}from-green-500 to-green-600
+                                {% elif first_stat.warna == 'blue' %}from-blue-500 to-blue-600
+                                {% elif first_stat.warna == 'purple' %}from-purple-500 to-purple-600
+                                {% elif first_stat.warna == 'orange' %}from-orange-500 to-orange-600
+                                {% elif first_stat.warna == 'red' %}from-red-500 to-red-600
+                                {% else %}from-green-500 to-green-600{% endif %}">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="{{ first_stat.icon|default:'fas fa-trophy' }} text-6xl md:text-8xl text-white/30"></i>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent"></div>
+                            </div>
+                            <div class="p-6 md:p-8 lg:p-10 flex flex-col justify-center bg-white">
+                                <div class="flex items-center text-xs md:text-sm text-gray-500 mb-3">
+                                    <i class="fas fa-trophy mr-2 text-orange-500"></i>
+                                    <span>Prestasi Unggulan</span>
+                                </div>
+                                <h3 class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3">{{ first_stat.judul }}</h3>
+                                <div class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 
+                                    {% if first_stat.warna == 'green' %}text-green-600
+                                    {% elif first_stat.warna == 'blue' %}text-blue-600
+                                    {% elif first_stat.warna == 'purple' %}text-purple-600
+                                    {% elif first_stat.warna == 'orange' %}text-orange-600
+                                    {% elif first_stat.warna == 'red' %}text-red-600
+                                    {% else %}text-green-600{% endif %}">
+                                    {{ first_stat.nilai }}
+                                </div>
+                                {% if first_stat.deskripsi %}
+                                <p class="text-sm md:text-base text-gray-600 mb-4">{{ first_stat.deskripsi }}</p>
+                                {% endif %}
+                                <div class="flex items-center text-green-600 font-semibold text-sm md:text-base">
+                                    <span>Klik untuk detail</span>
+                                    <i class="fas fa-arrow-right ml-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Grid untuk Statistik Lainnya -->
+            {% if statistik|length > 1 %}
+            <div class="statistik-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                {% for stat in statistik|slice:"1:" %}
+                <div class="prestasi-card stat-item fade-in bg-white rounded-lg shadow-md p-4 md:p-6 text-center hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+                     data-stat-id="{{ stat.id }}"
+                     data-stat-judul="{{ stat.judul }}"
+                     data-stat-nilai="{{ stat.nilai }}"
+                     data-stat-deskripsi="{{ stat.deskripsi|default:'' }}"
+                     data-stat-icon="{{ stat.icon }}"
+                     data-stat-warna="{{ stat.warna }}">
+                    <div class="stat-icon w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br 
+                        {% if stat.warna == 'green' %}from-green-500 to-green-600
+                        {% elif stat.warna == 'blue' %}from-blue-500 to-blue-600
+                        {% elif stat.warna == 'purple' %}from-purple-500 to-purple-600
+                        {% elif stat.warna == 'orange' %}from-orange-500 to-orange-600
+                        {% elif stat.warna == 'red' %}from-red-500 to-red-600
+                        {% else %}from-green-500 to-green-600{% endif %}
+                        rounded-full flex items-center justify-center text-white text-lg md:text-xl mb-3 mx-auto">
+                        <i class="{{ stat.icon|default:'fas fa-chart-bar' }}"></i>
+                    </div>
+                    <div class="stat-value text-2xl md:text-3xl font-bold text-gray-900 mb-2">{{ stat.nilai }}</div>
+                    <div class="stat-title text-xs md:text-sm font-semibold text-gray-700 mb-1">{{ stat.judul }}</div>
+                    {% if stat.deskripsi %}
+                    <div class="stat-desc text-xs text-gray-500 line-clamp-2">{{ stat.deskripsi }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-chart-bar text-4xl mb-4 text-gray-300"></i>
+                <p class="text-sm md:text-sm">Data statistik belum tersedia</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Prestasi Detail Modal -->
+    <div id="prestasi-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-4" onclick="closePrestasiModal()">
+        <div class="relative modal-container w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl mx-auto" onclick="event.stopPropagation()">
+            <!-- Modal Content -->
+            <div class="bg-white rounded-xl overflow-hidden shadow-2xl">
+                <div id="prestasi-modal-header" class="p-3 sm:p-4 md:p-6 lg:p-8 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-green-500 to-blue-500">
+                    <div class="flex items-center gap-2 sm:gap-3 md:gap-4">
+                        <div id="prestasi-modal-icon" class="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-white/20 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl md:text-3xl">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div>
+                            <h3 id="prestasi-modal-title" class="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-white"></h3>
+                        </div>
+                    </div>
+                    <button onclick="closePrestasiModal()" class="text-white hover:text-gray-200 transition-colors p-1.5 sm:p-2 hover:bg-white/20 rounded-lg">
+                        <i class="fas fa-times text-lg sm:text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-3 sm:p-4 md:p-6 lg:p-8">
+                    <div class="text-center mb-4 sm:mb-6">
+                        <div id="prestasi-modal-value" class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 sm:mb-4 text-gray-900"></div>
+                        <div id="prestasi-modal-desc" class="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed"></div>
+                    </div>
+                    <div class="mt-6 pt-6 border-t border-gray-200 text-center">
+                        <p class="text-sm text-gray-500">Klik di luar modal untuk menutup</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Gallery Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="gallery">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Galeri Pesantren</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Momen-momen Berharga di Pesantren</p>
+        </div>
+        
+        <div class="max-w-7xl mx-auto">
+            {% if all_media %}
+            <div class="gallery-masonry grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+                {% for media in all_media %}
+                <div class="gallery-item fade-in bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-105" 
+                     {% if media.tipe == 'gallery' and media.gambar %}data-image="{{ media.gambar.url }}" onclick="openGalleryLightbox('{{ media.gambar.url|escapejs }}', '{{ media.judul|escapejs }}')"{% elif media.tipe == 'video' and media.video_file %}data-video-url="{{ media.video_file.url|escapejs }}" onclick="openVideoModalFromGallery(this)"{% endif %}>
+                    {% if media.tipe == 'gallery' %}
+                        {% if media.gambar %}
+                        <div class="relative overflow-hidden gallery-image-container">
+                            <img src="{{ media.gambar.url }}" alt="{{ media.judul }}" class="w-full h-full object-cover" loading="lazy">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2">
+                                <i class="fas fa-image text-green-600 text-xs"></i>
+                            </div>
+                    </div>
+                    {% else %}
+                        <div class="gallery-image-container bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                            <i class="fas fa-image text-2xl md:text-4xl text-white/50"></i>
+                    </div>
+                    {% endif %}
+                    {% elif media.tipe == 'video' %}
+                        {% if media.featured_image %}
+                        <div class="relative overflow-hidden gallery-image-container">
+                            <img src="{{ media.featured_image.url }}" alt="{{ media.judul }}" class="w-full h-full object-cover" loading="lazy">
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                <div class="bg-white/90 backdrop-blur-sm rounded-full p-3 md:p-4 hover:scale-110 transition-transform">
+                                    <i class="fas fa-play-circle text-green-600 text-xl md:text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2">
+                                <i class="fas fa-video text-blue-600 text-xs"></i>
+                            </div>
+                        </div>
+                        {% elif media.video_file %}
+                        <div class="relative overflow-hidden gallery-image-container bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <div class="bg-white/90 backdrop-blur-sm rounded-full p-3 md:p-4 hover:scale-110 transition-transform">
+                                <i class="fas fa-play-circle text-white text-xl md:text-2xl"></i>
+                            </div>
+                            <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2">
+                                <i class="fas fa-video text-blue-600 text-xs"></i>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="gallery-image-container bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                            <i class="fas fa-video text-2xl md:text-4xl text-white/50"></i>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    <div class="p-2 md:p-3 bg-white">
+                        <p class="text-xs md:text-sm font-semibold text-gray-900 line-clamp-2">{{ media.judul }}</p>
+                        {% if media.sub_judul %}
+                        <p class="text-xs text-gray-500 line-clamp-1 mt-1">{{ media.sub_judul }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12 text-gray-500">
+                <i class="fas fa-images text-6xl mb-4 text-gray-300"></i>
+                <p class="text-lg">Data galeri belum tersedia</p>
+            </div>
+            {% endif %}
+            
+            <div class="text-center mt-4 md:mt-6">
+                <p class="text-xs md:text-sm text-gray-600">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    {% if all_media %}Klik pada gambar atau video untuk melihat detail{% else %}Galeri akan menampilkan foto-foto dan video kegiatan pesantren{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gallery Lightbox Modal -->
+    <div id="gallery-lightbox-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-4" onclick="closeGalleryLightbox()">
+        <div class="relative modal-container w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto" onclick="event.stopPropagation()">
+            <button onclick="closeGalleryLightbox()" class="absolute top-4 right-4 z-30 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors shadow-lg">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <img id="gallery-lightbox-img" src="" alt="" class="w-full h-auto max-h-[60vh] sm:max-h-[70vh] md:max-h-[80vh] lg:max-h-[85vh] xl:max-h-[90vh] object-contain rounded-lg shadow-2xl">
+            <div class="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 text-center">
+                <p id="gallery-lightbox-title" class="text-gray-900 text-xs sm:text-sm md:text-base font-semibold bg-white/90 backdrop-blur-sm rounded-lg px-2 sm:px-4 py-1 sm:py-2 inline-block shadow-lg"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Video Modal for Gallery -->
+    <div id="gallery-video-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-4" onclick="closeGalleryVideoModal()">
+        <div class="relative modal-container w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto" onclick="event.stopPropagation()">
+            <button onclick="closeGalleryVideoModal()" class="absolute top-4 right-4 z-30 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors shadow-lg">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <div id="gallery-video-modal-content" class="aspect-video bg-gray-100 rounded-lg overflow-hidden shadow-2xl">
+                <!-- Video akan diisi oleh JavaScript -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimoni Section -->
+<section class="section bg-white py-4 md:py-6" id="testimoni">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Testimoni</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Kata Mereka Tentang Pesantren</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            {% if testimoni %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                {% for t in testimoni %}
+                <div class="testimoni-card fade-in bg-white rounded-lg shadow-md p-3 md:p-4 border-l-4 border-green-500">
+                    <div class="flex items-center mb-3">
+                        {% if t.foto and t.foto.url %}
+                        <img src="{{ t.foto.url }}" alt="{{ t.nama }}" class="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full object-cover mr-3 flex-shrink-0" loading="lazy">
+                        {% else %}
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-sm md:text-lg mr-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="text-sm md:text-sm font-bold text-gray-900">{{ t.nama }}</h4>
+                            {% if t.jabatan %}
+                            <p class="text-xs text-gray-600">{{ t.jabatan }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="text-xs md:text-sm text-gray-700 leading-relaxed italic">
+                        "{{ t.testimoni|truncatewords:30 }}"
+                    </p>
+                    {% if t.rating %}
+                    <div class="mt-3 flex text-yellow-400">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= t.rating %}
+                            <i class="fas fa-star text-xs"></i>
+                            {% else %}
+                            <i class="far fa-star text-xs"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-comments text-4xl mb-4 text-gray-300"></i>
+                <p class="text-sm md:text-sm">Belum ada testimoni</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Informasi Tambahan Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="informasi">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Informasi Tambahan</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Informasi Penting untuk Calon Santri</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                {% if informasi_tambahan %}
+                    {% for info in informasi_tambahan %}
+                    <div class="info-card fade-in bg-white rounded-lg shadow-md p-3 md:p-4">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br 
+                                {% if info.warna == 'green' %}from-green-500 to-green-600
+                                {% elif info.warna == 'blue' %}from-blue-500 to-blue-600
+                                {% elif info.warna == 'purple' %}from-purple-500 to-purple-600
+                                {% elif info.warna == 'orange' %}from-orange-500 to-orange-600
+                                {% elif info.warna == 'red' %}from-red-500 to-red-600
+                                {% elif info.warna == 'teal' %}from-teal-500 to-teal-600
+                                {% elif info.warna == 'pink' %}from-pink-500 to-pink-600
+                                {% else %}from-green-500 to-green-600{% endif %}
+                                rounded-full flex items-center justify-center text-white text-sm md:text-lg mr-3">
+                                <i class="{{ info.icon|default:'fas fa-info-circle' }}"></i>
+                            </div>
+                            <h3 class="text-sm md:text-sm font-bold text-gray-900">{{ info.judul }}</h3>
+                        </div>
+                        <p class="text-xs md:text-sm text-gray-700 leading-relaxed">
+                            {{ info.deskripsi }}
+                        </p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Fallback jika belum ada data -->
+                    <div class="info-card fade-in bg-white rounded-lg shadow-md p-3 md:p-4">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white text-sm md:text-lg mr-3">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <h3 class="text-sm md:text-sm font-bold text-gray-900">Waktu Pendaftaran</h3>
+                        </div>
+                        <p class="text-xs md:text-sm text-gray-700 leading-relaxed">
+                            {% if settings and settings.waktu_pendaftaran %}
+                                {{ settings.waktu_pendaftaran }}
+                            {% else %}
+                                Pendaftaran dibuka setiap tahun. Kuota terbatas, segera daftarkan putra-putri Anda.
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Section -->
+{% if featured_blog %}
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="blog">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4 md:mb-6">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Berita & Artikel</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Informasi Terbaru dari {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren{% endif %}</p>
+        </div>
+        
+        <div class="max-w-7xl mx-auto">
+            {% if featured_blog|length > 0 %}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+                {% for post in featured_blog|slice:":4" %}
+                <article class="blog-card fade-in bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300">
+                    <a href="{% url 'public:blog_detail' post.slug %}" class="block">
+                        <div class="relative h-32 md:h-40 overflow-hidden">
+                            {% if post.featured_image and post.featured_image.url %}
+                            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center\'><i class=\'fas fa-newspaper text-3xl md:text-4xl text-white/50\'></i></div>';">
+                            {% else %}
+                            <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                                <i class="fas fa-newspaper text-3xl md:text-4xl text-white/50"></i>
+                            </div>
+                            {% endif %}
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                            {% if post.category %}
+                            <div class="absolute top-2 left-2">
+                                <span class="px-2 py-0.5 bg-green-600 text-white text-xs font-semibold rounded-full">{{ post.category.name }}</span>
+                            </div>
+                            {% endif %}
+                            {% if post.is_featured %}
+                            <div class="absolute top-2 right-2">
+                                <span class="px-2 py-0.5 bg-yellow-500 text-white text-xs font-semibold rounded-full">
+                                    <i class="fas fa-star mr-0.5"></i>Unggulan
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="p-3 md:p-4">
+                            <div class="flex items-center text-xs text-gray-500 mb-2">
+                                <i class="fas fa-calendar-alt mr-1"></i>
+                                <span>{% if post.published_at %}{{ post.published_at|date:"d M Y" }}{% else %}{{ post.created_at|date:"d M Y" }}{% endif %}</span>
+                            </div>
+                            <h4 class="text-sm md:text-base font-bold text-gray-900 mb-2 line-clamp-2 leading-tight">{{ post.title }}</h4>
+                            {% if post.excerpt %}
+                            <p class="text-xs md:text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">{{ post.excerpt|striptags|truncatewords:15 }}</p>
+                            {% else %}
+                            <p class="text-xs md:text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">{{ post.content|striptags|truncatewords:15 }}</p>
+                            {% endif %}
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <div class="flex items-center gap-2 text-xs text-gray-500">
+                                    <span><i class="fas fa-eye mr-0.5"></i>{{ post.views_count }}</span>
+                                    <span><i class="fas fa-heart mr-0.5"></i>{{ post.likes_count }}</span>
+                                </div>
+                                <span class="text-green-600 text-xs font-semibold hover:text-green-700 transition-colors">
+                                    Baca <i class="fas fa-arrow-right ml-0.5 text-xs"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+            
+            <div class="text-center">
+                <a href="{% url 'public:blog_list' %}" class="inline-flex items-center px-5 py-2.5 md:px-6 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base font-semibold shadow-md hover:shadow-lg">
+                    <i class="fas fa-newspaper mr-2"></i>
+                    <span>Lihat Semua Blog</span>
+                </a>
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-newspaper text-4xl mb-4 text-gray-300"></i>
+                <p class="text-sm md:text-sm">Data blog belum tersedia</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Pengumuman Section -->
+<section class="section bg-white py-4 md:py-6" id="pengumuman">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Pengumuman</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Informasi Terbaru dari Pesantren</p>
+        </div>
+        
+        <div class="max-w-4xl mx-auto">
+            {% if pengumuman %}
+            <div class="space-y-3 md:space-y-4">
+                {% for p in pengumuman %}
+                <div class="pengumuman-item fade-in bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-md p-3 md:p-4 border-l-4 {% if p.is_penting %}border-red-500{% else %}border-green-500{% endif %}">
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 md:w-12 md:h-12 {% if p.is_penting %}bg-red-500{% else %}bg-green-500{% endif %} rounded-full flex items-center justify-center text-white text-sm md:text-lg mr-3 flex-shrink-0">
+                            <i class="fas fa-{% if p.is_penting %}exclamation-triangle{% else %}bullhorn{% endif %}"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm md:text-base font-bold text-gray-900 mb-2">{{ p.judul }}</h3>
+                            <div class="pengumuman-preview text-xs md:text-sm text-gray-700 mb-3 prose prose-sm max-w-none">
+                                {{ p.konten|striptags|truncatewords:30 }}
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                            {% if p.published_at %}
+                            <span class="text-xs {% if p.is_penting %}text-red-600{% else %}text-green-600{% endif %} font-semibold">{{ p.published_at|date:"d F Y" }}</span>
+                            {% elif p.created_at %}
+                            <span class="text-xs {% if p.is_penting %}text-red-600{% else %}text-green-600{% endif %} font-semibold">{{ p.created_at|date:"d F Y" }}</span>
+                            {% endif %}
+                                </div>
+                                <button class="pengumuman-detail-btn px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                                        data-pengumuman-id="{{ p.id }}"
+                                        data-pengumuman-judul="{{ p.judul }}"
+                                        data-pengumuman-tanggal="{% if p.published_at %}{{ p.published_at|date:'d F Y' }}{% else %}{{ p.created_at|date:'d F Y' }}{% endif %}"
+                                        data-pengumuman-is-penting="{{ p.is_penting|yesno:'true,false' }}">
+                                    <i class="fas fa-eye"></i>
+                                    <span>Detail</span>
+                                </button>
+                                <script type="application/json" class="pengumuman-konten-data" data-pengumuman-id="{{ p.id }}">{{ p.konten|safe }}</script>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-bullhorn text-4xl mb-4 text-gray-300"></i>
+                <p class="text-sm md:text-sm">Belum ada pengumuman</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Pengumuman Detail Modal -->
+    <div id="pengumuman-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-3 md:p-4" onclick="closePengumumanModal()">
+        <div class="relative modal-container w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl xl:max-w-3xl mx-auto max-h-[85vh] sm:max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <!-- Modal Content -->
+            <div class="bg-white rounded-xl overflow-hidden shadow-2xl">
+                <div id="pengumuman-modal-header" class="p-4 md:p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-green-500 to-blue-500">
+                    <div class="flex items-center gap-3">
+                        <div id="pengumuman-modal-icon" class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white text-xl">
+                            <i class="fas fa-bullhorn"></i>
+        </div>
+                        <div>
+                            <h3 id="pengumuman-modal-title" class="text-lg md:text-xl font-bold text-white"></h3>
+                            <p id="pengumuman-modal-date" class="text-xs text-white/80 mt-1"></p>
+                        </div>
+                    </div>
+                    <button onclick="closePengumumanModal()" class="text-white hover:text-gray-200 transition-colors p-2 hover:bg-white/20 rounded-lg">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                    </div>
+                <div class="p-4 md:p-6">
+                    <div id="pengumuman-modal-content" class="pengumuman-content prose prose-sm md:prose-base max-w-none text-gray-700 leading-relaxed">
+                        <!-- Content akan diisi oleh JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Dokumentasi Section -->
+<section class="section bg-white py-4 md:py-6" id="dokumentasi">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Dokumentasi</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Rekam Jejak Kegiatan Pesantren</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            {% if dokumentasi %}
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                {% for doc in dokumentasi %}
+                <div class="doc-item fade-in bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                     {% if doc.gambar_dokumentasi.all %}onclick="openDokumentasiModal({{ doc.id }})"{% endif %}>
+                    <div class="relative aspect-video bg-gray-100 overflow-hidden min-h-[120px] sm:min-h-[140px]">
+                        {% if doc.gambar_dokumentasi.all %}
+                        <img src="{{ doc.gambar_dokumentasi.all.0.gambar.url }}" alt="{{ doc.judul }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fas fa-images text-green-600"></i>
+                            <span class="text-gray-900 font-semibold">{{ doc.gambar_dokumentasi.all|length }}</span>
+                        </div>
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-100">
+                            <i class="fas fa-folder-open text-4xl text-gray-400"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-3 md:p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-semibold">{{ doc.get_kategori_display }}</span>
+                            {% if doc.tanggal_kegiatan %}
+                            <span class="text-xs text-gray-500">{{ doc.tanggal_kegiatan|date:"M Y" }}</span>
+                            {% endif %}
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-sm mb-1 line-clamp-2">{{ doc.judul }}</h3>
+                        {% if doc.deskripsi %}
+                        <p class="text-xs text-gray-600 line-clamp-2 mt-1">{{ doc.deskripsi }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Dokumentasi Images Data (Hidden) -->
+            {% for doc in dokumentasi %}
+                {% if doc.gambar_dokumentasi.all %}
+                <script type="application/json" class="dokumentasi-images-data" data-doc-id="{{ doc.id }}">
+                {
+                    "id": {{ doc.id }},
+                    "judul": "{{ doc.judul|escapejs }}",
+                    "kategori": "{{ doc.get_kategori_display|escapejs }}",
+                    "tanggal": "{% if doc.tanggal_kegiatan %}{{ doc.tanggal_kegiatan|date:'d M Y' }}{% endif %}",
+                    "lokasi": "{{ doc.lokasi|escapejs }}",
+                    "images": [{% for img in doc.gambar_dokumentasi.all %}{"url": "{{ img.gambar.url|escapejs }}", "alt": "{{ img.alt_text|default:doc.judul|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+                }
+                </script>
+                {% endif %}
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-folder-open text-4xl mb-4 text-gray-300"></i>
+                <p class="text-sm md:text-sm">Data dokumentasi belum tersedia</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Dokumentasi Gallery Modal -->
+    <div id="dokumentasi-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-4" onclick="closeDokumentasiModal()">
+        <div class="relative modal-container w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto" onclick="event.stopPropagation()">
+            <!-- Close Button -->
+            <button onclick="closeDokumentasiModal()" class="absolute top-4 right-4 z-30 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors shadow-lg">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            
+            <!-- Modal Header -->
+            <div class="bg-white rounded-t-lg p-3 sm:p-4 md:p-6 border-b border-gray-200">
+                <h3 id="dokumentasi-modal-title" class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900"></h3>
+                <div id="dokumentasi-modal-meta" class="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-600">
+                    <span id="dokumentasi-modal-kategori"></span>
+                    <span id="dokumentasi-modal-tanggal"></span>
+                    <span id="dokumentasi-modal-lokasi"></span>
+                </div>
+            </div>
+            
+            <!-- Main Image -->
+            <div class="relative bg-gray-100">
+                <img id="dokumentasi-modal-main-img" src="" alt="" class="w-full h-auto max-h-[50vh] sm:max-h-[60vh] md:max-h-[65vh] lg:max-h-[70vh] object-contain">
+                
+                <!-- Navigation Arrows -->
+                <button id="dokumentasi-modal-prev" onclick="changeDokumentasiImage(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors hidden">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="dokumentasi-modal-next" onclick="changeDokumentasiImage(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded-full transition-colors hidden">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <!-- Thumbnails -->
+            <div id="dokumentasi-modal-thumbnails" class="bg-white rounded-b-lg p-2 sm:p-4 flex justify-center gap-1.5 sm:gap-2 overflow-x-auto pb-2">
+            </div>
+            
+            <!-- Image Counter -->
+            <div class="text-center mt-2 text-gray-900">
+                <span id="dokumentasi-modal-counter"></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Lokasi & Peta Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6" id="lokasi">
+    <div class="container mx-auto px-3">
+        <div class="section-header text-center mb-4">
+            <h2 class="section-title text-xl md:text-3xl font-bold text-gray-900 mb-2">Lokasi Pesantren</h2>
+            <p class="section-subtitle text-sm md:text-lg text-gray-600">Temukan Kami di Peta</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                <div class="info-box fade-in bg-white rounded-lg shadow-md p-3 md:p-4">
+                    <h3 class="text-sm md:text-lg font-bold text-gray-900 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>
+                        Alamat Lengkap
+                    </h3>
+                    <p class="text-xs md:text-sm text-gray-700 leading-relaxed mb-4">
+                        {% if settings and settings.alamat %}
+                            {{ settings.alamat|linebreaks }}
+                        {% else %}
+                            <span class="text-gray-500">Alamat belum diatur</span>
+                        {% endif %}
+                    </p>
+                    
+                    {% if settings and settings.no_telepon %}
+                    <div class="mb-2">
+                        <i class="fas fa-phone text-green-600 mr-2"></i>
+                        <span class="text-xs md:text-sm text-gray-700">{{ settings.no_telepon }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if settings and settings.email %}
+                    <div class="mb-2">
+                        <i class="fas fa-envelope text-green-600 mr-2"></i>
+                        <span class="text-xs md:text-sm text-gray-700">{{ settings.email }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="map-box fade-in bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="w-full h-64 md:h-80">
+                        {% if settings and settings.google_maps_embed_code %}
+                            {{ settings.google_maps_embed_code|safe }}
+                        {% else %}
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4743.338204627242!2d100.33053393754462!3d1.3829842394618077!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x302cbd7d4c59ae7b%3A0x2d06a22b77b25b31!2sPM.%20Raudhatussalam%20Mahato!5e0!3m2!1sid!2sid!4v1763890872178!5m2!1sid!2sid" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section relative py-4 md:py-6 bg-gradient-to-br from-green-100 via-green-200 to-blue-100 text-gray-900 overflow-hidden">
+    <div class="absolute inset-0 bg-white/10"></div>
+    <div class="container mx-auto px-3 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-sm md:text-sm font-bold mb-3 md:mb-4">Daftarkan Putra-Putri Anda Sekarang!</h2>
+            <p class="text-sm md:text-sm mb-4 md:mb-4 text-gray-700">Jadikan {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}pesantren{% endif %} sebagai tempat terbaik untuk pendidikan putra-putri Anda. Membentuk generasi Qur'ani yang unggul di bidang akademis dan akhlak mulia.</p>
+            <div class="flex flex-col md:flex-row gap-2 md:gap-3 justify-center">
+                <a href="{% url 'users:login' %}" class="cta-button primary px-3 py-2 md:px-6 md:py-3 text-sm md:text-sm font-semibold rounded-full shadow-lg hover:shadow-white/50 transition-all duration-300">
+                    Daftar Sekarang
+                </a>
+                <button onclick="openWhatsAppModal()" class="cta-button secondary px-3 py-2 md:px-6 md:py-3 text-sm md:text-sm font-semibold rounded-full shadow-lg hover:shadow-white/50 transition-all duration-300">
+                    <i class="fab fa-whatsapp mr-2"></i>Hubungi Kami
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Floating WhatsApp Button -->
+<button onclick="openWhatsAppModal()" class="fixed bottom-32 md:bottom-24 right-4 md:right-6 z-40 bg-green-500 hover:bg-green-600 text-white w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl hover:shadow-green-500/50 transition-all duration-300 transform hover:scale-110 active:scale-95 group flex items-center justify-center">
+    <i class="fab fa-whatsapp text-lg md:text-xl"></i>
+    <div class="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-100 text-gray-900 border border-gray-300 text-xs md:text-sm px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
+        Hubungi via WhatsApp
+        <div class="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
+    </div>
+</button>
+
+<!-- WhatsApp Template Modal -->
+<div id="whatsapp-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2 sm:p-3 md:p-4" onclick="closeWhatsAppModal()">
+    <div class="modal-container bg-white rounded-lg sm:rounded-xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl xl:max-w-3xl mx-auto max-h-[85vh] sm:max-h-[90vh] md:max-h-[95vh] overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-green-500 to-green-600 p-3 md:p-4 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                <div class="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fab fa-whatsapp text-white text-base md:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h3 class="text-base md:text-lg font-bold text-white truncate">Hubungi via WhatsApp</h3>
+                    <p class="text-xs text-white/90 hidden md:block">Pilih template dan nomor tujuan</p>
+                </div>
+            </div>
+            <button onclick="closeWhatsAppModal()" class="text-white hover:text-gray-200 transition-colors p-1.5 md:p-2 hover:bg-white/20 rounded-lg flex-shrink-0 ml-2">
+                <i class="fas fa-times text-lg md:text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Modal Content -->
+        <div class="flex-1 overflow-y-auto p-3 md:p-4">
+            <!-- Pilih Nomor -->
+            <div class="mb-3 md:mb-4">
+                <label class="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-phone mr-1.5 text-green-600"></i>Pilih Nomor Tujuan
+                </label>
+                <div class="space-y-2" id="whatsapp-contact-list">
+                    {% for contact in contact_persons %}
+                    <button onclick="selectWhatsAppContact(this)" 
+                            class="w-full p-2.5 md:p-3 bg-gray-50 hover:bg-green-50 border-2 border-gray-200 hover:border-green-500 rounded-lg transition-all text-left active:scale-95"
+                            data-contact-number="{{ contact.get_whatsapp_number|default:'' }}"
+                            data-contact-name="{{ contact.nama|escapejs }}">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                                <div class="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fab fa-whatsapp text-green-600 text-sm md:text-base"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-semibold text-xs md:text-sm text-gray-900 truncate">{{ contact.nama }}</div>
+                                    <div class="text-xs text-gray-600 truncate">{{ contact.no_hp|default:"-" }}</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 text-xs flex-shrink-0"></i>
+                        </div>
+                    </button>
+                    {% empty %}
+                    <div class="text-center py-4 text-gray-500">
+                        <i class="fas fa-user-circle text-xl md:text-2xl mb-2"></i>
+                        <p class="text-xs">Data contact person belum tersedia</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Pilih Template atau Custom -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs md:text-sm font-semibold text-gray-700">
+                        <i class="fas fa-file-alt mr-1.5 text-green-600"></i>Pilih Template Pesan
+                    </label>
+                    <button onclick="toggleCustomMessage()" id="toggle-custom-btn" class="text-xs md:text-sm text-green-600 hover:text-green-700 font-semibold flex items-center gap-1">
+                        <i class="fas fa-edit"></i>
+                        <span>Tulis Pesan Sendiri</span>
+                    </button>
+                </div>
+                
+                <!-- Custom Message Input -->
+                <div id="custom-message-section" class="hidden mb-3">
+                    <textarea id="custom-message-input" 
+                              placeholder="Tulis pesan Anda di sini..."
+                              class="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none text-xs md:text-sm"
+                              rows="6"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Pesan custom akan menggantikan template yang dipilih
+                    </p>
+                </div>
+                
+                <!-- Template List -->
+                <div class="space-y-2 max-h-48 md:max-h-64 overflow-y-auto" id="whatsapp-template-list">
+                    {% for template in whatsapp_templates %}
+                    <button onclick="selectWhatsAppTemplate(this)" 
+                            class="w-full p-2.5 md:p-3 bg-white hover:bg-green-50 border-2 border-gray-200 hover:border-green-500 rounded-lg transition-all text-left group active:scale-95"
+                            data-template-id="{{ template.id }}">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1.5 md:gap-2 mb-1 flex-wrap">
+                                    <span class="px-1.5 py-0.5 md:px-2 md:py-1 text-xs rounded-full bg-green-100 text-green-700 font-semibold whitespace-nowrap">{{ template.get_kategori_display }}</span>
+                                    <span class="font-semibold text-xs md:text-sm text-gray-900 truncate">{{ template.nama }}</span>
+                                </div>
+                                <p class="text-xs text-gray-600 line-clamp-2 mt-1">{{ template.pesan|truncatewords:12 }}</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 group-hover:text-green-600 transition-colors flex-shrink-0 mt-1 text-xs"></i>
+                        </div>
+                    </button>
+                    {% empty %}
+                    <div class="text-center py-4 text-gray-500">
+                        <i class="fas fa-file-alt text-xl md:text-2xl mb-2"></i>
+                        <p class="text-xs">Template WhatsApp belum tersedia</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- WhatsApp Templates Data (Hidden) -->
+                {% for template in whatsapp_templates %}
+                <script type="application/json" class="whatsapp-template-data" data-template-id="{{ template.id }}">
+                {
+                    "id": {{ template.id }},
+                    "nama": "{{ template.nama|escapejs }}",
+                    "pesan": "{{ template.pesan|escapejs }}"
+                }
+                </script>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex-shrink-0">
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-gray-600 mb-0.5">Nomor Tujuan:</p>
+                    <p id="whatsapp-selected-contact" class="text-xs md:text-sm font-semibold text-gray-900 truncate">Belum dipilih</p>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-gray-600 mb-0.5">Template/Pesan:</p>
+                    <p id="whatsapp-selected-template" class="text-xs md:text-sm font-semibold text-gray-900 truncate">Belum dipilih</p>
+                </div>
+            </div>
+            <button id="whatsapp-send-btn" onclick="sendWhatsAppMessage()" 
+                    disabled
+                    class="w-full py-2.5 md:py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold text-sm md:text-base transition-colors flex items-center justify-center gap-2 active:scale-95">
+                <i class="fab fa-whatsapp text-base md:text-lg"></i>
+                <span>Kirim via WhatsApp</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Section Subtitle Spacing untuk Mobile */
+.section-subtitle-spaced {
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 767px) {
+    /* Spacing lebih besar untuk sub judul di mobile */
+    .section-subtitle-spaced {
+        margin-top: 2rem !important;
+        display: block;
+    }
+    
+    /* Tambahkan margin-bottom pada section-title untuk spacing lebih besar */
+    .section-title-spaced {
+        margin-bottom: 1.5rem !important;
+    }
+}
+
+/* Sejarah Gallery - Landscape Format */
+.sejarah-gallery-image-wrapper {
+    padding-bottom: 62.5%; /* 16:10 aspect ratio - lebih landscape */
+}
+
+@media (min-width: 640px) {
+    .sejarah-gallery-image-wrapper {
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    }
+}
+
+@media (min-width: 768px) {
+    .sejarah-gallery-image-wrapper {
+        padding-bottom: 42.86%; /* 21:9 aspect ratio - sangat landscape */
+    }
+}
+
+/* Hero Slide Styles */
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    z-index: 1;
+}
+
+.hero-slide.active {
+    opacity: 1;
+    z-index: 2;
+}
+
+.hero-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.hero-content {
+    transition: opacity 0.5s ease-in-out;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Bottom Navigation */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 60px;
+    }
+}
+
+
+/* Timeline Mobile Improvements */
+.timeline-item-mobile {
+    padding-left: 1.5rem;
+}
+
+.timeline-item-mobile .bg-white {
+    border-left-width: 3px;
+}
+
+@media (max-width: 640px) {
+    .timeline-item-mobile {
+        padding-left: 1.25rem;
+    }
+    
+    .timeline-item-mobile .absolute {
+        width: 1.75rem;
+        height: 1.75rem;
+        left: -0.5rem;
+    }
+}
+
+/* Visi Misi Summernote Content - Responsif Mobile */
+.visi-content,
+.misi-content {
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.visi-content *,
+.misi-content * {
+    font-size: 0.75rem !important;
+    line-height: 1.5 !important;
+}
+
+.visi-content p,
+.misi-content p {
+    margin-bottom: 0.5rem;
+}
+
+.visi-content ul,
+.misi-content ul,
+.visi-content ol,
+.misi-content ol {
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.visi-content li,
+.misi-content li {
+    margin-bottom: 0.25rem;
+}
+
+@media (min-width: 768px) {
+    .visi-content,
+    .misi-content {
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+    
+    .visi-content *,
+    .misi-content * {
+        font-size: 1rem !important;
+        line-height: 1.75 !important;
+    }
+    
+    .visi-content p,
+    .misi-content p {
+        margin-bottom: 0.75rem;
+    }
+    
+    .visi-content ul,
+    .misi-content ul,
+    .visi-content ol,
+    .misi-content ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .visi-content li,
+    .misi-content li {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* KMI Summernote Content - Responsif Mobile */
+.kmi-visi-content,
+.kmi-profil-content {
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.kmi-visi-content *,
+.kmi-profil-content * {
+    font-size: 0.75rem !important;
+    line-height: 1.5 !important;
+}
+
+.kmi-visi-content p,
+.kmi-profil-content p {
+    margin-bottom: 0.5rem;
+}
+
+.kmi-visi-content ul,
+.kmi-profil-content ul,
+.kmi-visi-content ol,
+.kmi-profil-content ol {
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.kmi-visi-content li,
+.kmi-profil-content li {
+    margin-bottom: 0.25rem;
+}
+
+@media (min-width: 768px) {
+    .kmi-visi-content,
+    .kmi-profil-content {
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+    
+    .kmi-visi-content *,
+    .kmi-profil-content * {
+        font-size: 1rem !important;
+        line-height: 1.75 !important;
+    }
+    
+    .kmi-visi-content p,
+    .kmi-profil-content p {
+        margin-bottom: 0.75rem;
+    }
+    
+    .kmi-visi-content ul,
+    .kmi-profil-content ul,
+    .kmi-visi-content ol,
+    .kmi-profil-content ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .kmi-visi-content li,
+    .kmi-profil-content li {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Persyaratan & Alur Pendaftaran Summernote Content - Responsif Mobile */
+.persyaratan-content,
+.alur-content {
+    font-size: 0.7rem;
+    line-height: 1.4;
+}
+
+.persyaratan-content *,
+.alur-content * {
+    font-size: 0.7rem !important;
+    line-height: 1.4 !important;
+}
+
+.persyaratan-content p,
+.alur-content p {
+    margin-bottom: 0.4rem;
+}
+
+.persyaratan-content ul,
+.alur-content ul,
+.persyaratan-content ol,
+.alur-content ol {
+    padding-left: 0.875rem;
+    margin-bottom: 0.4rem;
+}
+
+.persyaratan-content li,
+.alur-content li {
+    margin-bottom: 0.2rem;
+}
+
+.persyaratan-content h1,
+.persyaratan-content h2,
+.persyaratan-content h3,
+.persyaratan-content h4,
+.persyaratan-content h5,
+.persyaratan-content h6,
+.alur-content h1,
+.alur-content h2,
+.alur-content h3,
+.alur-content h4,
+.alur-content h5,
+.alur-content h6 {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+@media (min-width: 768px) {
+    .persyaratan-content,
+    .alur-content {
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    
+    .persyaratan-content *,
+    .alur-content * {
+        font-size: 0.875rem !important;
+        line-height: 1.5 !important;
+    }
+    
+    .persyaratan-content p,
+    .alur-content p {
+        margin-bottom: 0.5rem;
+    }
+    
+    .persyaratan-content ul,
+    .alur-content ul,
+    .persyaratan-content ol,
+    .alur-content ol {
+        padding-left: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .persyaratan-content li,
+    .alur-content li {
+        margin-bottom: 0.35rem;
+    }
+    
+    .persyaratan-content h1,
+    .persyaratan-content h2,
+    .persyaratan-content h3,
+    .persyaratan-content h4,
+    .persyaratan-content h5,
+    .persyaratan-content h6,
+    .alur-content h1,
+    .alur-content h2,
+    .alur-content h3,
+    .alur-content h4,
+    .alur-content h5,
+    .alur-content h6 {
+        font-size: 1rem !important;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Override untuk tabel biaya - pastikan text tidak putih */
+.biaya-tahunan .data-table thead th,
+.biaya-bulanan .data-table thead th {
+    color: #111827 !important;
+    background-color: #f0fdf4 !important;
+}
+
+.biaya-bulanan .data-table thead th {
+    background-color: #eff6ff !important;
+}
+
+.biaya-tahunan .data-table tbody td,
+.biaya-bulanan .data-table tbody td {
+    color: #111827 !important;
+}
+
+/* Tabel Biaya Mobile Optimization */
+@media (max-width: 640px) {
+    .biaya-tahunan .data-table,
+    .biaya-bulanan .data-table,
+    .perlengkapan-santri .data-table {
+        font-size: 0.7rem;
+    }
+    
+    .biaya-tahunan .data-table th,
+    .biaya-bulanan .data-table th,
+    .perlengkapan-santri .data-table th {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .biaya-tahunan .data-table td,
+    .biaya-bulanan .data-table td,
+    .perlengkapan-santri .data-table td {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    /* Pastikan kolom Jumlah tidak terlalu kecil */
+    .biaya-tahunan .data-table td:last-child,
+    .biaya-bulanan .data-table td:last-child,
+    .perlengkapan-santri .data-table td:last-child {
+        font-size: 0.7rem;
+        min-width: 80px;
+    }
+}
+
+/* Pengumuman Summernote Content - Responsif Mobile */
+.pengumuman-content {
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.pengumuman-content * {
+    font-size: 0.875rem !important;
+    line-height: 1.6 !important;
+}
+
+.pengumuman-content p {
+    margin-bottom: 0.75rem;
+}
+
+.pengumuman-content ul,
+.pengumuman-content ol {
+    padding-left: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.pengumuman-content li {
+    margin-bottom: 0.5rem;
+}
+
+.pengumuman-content h1,
+.pengumuman-content h2,
+.pengumuman-content h3,
+.pengumuman-content h4,
+.pengumuman-content h5,
+.pengumuman-content h6 {
+    font-size: 1rem !important;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.pengumuman-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.pengumuman-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.pengumuman-content table th,
+.pengumuman-content table td {
+    padding: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+@media (min-width: 768px) {
+    .pengumuman-content {
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+    
+    .pengumuman-content * {
+        font-size: 1rem !important;
+        line-height: 1.75 !important;
+    }
+    
+    .pengumuman-content p {
+        margin-bottom: 1rem;
+    }
+    
+    .pengumuman-content ul,
+    .pengumuman-content ol {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .pengumuman-content li {
+        margin-bottom: 0.75rem;
+    }
+    
+    .pengumuman-content h1,
+    .pengumuman-content h2,
+    .pengumuman-content h3,
+    .pengumuman-content h4,
+    .pengumuman-content h5,
+    .pengumuman-content h6 {
+        font-size: 1.25rem !important;
+        margin-bottom: 1rem;
+    }
+}
+
+/* Gallery Image Container - Uniform Size */
+.gallery-image-container {
+    height: 8rem;
+    min-height: 8rem;
+}
+
+@media (min-width: 640px) {
+    .gallery-image-container {
+        height: 10rem;
+        min-height: 10rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .gallery-image-container {
+        height: 14rem;
+        min-height: 14rem;
+    }
+}
+
+/* Image Responsive Fixes for Mobile */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Hero Image Mobile Optimization */
+.hero-slide img {
+    object-position: center;
+}
+
+@media (max-width: 640px) {
+    .hero-slide img {
+        object-position: center top;
+    }
+}
+
+/* Program Kegiatan Image Mobile */
+.program-kegiatan-card img {
+    min-height: 100%;
+    object-fit: cover;
+}
+
+/* Dokumentasi Image Mobile */
+.doc-item img {
+    min-height: 100%;
+    object-fit: cover;
+}
+
+/* Modal Images Mobile Optimization */
+@media (max-width: 640px) {
+    #gallery-lightbox-img,
+    #fasilitas-modal-img,
+    #ekstrakurikuler-modal-main-img,
+    #dokumentasi-modal-main-img,
+    #program-gallery-main-img {
+        padding: 0.5rem;
+    }
+}
+
+/* Contact Person Image Mobile */
+@media (max-width: 640px) {
+    .contact-info img {
+        flex-shrink: 0;
+    }
+}
+
+/* Pengajar Image Mobile */
+@media (max-width: 640px) {
+    .pengajar-card img,
+    .pengajar-slide img {
+        flex-shrink: 0;
+    }
+}
+
+/* Floating WhatsApp Button */
+@media (max-width: 768px) {
+    /* Adjust position untuk mobile agar tidak overlap dengan bottom nav dan back to top */
+    button[onclick*="openWhatsAppModal"] {
+        bottom: 8rem !important;
+    }
+    
+    /* Pastikan kedua floating button memiliki ukuran yang sama */
+    #backToTop,
+    button[onclick*="openWhatsAppModal"] {
+        width: 3rem !important;
+        height: 3rem !important;
+        padding: 0 !important;
+    }
+    
+    /* Jarak antara floating button - WhatsApp di atas, Back to Top di bawah */
+    #backToTop {
+        bottom: 5rem !important;
+    }
+}
+
+/* Pengajar Card Animations */
+.pengajar-card {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.pengajar-card:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-in-out;
+}
+
+@media (max-width: 768px) {
+    .pengajar-card {
+        transition: transform 0.15s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .pengajar-card:active {
+        transform: scale(0.93);
+    }
+}
+
+/* Modal Responsive Styles */
+.modal-container {
+    transition: all 0.3s ease-in-out;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{# {% load compress %} #}  {# UNCOMMENT setelah install django-compressor #}
+{# {% compress js %} #}
+<script src="{% static 'public/js/home.js' %}"></script>
+<script src="{% static 'public/js/sejarah-gallery.js' %}"></script>
+<script src="{% static 'public/js/whatsapp-modal.js' %}"></script>
+{# {% endcompress %} #}
+<script>
+// Handle image error untuk pengajar foto
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle pengajar foto error
+    const pengajarFotos = document.querySelectorAll('.pengajar-foto');
+    pengajarFotos.forEach(function(img) {
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            const fallback = document.createElement('div');
+            fallback.className = 'w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center absolute inset-0';
+            const iconSize = this.classList.contains('md:text-6xl') ? 'text-5xl md:text-6xl' : 'text-4xl';
+            fallback.innerHTML = '<i class="fas fa-user ' + iconSize + ' text-white/50"></i>';
+            this.parentNode.appendChild(fallback);
+        });
+    });
+    
+    // Format Rupiah Indonesia - ganti koma dengan titik
+    const rupiahElements = document.querySelectorAll('.format-rupiah');
+    rupiahElements.forEach(function(el) {
+        const amount = el.getAttribute('data-amount');
+        if (amount) {
+            // Format angka dengan titik sebagai pemisah ribuan (format Indonesia)
+            var num = parseFloat(amount) || 0;
+            var numInt = Math.floor(num);
+            // Format dengan titik sebagai pemisah ribuan
+            var formatted = numInt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            el.textContent = 'Rp ' + formatted;
+        } else if (el.textContent) {
+            // Fallback: ganti koma dengan titik jika data-amount tidak ada
+            el.textContent = el.textContent.replace(/,/g, '.');
+        }
+    });
+});
+</script>
+{% endblock %}
+
+
+
+
+
+

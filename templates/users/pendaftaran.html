@@ -1,0 +1,1240 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Pendaftaran Santri - User Panel{% endblock %}
+{% block page_title %}Pendaftaran Santri{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-4 md:space-y-6">
+    <!-- Info Card -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+        <div class="flex items-start">
+            <i class="fas fa-info-circle text-blue-600 mr-3 mt-0.5"></i>
+            <div class="text-sm text-blue-800">
+                <p class="font-medium mb-1">Panduan Pendaftaran</p>
+                <p class="text-xs">Lengkapi semua data dengan benar. Pastikan dokumen yang diupload jelas dan valid. Agama Islam wajib untuk semua santri.</p>
+            </div>
+        </div>
+    </div>
+    
+    {% if has_santri and not edit_mode %}
+    <!-- View Mode: Tampilkan Data -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg md:text-xl font-bold text-gray-900">Data Pendaftaran Santri</h3>
+            <div class="flex items-center space-x-2">
+                <a 
+                    href="{% url 'users:pendaftaran_pdf' %}"
+                    target="_blank"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-file-pdf mr-2"></i>Download PDF
+                </a>
+                <a 
+                    href="?edit=true"
+                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Edit Data
+                </a>
+            </div>
+        </div>
+        
+        <!-- Data Pribadi Santri -->
+        <div class="border-b border-gray-200 pb-6 mb-6">
+            <h4 class="text-base font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-user mr-2 text-green-600"></i>
+                Data Pribadi Santri
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Nama Lengkap</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.nama_lengkap }}</p>
+                </div>
+                {% if santri.nama_panggilan %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Nama Panggilan</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.nama_panggilan }}</p>
+                </div>
+                {% endif %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">NISN</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.nisn }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tempat, Tanggal Lahir</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tempat_lahir }}, {{ santri.tanggal_lahir|date:"d F Y" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Jenis Kelamin</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.get_jenis_kelamin_display }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Agama</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.agama }}</p>
+                </div>
+                {% if santri.kewarganegaraan %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Kewarganegaraan</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.get_kewarganegaraan_display|default:santri.kewarganegaraan }}</p>
+                </div>
+                {% endif %}
+                {% if santri.anak_ke %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Anak Ke</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.anak_ke }}</p>
+                </div>
+                {% endif %}
+                {% if santri.jumlah_saudara is not None %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Jumlah Saudara</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.jumlah_saudara }}</p>
+                </div>
+                {% endif %}
+                {% if santri.bahasa_sehari_hari %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Bahasa Sehari-hari</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.bahasa_sehari_hari }}</p>
+                </div>
+                {% endif %}
+                {% if santri.golongan_darah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Golongan Darah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.golongan_darah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.tinggi_badan %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tinggi Badan</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tinggi_badan }} cm</p>
+                </div>
+                {% endif %}
+                {% if santri.berat_badan %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Berat Badan</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.berat_badan }} kg</p>
+                </div>
+                {% endif %}
+                {% if santri.riwayat_penyakit %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Riwayat Penyakit</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.riwayat_penyakit }}</p>
+                </div>
+                {% endif %}
+                {% if santri.tinggal_dengan %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tinggal Dengan</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tinggal_dengan }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Data Orang Tua -->
+        <div class="border-b border-gray-200 pb-6 mb-6">
+            <h4 class="text-base font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-users mr-2 text-green-600"></i>
+                Data Orang Tua
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Data Ayah -->
+                <div class="md:col-span-2">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3 border-b pb-2">Data Ayah</h5>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Nama Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.nama_ayah }}</p>
+                </div>
+                {% if santri.nik_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">NIK Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.nik_ayah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.tempat_lahir_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tempat Lahir Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tempat_lahir_ayah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.tanggal_lahir_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tanggal Lahir Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tanggal_lahir_ayah|date:"d F Y" }}</p>
+                </div>
+                {% endif %}
+                {% if santri.agama_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Agama Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.agama_ayah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.kewarganegaraan_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Kewarganegaraan Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.get_kewarganegaraan_ayah_display|default:santri.kewarganegaraan_ayah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.pendidikan_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Pendidikan Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.pendidikan_ayah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.pekerjaan_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Pekerjaan Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.pekerjaan_ayah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.no_hp_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">No. HP Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.no_hp_ayah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.status_ayah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Status Ayah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.get_status_ayah_display|default:santri.status_ayah }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Data Ibu -->
+                <div class="md:col-span-2 mt-4">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3 border-b pb-2">Data Ibu</h5>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Nama Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.nama_ibu }}</p>
+                </div>
+                {% if santri.nik_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">NIK Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.nik_ibu }}</p>
+                </div>
+                {% endif %}
+                {% if santri.tempat_lahir_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tempat Lahir Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tempat_lahir_ibu }}</p>
+                </div>
+                {% endif %}
+                {% if santri.tanggal_lahir_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tanggal Lahir Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tanggal_lahir_ibu|date:"d F Y" }}</p>
+                </div>
+                {% endif %}
+                {% if santri.agama_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Agama Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.agama_ibu }}</p>
+                </div>
+                {% endif %}
+                {% if santri.kewarganegaraan_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Kewarganegaraan Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.get_kewarganegaraan_ibu_display|default:santri.kewarganegaraan_ibu }}</p>
+                </div>
+                {% endif %}
+                {% if santri.pendidikan_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Pendidikan Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.pendidikan_ibu }}</p>
+                </div>
+                {% endif %}
+                {% if santri.pekerjaan_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Pekerjaan Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.pekerjaan_ibu }}</p>
+                </div>
+                {% endif %}
+                {% if santri.no_hp_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">No. HP Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.no_hp_ibu }}</p>
+                </div>
+                {% endif %}
+                {% if santri.status_ibu %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Status Ibu</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.get_status_ibu_display|default:santri.status_ibu }}</p>
+                </div>
+                {% endif %}
+                {% if santri.alamat_orangtua %}
+                <div class="md:col-span-2">
+                    <p class="text-xs text-gray-600 mb-1">Alamat Orang Tua</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.alamat_orangtua }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Kontak & Alamat -->
+        <div class="border-b border-gray-200 pb-6 mb-6">
+            <h4 class="text-base font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-map-marker-alt mr-2 text-green-600"></i>
+                Kontak & Alamat
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <p class="text-xs text-gray-600 mb-1">Alamat Lengkap</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.alamat }}</p>
+                </div>
+                {% if santri.desa %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Desa/Kelurahan</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.desa }}</p>
+                </div>
+                {% endif %}
+                {% if santri.kecamatan %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Kecamatan</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.kecamatan }}</p>
+                </div>
+                {% endif %}
+                {% if santri.kabupaten %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Kabupaten/Kota</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.kabupaten }}</p>
+                </div>
+                {% endif %}
+                {% if santri.provinsi %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Provinsi</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.provinsi }}</p>
+                </div>
+                {% endif %}
+                {% if santri.kode_pos %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Kode Pos</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.kode_pos }}</p>
+                </div>
+                {% endif %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">No. HP</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.no_hp }}</p>
+                </div>
+                {% if santri.email %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Email</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.email }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Data Sekolah -->
+        <div class="border-b border-gray-200 pb-6 mb-6">
+            <h4 class="text-base font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-school mr-2 text-green-600"></i>
+                Data Sekolah
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Asal Sekolah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.asal_sekolah }}</p>
+                </div>
+                {% if santri.npsn_sekolah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">NPSN Sekolah</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.npsn_sekolah }}</p>
+                </div>
+                {% endif %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Kelas Terakhir</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.kelas_terakhir }}</p>
+                </div>
+                {% if santri.tahun_lulus %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tahun Lulus</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tahun_lulus }}</p>
+                </div>
+                {% endif %}
+                {% if santri.no_ijazah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">No. Ijazah/SKHUN</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.no_ijazah }}</p>
+                </div>
+                {% endif %}
+                {% if santri.kelas_diterima %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Kelas Diterima (di Pesantren)</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.kelas_diterima }}</p>
+                </div>
+                {% endif %}
+                {% if santri.tanggal_diterima %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-1">Tanggal Diterima</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ santri.tanggal_diterima|date:"d F Y" }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Dokumen -->
+        <div class="border-b border-gray-200 pb-6 mb-6">
+            <h4 class="text-base font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-file-upload mr-2 text-green-600"></i>
+                Dokumen
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% if santri.foto_santri %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-2">Foto Santri</p>
+                    <img src="{{ santri.foto_santri.url }}" alt="Foto Santri" class="w-full h-48 object-cover rounded-lg border border-gray-300">
+                </div>
+                {% endif %}
+                {% if santri.foto_ktp %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-2">Foto KTP/Kartu Keluarga</p>
+                    <img src="{{ santri.foto_ktp.url }}" alt="Foto KTP" class="w-full h-48 object-cover rounded-lg border border-gray-300">
+                </div>
+                {% endif %}
+                {% if santri.foto_akta %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-2">Foto Akta Kelahiran</p>
+                    <img src="{{ santri.foto_akta.url }}" alt="Foto Akta" class="w-full h-48 object-cover rounded-lg border border-gray-300">
+                </div>
+                {% endif %}
+                {% if santri.foto_ijazah %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-2">Foto Ijazah/SKHUN</p>
+                    <img src="{{ santri.foto_ijazah.url }}" alt="Foto Ijazah" class="w-full h-48 object-cover rounded-lg border border-gray-300">
+                </div>
+                {% endif %}
+                {% if santri.surat_sehat %}
+                <div>
+                    <p class="text-xs text-gray-600 mb-2">Surat Keterangan Sehat</p>
+                    <img src="{{ santri.surat_sehat.url }}" alt="Surat Sehat" class="w-full h-48 object-cover rounded-lg border border-gray-300">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if santri.catatan %}
+        <!-- Catatan -->
+        <div class="pb-6">
+            <h4 class="text-base font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-sticky-note mr-2 text-green-600"></i>
+                Catatan
+            </h4>
+            <p class="text-sm text-gray-900">{{ santri.catatan }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="pt-6 border-t border-gray-200 flex items-center space-x-3">
+            <a href="{% url 'users:pendaftaran_pdf' %}" target="_blank" class="inline-flex items-center px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md">
+                <i class="fas fa-file-pdf mr-2"></i>Download PDF
+            </a>
+            <a href="{% url 'users:status' %}" class="inline-flex items-center px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md">
+                <i class="fas fa-eye mr-2"></i>Lihat Status Pendaftaran
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Form Mode: Tampilkan Form (Create atau Edit) -->
+    {% if edit_mode or not has_santri %}
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        {% if has_santri %}
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg md:text-xl font-bold text-gray-900">Edit Data Pendaftaran</h3>
+            <a 
+                href="{% url 'users:pendaftaran' %}"
+                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors">
+                <i class="fas fa-times mr-2"></i>Batal
+            </a>
+        </div>
+        {% else %}
+        <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-6">Formulir Pendaftaran Santri</h3>
+        {% endif %}
+        
+        <form method="post" enctype="multipart/form-data" class="space-y-8" id="pendaftaran-form">
+            {% csrf_token %}
+            
+            <!-- Data Pribadi Santri -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-user mr-2 text-green-600"></i>
+                    Data Pribadi Santri
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="nama_lengkap" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap Santri *</label>
+                        <input 
+                            type="text" 
+                            id="nama_lengkap" 
+                            name="nama_lengkap" 
+                            value="{% if santri %}{{ santri.nama_lengkap }}{% endif %}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Nama lengkap sesuai akta kelahiran">
+                    </div>
+                    
+                    <div>
+                        <label for="nama_panggilan" class="block text-sm font-medium text-gray-700 mb-1">Nama Panggilan</label>
+                        <input 
+                            type="text" 
+                            id="nama_panggilan" 
+                            name="nama_panggilan" 
+                            value="{% if santri %}{{ santri.nama_panggilan }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Nama panggilan">
+                    </div>
+                    
+                    <div>
+                        <label for="nisn" class="block text-sm font-medium text-gray-700 mb-1">NISN *</label>
+                        <input 
+                            type="text" 
+                            id="nisn" 
+                            name="nisn" 
+                            value="{% if santri %}{{ santri.nisn }}{% endif %}"
+                            required
+                            maxlength="10"
+                            pattern="[0-9]{10}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="10 digit NISN">
+                    </div>
+                    
+                    <div>
+                        <label for="tempat_lahir" class="block text-sm font-medium text-gray-700 mb-1">Tempat Lahir *</label>
+                        <input 
+                            type="text" 
+                            id="tempat_lahir" 
+                            name="tempat_lahir" 
+                            value="{% if santri %}{{ santri.tempat_lahir }}{% endif %}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Kota tempat lahir">
+                    </div>
+                    
+                    <div>
+                        <label for="tanggal_lahir" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir *</label>
+                        <input 
+                            type="date" 
+                            id="tanggal_lahir" 
+                            name="tanggal_lahir" 
+                            value="{% if santri %}{{ santri.tanggal_lahir|date:'Y-m-d' }}{% endif %}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="jenis_kelamin" class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin *</label>
+                        <select 
+                            id="jenis_kelamin" 
+                            name="jenis_kelamin" 
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Pilih Jenis Kelamin</option>
+                            <option value="L" {% if santri and santri.jenis_kelamin == 'L' %}selected{% endif %}>Laki-laki</option>
+                            <option value="P" {% if santri and santri.jenis_kelamin == 'P' %}selected{% endif %}>Perempuan</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="agama" class="block text-sm font-medium text-gray-700 mb-1">Agama *</label>
+                        <input 
+                            type="text" 
+                            id="agama" 
+                            name="agama" 
+                            value="Islam"
+                            readonly
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed">
+                        <p class="mt-1 text-xs text-gray-500">Agama Islam wajib untuk semua santri</p>
+                    </div>
+                    
+                    <div>
+                        <label for="kewarganegaraan" class="block text-sm font-medium text-gray-700 mb-1">Kewarganegaraan</label>
+                        <select 
+                            id="kewarganegaraan" 
+                            name="kewarganegaraan"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="WNI" {% if not santri or santri.kewarganegaraan == 'WNI' %}selected{% endif %}>WNI</option>
+                            <option value="WNA" {% if santri and santri.kewarganegaraan == 'WNA' %}selected{% endif %}>WNA</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="anak_ke" class="block text-sm font-medium text-gray-700 mb-1">Anak Ke</label>
+                        <input 
+                            type="number" 
+                            id="anak_ke" 
+                            name="anak_ke"
+                            value="{% if santri %}{{ santri.anak_ke }}{% endif %}"
+                            min="1"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: 1, 2, 3">
+                    </div>
+                    
+                    <div>
+                        <label for="jumlah_saudara" class="block text-sm font-medium text-gray-700 mb-1">Jumlah Saudara</label>
+                        <input 
+                            type="number" 
+                            id="jumlah_saudara" 
+                            name="jumlah_saudara"
+                            value="{% if santri %}{{ santri.jumlah_saudara }}{% endif %}"
+                            min="0"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: 2, 3">
+                    </div>
+                    
+                    <div>
+                        <label for="bahasa_sehari_hari" class="block text-sm font-medium text-gray-700 mb-1">Bahasa Sehari-hari</label>
+                        <input 
+                            type="text" 
+                            id="bahasa_sehari_hari" 
+                            name="bahasa_sehari_hari"
+                            value="{% if santri %}{{ santri.bahasa_sehari_hari }}{% else %}Indonesia{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: Indonesia, Jawa, dll">
+                    </div>
+                    
+                    <div>
+                        <label for="golongan_darah" class="block text-sm font-medium text-gray-700 mb-1">Golongan Darah</label>
+                        <select 
+                            id="golongan_darah" 
+                            name="golongan_darah"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Pilih Golongan Darah</option>
+                            <option value="A" {% if santri and santri.golongan_darah == 'A' %}selected{% endif %}>A</option>
+                            <option value="B" {% if santri and santri.golongan_darah == 'B' %}selected{% endif %}>B</option>
+                            <option value="AB" {% if santri and santri.golongan_darah == 'AB' %}selected{% endif %}>AB</option>
+                            <option value="O" {% if santri and santri.golongan_darah == 'O' %}selected{% endif %}>O</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="tinggi_badan" class="block text-sm font-medium text-gray-700 mb-1">Tinggi Badan (cm)</label>
+                        <input 
+                            type="number" 
+                            id="tinggi_badan" 
+                            name="tinggi_badan"
+                            value="{% if santri %}{{ santri.tinggi_badan }}{% endif %}"
+                            min="0"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: 165">
+                    </div>
+                    
+                    <div>
+                        <label for="berat_badan" class="block text-sm font-medium text-gray-700 mb-1">Berat Badan (kg)</label>
+                        <input 
+                            type="number" 
+                            id="berat_badan" 
+                            name="berat_badan"
+                            value="{% if santri %}{{ santri.berat_badan }}{% endif %}"
+                            min="0"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: 55">
+                    </div>
+                    
+                    <div>
+                        <label for="riwayat_penyakit" class="block text-sm font-medium text-gray-700 mb-1">Riwayat Penyakit</label>
+                        <input 
+                            type="text" 
+                            id="riwayat_penyakit" 
+                            name="riwayat_penyakit"
+                            value="{% if santri %}{{ santri.riwayat_penyakit }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: Demam, Asma, dll">
+                    </div>
+                    
+                    <div>
+                        <label for="tinggal_dengan" class="block text-sm font-medium text-gray-700 mb-1">Tinggal Dengan</label>
+                        <select 
+                            id="tinggal_dengan" 
+                            name="tinggal_dengan"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Pilih</option>
+                            <option value="Orang Tua" {% if not santri or santri.tinggal_dengan == 'Orang Tua' %}selected{% endif %}>Orang Tua</option>
+                            <option value="Wali" {% if santri and santri.tinggal_dengan == 'Wali' %}selected{% endif %}>Wali</option>
+                            <option value="Lainnya" {% if santri and santri.tinggal_dengan == 'Lainnya' %}selected{% endif %}>Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Orang Tua -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-users mr-2 text-green-600"></i>
+                    Data Orang Tua
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="nama_ayah" class="block text-sm font-medium text-gray-700 mb-1">Nama Ayah *</label>
+                        <input 
+                            type="text" 
+                            id="nama_ayah" 
+                            name="nama_ayah" 
+                            value="{% if santri %}{{ santri.nama_ayah }}{% endif %}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Nama lengkap ayah">
+                    </div>
+                    
+                    <div>
+                        <label for="nama_ibu" class="block text-sm font-medium text-gray-700 mb-1">Nama Ibu *</label>
+                        <input 
+                            type="text" 
+                            id="nama_ibu" 
+                            name="nama_ibu" 
+                            value="{% if santri %}{{ santri.nama_ibu }}{% endif %}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Nama lengkap ibu">
+                    </div>
+                    
+                    <div>
+                        <label for="nik_ayah" class="block text-sm font-medium text-gray-700 mb-1">NIK Ayah (No. KTP)</label>
+                        <input 
+                            type="text" 
+                            id="nik_ayah" 
+                            name="nik_ayah"
+                            value="{% if santri %}{{ santri.nik_ayah }}{% endif %}"
+                            maxlength="16"
+                            pattern="[0-9]{16}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="16 digit NIK ayah">
+                    </div>
+                    
+                    <div>
+                        <label for="tempat_lahir_ayah" class="block text-sm font-medium text-gray-700 mb-1">Tempat Lahir Ayah</label>
+                        <input 
+                            type="text" 
+                            id="tempat_lahir_ayah" 
+                            name="tempat_lahir_ayah"
+                            value="{% if santri %}{{ santri.tempat_lahir_ayah }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Tempat lahir ayah">
+                    </div>
+                    
+                    <div>
+                        <label for="tanggal_lahir_ayah" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir Ayah</label>
+                        <input 
+                            type="date" 
+                            id="tanggal_lahir_ayah" 
+                            name="tanggal_lahir_ayah"
+                            value="{% if santri and santri.tanggal_lahir_ayah %}{{ santri.tanggal_lahir_ayah|date:'Y-m-d' }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="agama_ayah" class="block text-sm font-medium text-gray-700 mb-1">Agama Ayah</label>
+                        <input 
+                            type="text" 
+                            id="agama_ayah" 
+                            name="agama_ayah"
+                            value="{% if santri %}{{ santri.agama_ayah }}{% else %}Islam{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Agama ayah">
+                    </div>
+                    
+                    <div>
+                        <label for="kewarganegaraan_ayah" class="block text-sm font-medium text-gray-700 mb-1">Kewarganegaraan Ayah</label>
+                        <select 
+                            id="kewarganegaraan_ayah" 
+                            name="kewarganegaraan_ayah"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="WNI" {% if not santri or santri.kewarganegaraan_ayah == 'WNI' %}selected{% endif %}>WNI</option>
+                            <option value="WNA" {% if santri and santri.kewarganegaraan_ayah == 'WNA' %}selected{% endif %}>WNA</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="pendidikan_ayah" class="block text-sm font-medium text-gray-700 mb-1">Pendidikan Ayah</label>
+                        <select 
+                            id="pendidikan_ayah" 
+                            name="pendidikan_ayah"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Pilih Pendidikan</option>
+                            <option value="SD SEDERAJAT" {% if santri and santri.pendidikan_ayah == 'SD SEDERAJAT' %}selected{% endif %}>SD SEDERAJAT</option>
+                            <option value="SMP SEDERAJAT" {% if santri and santri.pendidikan_ayah == 'SMP SEDERAJAT' %}selected{% endif %}>SMP SEDERAJAT</option>
+                            <option value="SMA SEDERAJAT" {% if santri and santri.pendidikan_ayah == 'SMA SEDERAJAT' %}selected{% endif %}>SMA SEDERAJAT</option>
+                            <option value="D3" {% if santri and santri.pendidikan_ayah == 'D3' %}selected{% endif %}>D3</option>
+                            <option value="S1" {% if santri and santri.pendidikan_ayah == 'S1' %}selected{% endif %}>S1</option>
+                            <option value="S2" {% if santri and santri.pendidikan_ayah == 'S2' %}selected{% endif %}>S2</option>
+                            <option value="S3" {% if santri and santri.pendidikan_ayah == 'S3' %}selected{% endif %}>S3</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="status_ayah" class="block text-sm font-medium text-gray-700 mb-1">Status Ayah</label>
+                        <select 
+                            id="status_ayah" 
+                            name="status_ayah"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="HIDUP" {% if not santri or santri.status_ayah == 'HIDUP' %}selected{% endif %}>HIDUP</option>
+                            <option value="MENINGGAL" {% if santri and santri.status_ayah == 'MENINGGAL' %}selected{% endif %}>MENINGGAL</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="nik_ibu" class="block text-sm font-medium text-gray-700 mb-1">NIK Ibu (No. KTP)</label>
+                        <input 
+                            type="text" 
+                            id="nik_ibu" 
+                            name="nik_ibu"
+                            value="{% if santri %}{{ santri.nik_ibu }}{% endif %}"
+                            maxlength="16"
+                            pattern="[0-9]{16}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="16 digit NIK ibu">
+                    </div>
+                    
+                    <div>
+                        <label for="tempat_lahir_ibu" class="block text-sm font-medium text-gray-700 mb-1">Tempat Lahir Ibu</label>
+                        <input 
+                            type="text" 
+                            id="tempat_lahir_ibu" 
+                            name="tempat_lahir_ibu"
+                            value="{% if santri %}{{ santri.tempat_lahir_ibu }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Tempat lahir ibu">
+                    </div>
+                    
+                    <div>
+                        <label for="tanggal_lahir_ibu" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir Ibu</label>
+                        <input 
+                            type="date" 
+                            id="tanggal_lahir_ibu" 
+                            name="tanggal_lahir_ibu"
+                            value="{% if santri and santri.tanggal_lahir_ibu %}{{ santri.tanggal_lahir_ibu|date:'Y-m-d' }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="agama_ibu" class="block text-sm font-medium text-gray-700 mb-1">Agama Ibu</label>
+                        <input 
+                            type="text" 
+                            id="agama_ibu" 
+                            name="agama_ibu"
+                            value="{% if santri %}{{ santri.agama_ibu }}{% else %}Islam{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Agama ibu">
+                    </div>
+                    
+                    <div>
+                        <label for="kewarganegaraan_ibu" class="block text-sm font-medium text-gray-700 mb-1">Kewarganegaraan Ibu</label>
+                        <select 
+                            id="kewarganegaraan_ibu" 
+                            name="kewarganegaraan_ibu"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="WNI" {% if not santri or santri.kewarganegaraan_ibu == 'WNI' %}selected{% endif %}>WNI</option>
+                            <option value="WNA" {% if santri and santri.kewarganegaraan_ibu == 'WNA' %}selected{% endif %}>WNA</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="pendidikan_ibu" class="block text-sm font-medium text-gray-700 mb-1">Pendidikan Ibu</label>
+                        <select 
+                            id="pendidikan_ibu" 
+                            name="pendidikan_ibu"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Pilih Pendidikan</option>
+                            <option value="SD SEDERAJAT" {% if santri and santri.pendidikan_ibu == 'SD SEDERAJAT' %}selected{% endif %}>SD SEDERAJAT</option>
+                            <option value="SMP SEDERAJAT" {% if santri and santri.pendidikan_ibu == 'SMP SEDERAJAT' %}selected{% endif %}>SMP SEDERAJAT</option>
+                            <option value="SMA SEDERAJAT" {% if santri and santri.pendidikan_ibu == 'SMA SEDERAJAT' %}selected{% endif %}>SMA SEDERAJAT</option>
+                            <option value="D3" {% if santri and santri.pendidikan_ibu == 'D3' %}selected{% endif %}>D3</option>
+                            <option value="S1" {% if santri and santri.pendidikan_ibu == 'S1' %}selected{% endif %}>S1</option>
+                            <option value="S2" {% if santri and santri.pendidikan_ibu == 'S2' %}selected{% endif %}>S2</option>
+                            <option value="S3" {% if santri and santri.pendidikan_ibu == 'S3' %}selected{% endif %}>S3</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="status_ibu" class="block text-sm font-medium text-gray-700 mb-1">Status Ibu</label>
+                        <select 
+                            id="status_ibu" 
+                            name="status_ibu"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="HIDUP" {% if not santri or santri.status_ibu == 'HIDUP' %}selected{% endif %}>HIDUP</option>
+                            <option value="MENINGGAL" {% if santri and santri.status_ibu == 'MENINGGAL' %}selected{% endif %}>MENINGGAL</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="pekerjaan_ayah" class="block text-sm font-medium text-gray-700 mb-1">Pekerjaan Ayah</label>
+                        <input 
+                            type="text" 
+                            id="pekerjaan_ayah" 
+                            name="pekerjaan_ayah"
+                            value="{% if santri %}{{ santri.pekerjaan_ayah }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Pekerjaan ayah">
+                    </div>
+                    
+                    <div>
+                        <label for="pekerjaan_ibu" class="block text-sm font-medium text-gray-700 mb-1">Pekerjaan Ibu</label>
+                        <input 
+                            type="text" 
+                            id="pekerjaan_ibu" 
+                            name="pekerjaan_ibu"
+                            value="{% if santri %}{{ santri.pekerjaan_ibu }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Pekerjaan ibu">
+                    </div>
+                    
+                    <div>
+                        <label for="no_hp_ayah" class="block text-sm font-medium text-gray-700 mb-1">No. HP Ayah</label>
+                        <input 
+                            type="tel" 
+                            id="no_hp_ayah" 
+                            name="no_hp_ayah"
+                            value="{% if santri %}{{ santri.no_hp_ayah }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="081234567890">
+                    </div>
+                    
+                    <div>
+                        <label for="no_hp_ibu" class="block text-sm font-medium text-gray-700 mb-1">No. HP Ibu</label>
+                        <input 
+                            type="tel" 
+                            id="no_hp_ibu" 
+                            name="no_hp_ibu"
+                            value="{% if santri %}{{ santri.no_hp_ibu }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="081234567890">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label for="alamat_orangtua" class="block text-sm font-medium text-gray-700 mb-1">Alamat Orang Tua</label>
+                        <textarea 
+                            id="alamat_orangtua" 
+                            name="alamat_orangtua"
+                            rows="3"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Alamat lengkap orang tua">{% if santri %}{{ santri.alamat_orangtua }}{% endif %}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Kontak & Alamat -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-5 flex items-center">
+                    <i class="fas fa-map-marker-alt mr-2 text-green-600"></i>
+                    Kontak & Alamat
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="alamat" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">Alamat Lengkap *</label>
+                        <textarea 
+                            id="alamat" 
+                            name="alamat" 
+                            required
+                            rows="3"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent leading-relaxed"
+                            placeholder="Alamat lengkap tempat tinggal">{% if santri %}{{ santri.alamat }}{% endif %}</textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="desa" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">Desa/Kelurahan</label>
+                        <input 
+                            type="text" 
+                            id="desa" 
+                            name="desa"
+                            value="{% if santri %}{{ santri.desa }}{% endif %}"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent leading-relaxed"
+                            placeholder="Desa/Kelurahan">
+                    </div>
+                    
+                    <div>
+                        <label for="kecamatan" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">Kecamatan</label>
+                        <input 
+                            type="text" 
+                            id="kecamatan" 
+                            name="kecamatan"
+                            value="{% if santri %}{{ santri.kecamatan }}{% endif %}"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent leading-relaxed"
+                            placeholder="Kecamatan">
+                    </div>
+                    
+                    <div>
+                        <label for="kabupaten" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">Kabupaten</label>
+                        <input 
+                            type="text" 
+                            id="kabupaten" 
+                            name="kabupaten"
+                            value="{% if santri %}{{ santri.kabupaten }}{% endif %}"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent leading-relaxed"
+                            placeholder="Kabupaten">
+                    </div>
+                    
+                    <div>
+                        <label for="provinsi" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">Provinsi</label>
+                        <input 
+                            type="text" 
+                            id="provinsi" 
+                            name="provinsi"
+                            value="{% if santri %}{{ santri.provinsi }}{% endif %}"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent leading-relaxed"
+                            placeholder="Provinsi">
+                    </div>
+                    
+                    <div>
+                        <label for="kode_pos" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">Kode Pos</label>
+                        <input 
+                            type="text" 
+                            id="kode_pos" 
+                            name="kode_pos"
+                            value="{% if santri %}{{ santri.kode_pos }}{% endif %}"
+                            maxlength="10"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent leading-relaxed"
+                            placeholder="Kode Pos">
+                    </div>
+                    
+                    <div>
+                        <label for="no_hp" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">No. HP *</label>
+                        <input 
+                            type="tel" 
+                            id="no_hp" 
+                            name="no_hp" 
+                            value="{% if santri %}{{ santri.no_hp }}{% endif %}"
+                            required
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent leading-relaxed"
+                            placeholder="08XXXXXXXXXX">
+                    </div>
+                    
+                    <div>
+                        <label for="santri_email" class="block text-sm font-medium text-gray-700 mb-2 leading-relaxed">Email Santri <span class="text-xs text-gray-500">(opsional)</span></label>
+                        <input 
+                            type="email" 
+                            id="santri_email" 
+                            name="santri_email"
+                            value="{% if santri %}{{ santri.email }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="email@example.com">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Sekolah -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-school mr-2 text-green-600"></i>
+                    Data Sekolah
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="asal_sekolah" class="block text-sm font-medium text-gray-700 mb-1">Asal Sekolah *</label>
+                        <input 
+                            type="text" 
+                            id="asal_sekolah" 
+                            name="asal_sekolah" 
+                            value="{% if santri %}{{ santri.asal_sekolah }}{% endif %}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Nama sekolah asal">
+                    </div>
+                    
+                    <div>
+                        <label for="npsn_sekolah" class="block text-sm font-medium text-gray-700 mb-1">NPSN Sekolah</label>
+                        <input 
+                            type="text" 
+                            id="npsn_sekolah" 
+                            name="npsn_sekolah"
+                            value="{% if santri %}{{ santri.npsn_sekolah }}{% endif %}"
+                            maxlength="20"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="NPSN Sekolah">
+                    </div>
+                    
+                    <div>
+                        <label for="kelas_terakhir" class="block text-sm font-medium text-gray-700 mb-1">Kelas Terakhir *</label>
+                        <input 
+                            type="text" 
+                            id="kelas_terakhir" 
+                            name="kelas_terakhir" 
+                            value="{% if santri %}{{ santri.kelas_terakhir }}{% endif %}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: IX, XII, dll">
+                    </div>
+                    
+                    <div>
+                        <label for="tahun_lulus" class="block text-sm font-medium text-gray-700 mb-1">Tahun Lulus</label>
+                        <input 
+                            type="text" 
+                            id="tahun_lulus" 
+                            name="tahun_lulus"
+                            value="{% if santri %}{{ santri.tahun_lulus }}{% endif %}"
+                            maxlength="4"
+                            pattern="[0-9]{4}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: 2024">
+                    </div>
+                    
+                    <div>
+                        <label for="no_ijazah" class="block text-sm font-medium text-gray-700 mb-1">No. Ijazah/SKHUN</label>
+                        <input 
+                            type="text" 
+                            id="no_ijazah" 
+                            name="no_ijazah"
+                            value="{% if santri %}{{ santri.no_ijazah }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Nomor ijazah atau SKHUN">
+                    </div>
+                    
+                    <div>
+                        <label for="kelas_diterima" class="block text-sm font-medium text-gray-700 mb-1">Kelas Diterima (di Pesantren)</label>
+                        <input 
+                            type="text" 
+                            id="kelas_diterima" 
+                            name="kelas_diterima"
+                            value="{% if santri %}{{ santri.kelas_diterima }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: 1 KMI, 2 KMI, dll">
+                    </div>
+                    
+                    <div>
+                        <label for="tanggal_diterima" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Diterima</label>
+                        <input 
+                            type="date" 
+                            id="tanggal_diterima" 
+                            name="tanggal_diterima"
+                            value="{% if santri and santri.tanggal_diterima %}{{ santri.tanggal_diterima|date:'Y-m-d' }}{% endif %}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upload Dokumen -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-file-upload mr-2 text-green-600"></i>
+                    Upload Dokumen
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="foto_santri" class="block text-sm font-medium text-gray-700 mb-1">Foto Santri</label>
+                        {% if santri and santri.foto_santri %}
+                        <div class="mb-2">
+                            <img src="{{ santri.foto_santri.url }}" alt="Foto Santri" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                        </div>
+                        {% endif %}
+                        <input 
+                            type="file" 
+                            id="foto_santri" 
+                            name="foto_santri"
+                            accept="image/*"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG (Maks. 5MB)</p>
+                    </div>
+                    
+                    <div>
+                        <label for="foto_ktp" class="block text-sm font-medium text-gray-700 mb-1">Foto KTP/Kartu Keluarga</label>
+                        {% if santri and santri.foto_ktp %}
+                        <div class="mb-2">
+                            <img src="{{ santri.foto_ktp.url }}" alt="Foto KTP" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                        </div>
+                        {% endif %}
+                        <input 
+                            type="file" 
+                            id="foto_ktp" 
+                            name="foto_ktp"
+                            accept="image/*"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG (Maks. 5MB)</p>
+                    </div>
+                    
+                    <div>
+                        <label for="foto_akta" class="block text-sm font-medium text-gray-700 mb-1">Foto Akta Kelahiran</label>
+                        {% if santri and santri.foto_akta %}
+                        <div class="mb-2">
+                            <img src="{{ santri.foto_akta.url }}" alt="Foto Akta" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                        </div>
+                        {% endif %}
+                        <input 
+                            type="file" 
+                            id="foto_akta" 
+                            name="foto_akta"
+                            accept="image/*"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG (Maks. 5MB)</p>
+                    </div>
+                    
+                    <div>
+                        <label for="foto_ijazah" class="block text-sm font-medium text-gray-700 mb-1">Foto Ijazah/SKHUN</label>
+                        {% if santri and santri.foto_ijazah %}
+                        <div class="mb-2">
+                            <img src="{{ santri.foto_ijazah.url }}" alt="Foto Ijazah" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                        </div>
+                        {% endif %}
+                        <input 
+                            type="file" 
+                            id="foto_ijazah" 
+                            name="foto_ijazah"
+                            accept="image/*"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG (Maks. 5MB)</p>
+                    </div>
+                    
+                    <div>
+                        <label for="surat_sehat" class="block text-sm font-medium text-gray-700 mb-1">Surat Keterangan Sehat</label>
+                        {% if santri and santri.surat_sehat %}
+                        <div class="mb-2">
+                            <img src="{{ santri.surat_sehat.url }}" alt="Surat Sehat" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                        </div>
+                        {% endif %}
+                        <input 
+                            type="file" 
+                            id="surat_sehat" 
+                            name="surat_sehat"
+                            accept="image/*"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG (Maks. 5MB)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Catatan -->
+            <div class="pb-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-sticky-note mr-2 text-green-600"></i>
+                    Catatan Tambahan
+                </h3>
+                <div>
+                    <label for="catatan" class="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
+                    <textarea 
+                        id="catatan" 
+                        name="catatan"
+                        rows="4"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Catatan tambahan jika ada">{% if santri %}{{ santri.catatan }}{% endif %}</textarea>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 pt-6 border-t border-gray-200">
+                <div class="text-sm text-gray-600">
+                    <p><span class="text-red-500">*</span> Wajib diisi</p>
+                </div>
+                <div class="flex space-x-3">
+                    {% if has_santri %}
+                    <a 
+                        href="{% url 'users:pendaftaran' %}"
+                        class="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        Batal
+                    </a>
+                    {% else %}
+                    <a href="{% url 'users:dashboard' %}" class="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        Batal
+                    </a>
+                    {% endif %}
+                    <button 
+                        type="submit" 
+                        class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md">
+                        <i class="fas fa-paper-plane mr-2"></i>{% if has_santri %}Simpan Perubahan{% else %}Kirim Pendaftaran{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

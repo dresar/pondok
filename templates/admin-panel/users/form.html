@@ -1,0 +1,315 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block title %}{% if user_obj %}Edit User{% else %}Tambah User Baru{% endif %} - Admin Panel{% endblock %}
+
+{% block page_title %}{% if user_obj %}Edit User{% else %}Tambah User Baru{% endif %}{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Manajemen Santri</span></li>
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:user_account_list' %}" class="text-gray-600 hover:text-gray-900">Pengaturan Akun User</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">{% if user_obj %}Edit{% else %}Tambah Baru{% endif %}</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    loadFromSantri: false,
+    selectedSantriId: null,
+    santriData: null
+}">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-4 sm:space-y-6">
+            {% csrf_token %}
+            
+            <!-- Info: Ambil Data dari Santri (hanya untuk create) -->
+            {% if not user_obj %}
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
+                <div class="flex items-start sm:items-center mb-2 sm:mb-3">
+                    <i class="fas fa-info-circle text-blue-600 text-lg sm:text-xl mr-2 sm:mr-3 flex-shrink-0 mt-0.5 sm:mt-0"></i>
+                    <h3 class="text-base sm:text-lg font-semibold text-blue-800">Ambil Data dari Santri</h3>
+                </div>
+                <p class="text-xs sm:text-sm text-blue-700 mb-3 sm:mb-4">
+                    Anda dapat membuat akun user dengan mengambil data dari Santri yang sudah terdaftar. 
+                    Pilih Santri di bawah ini untuk mengisi form secara otomatis.
+                </p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Cari Santri (Opsional)
+                        </label>
+                        <div class="relative" x-data="{ 
+                            searchQuery: '',
+                            results: [],
+                            selectedSantri: null,
+                            showResults: false,
+                            loading: false
+                        }">
+                            <input 
+                                type="text"
+                                x-model="searchQuery"
+                                @input="
+                                    if (searchQuery.length >= 2) {
+                                        loading = true;
+                                        fetch('{% url 'admin-panel:santri_search_api' %}?q=' + encodeURIComponent(searchQuery))
+                                            .then(r => r.json())
+                                            .then(data => {
+                                                results = data.results || [];
+                                                showResults = results.length > 0;
+                                                loading = false;
+                                            })
+                                            .catch(e => {
+                                                console.error('Error:', e);
+                                                loading = false;
+                                            });
+                                    } else {
+                                        results = [];
+                                        showResults = false;
+                                    }
+                                "
+                                @focus="if (results.length > 0) showResults = true"
+                                @click.away="showResults = false"
+                                placeholder="Ketik nama, NISN, email, atau no HP..."
+                                class="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            >
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <div x-show="loading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-spinner fa-spin text-gray-400"></i>
+                            </div>
+                            
+                            <!-- Results Dropdown -->
+                            <div 
+                                x-show="showResults && results.length > 0"
+                                x-cloak
+                                class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                                style="display: none;"
+                            >
+                                <template x-for="result in results" :key="result.id">
+                                    <div 
+                                        @click="
+                                            selectedSantri = result;
+                                            searchQuery = result.text;
+                                            showResults = false;
+                                            
+                                            // Fill form fields
+                                            const usernameField = document.getElementById('id_username');
+                                            const emailField = document.getElementById('id_email');
+                                            const firstNameField = document.getElementById('id_first_name');
+                                            const lastNameField = document.getElementById('id_last_name');
+                                            const phoneField = document.getElementById('id_phone');
+                                            
+                                            if (usernameField) {
+                                                // Generate username dari nama awal + random 2 digit
+                                                const nameParts = (result.nama_lengkap || '').split(' ');
+                                                const firstName = nameParts[0] || '';
+                                                const randomCode = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+                                                const baseUsername = firstName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                                usernameField.value = baseUsername + randomCode;
+                                            }
+                                            if (emailField) {
+                                                emailField.value = result.email || '';
+                                            }
+                                            if (firstNameField && lastNameField) {
+                                                const nameParts = (result.nama_lengkap || '').split(' ');
+                                                firstNameField.value = nameParts[0] || '';
+                                                lastNameField.value = nameParts.slice(1).join(' ') || '';
+                                            }
+                                            if (phoneField) {
+                                                phoneField.value = result.no_hp || '';
+                                            }
+                                        "
+                                        class="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                    >
+                                        <div class="font-medium text-gray-900" x-text="result.nama_lengkap"></div>
+                                        <div class="text-sm text-gray-500" x-text="'NISN: ' + result.nisn"></div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <!-- No Results -->
+                            <div 
+                                x-show="showResults && results.length === 0 && searchQuery.length >= 2 && !loading"
+                                x-cloak
+                                class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4 text-center text-gray-500"
+                                style="display: none;"
+                            >
+                                Tidak ada Santri ditemukan
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Ketik minimal 2 karakter untuk mencari Santri. Pilih Santri untuk mengisi data otomatis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Form Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <!-- Username -->
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.username.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">
+                        Username akan otomatis dibuat dari nama awal + kode random 2 digit jika kosong
+                    </p>
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.email.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- First Name -->
+                <div>
+                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.first_name.label }}
+                    </label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Last Name -->
+                <div>
+                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.last_name.label }}
+                    </label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Phone -->
+                <div>
+                    <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.phone.label }}
+                    </label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Password Fields -->
+            <div class="border-t border-gray-200 pt-4 sm:pt-6">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Password</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
+                        <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.password1.label }} {% if not user %}<span class="text-red-500">*</span>{% endif %}
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                        {% endif %}
+                        {% if form.password1.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.password1.help_text }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.password2.label }} {% if not user %}<span class="text-red-500">*</span>{% endif %}
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                        {% endif %}
+                        {% if form.password2.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.password2.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status -->
+            <div class="border-t border-gray-200 pt-4 sm:pt-6">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Status</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        {{ form.is_active }}
+                        <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700">
+                            {{ form.is_active.label }}
+                        </label>
+                    </div>
+                    {% if form.is_active.errors %}
+                    <p class="text-sm text-red-600">{{ form.is_active.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-gray-500 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>User ini adalah user biasa (bukan staff/admin)
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Avatar -->
+            <div class="border-t border-gray-200 pt-4 sm:pt-6">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Foto Profil</h3>
+                <div>
+                    {% if user_obj %}
+                        {% if user_obj.avatar %}
+                        <div class="mb-3 sm:mb-4">
+                            <img src="{{ user_obj.avatar.url }}" alt="{{ user_obj.username }}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-300">
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    <label for="{{ form.avatar.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.avatar.label }}
+                    </label>
+                    {{ form.avatar }}
+                    {% if form.avatar.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.avatar.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Form Errors (Non-field) -->
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-lg">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <div class="flex-1 min-w-0">
+                        {% for error in form.non_field_errors %}
+                        <p class="text-xs sm:text-sm text-red-800">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Submit Buttons -->
+            <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4 sm:pt-6 border-t border-gray-200">
+                <a 
+                    href="{% url 'admin-panel:user_account_list' %}" 
+                    class="w-full sm:w-auto px-4 sm:px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-center text-sm sm:text-base"
+                >
+                    Batal
+                </a>
+                <button 
+                    type="submit" 
+                    class="w-full sm:w-auto px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md text-sm sm:text-base"
+                >
+                    <i class="fas fa-save mr-2"></i>Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

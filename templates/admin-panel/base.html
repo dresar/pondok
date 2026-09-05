@@ -1,0 +1,943 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id" x-data="{ sidebarOpen: false }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% if settings and settings.meta_description %}{{ settings.meta_description }}{% else %}Admin Panel - Pondok Pesantren{% endif %}">
+    <meta name="keywords" content="{% if settings and settings.meta_keywords %}{{ settings.meta_keywords }}{% else %}admin panel, pondok pesantren{% endif %}">
+    <meta name="author" content="{% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pondok Pesantren{% endif %}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% if settings and settings.meta_title %}{{ settings.meta_title }}{% else %}{% block og_title %}Admin Panel - Pondok Pesantren{% endblock %}{% endif %}">
+    <meta property="og:description" content="{% if settings and settings.meta_description %}{{ settings.meta_description }}{% else %}Admin Panel - Pondok Pesantren{% endif %}">
+    {% if settings and settings.logo %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ settings.logo.url }}">
+    {% endif %}
+    
+    <title>{% block title %}{% if settings and settings.meta_title %}{{ settings.meta_title }} - Admin Panel{% else %}Admin Panel - Pondok Pesantren{% endif %}{% endblock title %}</title>
+    
+    <!-- Favicon -->
+    {% if settings and settings.favicon %}
+    {# Favicon dengan absolute URL untuk Google Search #}
+    <link rel="icon" type="image/x-icon" href="{{ request.scheme }}://{{ request.get_host }}{{ settings.favicon.url }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ request.scheme }}://{{ request.get_host }}{{ settings.favicon.url }}">
+    <link rel="apple-touch-icon" href="{{ request.scheme }}://{{ request.get_host }}{{ settings.favicon.url }}">
+    {% else %}
+    {# Fallback favicon dari static files #}
+    <link rel="icon" type="image/x-icon" href="{{ request.scheme }}://{{ request.get_host }}{% static 'favicon.ico' %}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ request.scheme }}://{{ request.get_host }}{% static 'favicon.ico' %}">
+    <link rel="apple-touch-icon" href="{{ request.scheme }}://{{ request.get_host }}{% static 'favicon.ico' %}">
+    {% endif %}
+    
+    <!-- TailwindCSS dari static (tanpa CDN) -->
+    <link rel="stylesheet" href="{% static 'public/css/tailwind.css' %}">
+    
+    <!-- Alpine.js (CDN) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- HTMX (CDN, sudah diizinkan oleh CSP) -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Font Awesome Free via pip (fontawesomefree) -->
+    <link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
+    
+    <!-- Summernote CSS (from library) - akan di-load via form.media di halaman form -->
+    
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        /* Sidebar Background - Force Green */
+        aside {
+            background-color: #166534 !important;
+            color: white !important;
+        }
+        
+        /* Custom Scrollbar untuk Sidebar */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(34, 197, 94, 0.5);
+            border-radius: 10px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: rgba(34, 197, 94, 0.7);
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Fix spacing untuk main content di bawah fixed header */
+        main {
+            margin-top: 5rem !important;
+            padding-top: 0.5rem !important;
+        }
+        
+        @media (min-width: 640px) {
+            main {
+                margin-top: 4.5rem !important;
+                padding-top: 0.75rem !important;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            main {
+                margin-top: 4rem !important;
+                padding-top: 1rem !important;
+            }
+        }
+        
+        /* Image Picker Modal - Pastikan di atas semua elemen termasuk sidebar */
+        #image-picker-modal {
+            z-index: 10000 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+        }
+        
+        #image-picker-modal > div {
+            z-index: 10001 !important;
+            position: relative !important;
+        }
+        
+        /* Notification Toast Styles */
+        .notification-toast {
+            min-width: 320px;
+            max-width: 420px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        @media (max-width: 640px) {
+            .notification-toast {
+                min-width: calc(100vw - 2rem);
+                max-width: calc(100vw - 2rem);
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside 
+            x-show="sidebarOpen || window.innerWidth >= 1024"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="-translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="-translate-x-full"
+            @click.away="if (window.innerWidth < 1024) sidebarOpen = false"
+            class="fixed lg:fixed inset-y-0 left-0 z-50 w-64 bg-green-800 text-white shadow-2xl lg:shadow-xl"
+            :class="{ 'hidden lg:block': !sidebarOpen && window.innerWidth < 1024 }"
+        >
+            <!-- Logo & Brand -->
+            <div class="flex items-center justify-between h-16 px-6 border-b border-green-600/30">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                        <i class="fas fa-mosque text-xl text-green-200"></i>
+                    </div>
+                    <span class="text-lg font-bold text-white tracking-wide">Admin Panel</span>
+                </div>
+                <button @click="sidebarOpen = false" class="lg:hidden text-white hover:text-green-300 transition-colors p-1 rounded-md hover:bg-white/10">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="mt-4 px-3 space-y-1 overflow-y-auto h-[calc(100vh-4rem)] pb-6 scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900/50">
+                <!-- Dashboard -->
+                <a href="{% url 'admin-panel:index' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if request.resolver_match.url_name == 'index' %}bg-white/15 shadow-lg border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                    <i class="fas fa-home w-5 mr-3 {% if request.resolver_match.url_name == 'index' %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                    <span class="{% if request.resolver_match.url_name == 'index' %}font-semibold text-white{% else %}text-green-50{% endif %}">Dashboard</span>
+                </a>
+                
+                <!-- Manajemen Santri -->
+                <div x-data="{ open: {% if 'santri' in request.resolver_match.url_name or 'user_account' in request.resolver_match.url_name %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'santri' in request.resolver_match.url_name or 'user_account' in request.resolver_match.url_name %}bg-white/10 border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas fa-users w-5 mr-3 {% if 'santri' in request.resolver_match.url_name or 'user_account' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'santri' in request.resolver_match.url_name or 'user_account' in request.resolver_match.url_name %}font-semibold text-white{% else %}text-green-50{% endif %}">Manajemen Santri</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 text-green-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="ml-4 mt-2 space-y-1.5"
+                        style="display: none;">
+                        <a href="{% url 'admin-panel:santri_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if request.resolver_match.url_name == 'santri_list' %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-list w-4 mr-2.5 {% if request.resolver_match.url_name == 'santri_list' %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if request.resolver_match.url_name == 'santri_list' %}font-medium text-white{% else %}text-green-50{% endif %}">Daftar Santri</span>
+                        </a>
+                        <a href="{% url 'admin-panel:santri_dokumen_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'santri_dokumen' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-file-alt w-4 mr-2.5 {% if 'santri_dokumen' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'santri_dokumen' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">List Dokumen Santri</span>
+                        </a>
+                        <a href="{% url 'admin-panel:user_account_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'user_account' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-user-cog w-4 mr-2.5 {% if 'user_account' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'user_account' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Pengaturan Akun User</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Export Data Excel -->
+                <a href="{% url 'documents:list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'documents' in request.path %}bg-white/15 shadow-lg border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                    <i class="fas fa-file-excel w-5 mr-3 {% if 'documents' in request.path %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                    <span class="{% if 'documents' in request.path %}font-semibold text-white{% else %}text-green-50{% endif %}">Export Data Excel</span>
+                </a>
+                
+                <!-- Statistik Login -->
+                <a href="{% url 'admin-panel:login_statistics' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if request.resolver_match.url_name == 'login_statistics' %}bg-white/15 shadow-lg border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                    <i class="fas fa-sign-in-alt w-5 mr-3 {% if request.resolver_match.url_name == 'login_statistics' %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                    <span class="{% if request.resolver_match.url_name == 'login_statistics' %}font-semibold text-white{% else %}text-green-50{% endif %}">Statistik Login</span>
+                </a>
+                
+                <!-- Keuangan -->
+                <div x-data="{ open: {% if 'payment' in request.resolver_match.url_name or 'pembayaran' in request.resolver_match.url_name or 'keuangan' in request.path %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'payment' in request.resolver_match.url_name or 'pembayaran' in request.resolver_match.url_name or 'keuangan' in request.path %}bg-white/10 border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas fa-money-bill-wave w-5 mr-3 {% if 'payment' in request.resolver_match.url_name or 'pembayaran' in request.resolver_match.url_name or 'keuangan' in request.path %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'payment' in request.resolver_match.url_name or 'pembayaran' in request.resolver_match.url_name or 'keuangan' in request.path %}font-semibold text-white{% else %}text-green-50{% endif %}">Keuangan</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 text-green-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="ml-4 mt-2 space-y-1.5"
+                        style="display: none;">
+                        <a href="{% url 'admin-panel:keuangan_dashboard' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'keuangan' in request.path and 'dashboard' in request.path %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-chart-line w-4 mr-2.5 {% if 'keuangan' in request.path and 'dashboard' in request.path %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'keuangan' in request.path and 'dashboard' in request.path %}font-medium text-white{% else %}text-green-50{% endif %}">Dashboard Keuangan</span>
+                        </a>
+                        <a href="{% url 'admin-panel:payment_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if request.resolver_match.url_name == 'payment_list' %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-list w-4 mr-2.5 {% if request.resolver_match.url_name == 'payment_list' %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if request.resolver_match.url_name == 'payment_list' %}font-medium text-white{% else %}text-green-50{% endif %}">Daftar Pembayaran</span>
+                        </a>
+                        <a href="{% url 'admin-panel:payment_list' %}?status=pending" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 border-l-2 border-transparent">
+                            <i class="fas fa-check-double w-4 mr-2.5 text-green-100"></i>
+                            <span class="text-green-50">Perlu Verifikasi</span>
+                        </a>
+                        <a href="{% url 'admin-panel:payment_list' %}?status=verified" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 border-l-2 border-transparent">
+                            <i class="fas fa-history w-4 mr-2.5 text-green-100"></i>
+                            <span class="text-green-50">Riwayat Terverifikasi</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Blog/Artikel Management -->
+                <div x-data="{ open: {% if 'blog' in request.path or 'category' in request.resolver_match.url_name or 'tag' in request.resolver_match.url_name or 'testimoni' in request.resolver_match.url_name or 'pengumuman' in request.resolver_match.url_name %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'blog' in request.path or 'category' in request.resolver_match.url_name or 'tag' in request.resolver_match.url_name or 'testimoni' in request.resolver_match.url_name or 'pengumuman' in request.resolver_match.url_name %}bg-white/10 border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas fa-blog w-5 mr-3 {% if 'blog' in request.path or 'category' in request.resolver_match.url_name or 'tag' in request.resolver_match.url_name or 'testimoni' in request.resolver_match.url_name or '' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'blog' in request.path or 'category' in request.resolver_match.url_name or 'tag' in request.resolver_match.url_name or 'testimoni' in request.resolver_match.url_name or 'pengumuman' in request.resolver_match.url_name %}font-semibold text-white{% else %}text-green-50{% endif %}">Blog/Artikel</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 text-green-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="ml-4 mt-2 space-y-1.5"
+                        style="display: none;">
+                        <a href="{% url 'blog:list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if request.resolver_match.url_name == 'list' and 'blog' in request.path %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-list w-4 mr-2.5 {% if request.resolver_match.url_name == 'list' and 'blog' in request.path %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if request.resolver_match.url_name == 'list' and 'blog' in request.path %}font-medium text-white{% else %}text-green-50{% endif %}">Daftar Artikel</span>
+                        </a>
+                        <a href="{% url 'blog:create' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if request.resolver_match.url_name == 'create' and 'blog' in request.path %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-plus w-4 mr-2.5 {% if request.resolver_match.url_name == 'create' and 'blog' in request.path %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if request.resolver_match.url_name == 'create' and 'blog' in request.path %}font-medium text-white{% else %}text-green-50{% endif %}">Tambah Artikel</span>
+                        </a>
+                        <a href="{% url 'blog:category_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'category' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-folder w-4 mr-2.5 {% if 'category' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'category' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Kategori</span>
+                        </a>
+                        <a href="{% url 'blog:tag_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'tag' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-tags w-4 mr-2.5 {% if 'tag' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'tag' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Tag</span>
+                        </a>
+                        <a href="{% url 'blog:testimoni_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'testimoni' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-star w-4 mr-2.5 {% if 'testimoni' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'testimoni' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Testimoni</span>
+                        </a>
+                        <a href="{% url 'blog:pengumuman_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'pengumuman' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-bullhorn w-4 mr-2.5 {% if 'pengumuman' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'pengumuman' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Pengumuman</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- WhatsApp & Kontak -->
+                <div x-data="{ open: {% if 'whatsapp' in request.path or 'kontak' in request.path or 'contact_person' in request.resolver_match.url_name %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'whatsapp' in request.path or 'kontak' in request.path or 'contact_person' in request.resolver_match.url_name %}bg-white/10 border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fab fa-whatsapp w-5 mr-3 {% if 'whatsapp' in request.path or 'kontak' in request.path or 'contact_person' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'whatsapp' in request.path or 'kontak' in request.path or 'contact_person' in request.resolver_match.url_name %}font-semibold text-white{% else %}text-green-50{% endif %}">WhatsApp & Kontak</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 text-green-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="ml-4 mt-2 space-y-1.5"
+                        style="display: none;">
+                        <a href="{% url 'core:whatsapp_template_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'whatsapp_template' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-file-alt w-4 mr-2.5 {% if 'whatsapp_template' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'whatsapp_template' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Template WhatsApp</span>
+                        </a>
+                        <a href="{% url 'core:whatsapp_broadcast' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'whatsapp_broadcast' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-broadcast-tower w-4 mr-2.5 {% if 'whatsapp_broadcast' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'whatsapp_broadcast' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Broadcast WhatsApp</span>
+                        </a>
+                        <a href="{% url 'core:contact_person_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'contact_person' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-user w-4 mr-2.5 {% if 'contact_person' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'contact_person' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Contact Person</span>
+                        </a>
+                        <a href="{% url 'core:kontak_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'kontak' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-envelope w-4 mr-2.5 {% if 'kontak' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'kontak' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Kontak/Inquiry</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Tenaga Pengajar -->
+                <div x-data="{ open: {% if 'tenaga_pengajar' in request.path or 'bagian_jabatan' in request.path %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'tenaga_pengajar' in request.path or 'bagian_jabatan' in request.path %}bg-white/10 border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas fa-chalkboard-teacher w-5 mr-3 {% if 'tenaga_pengajar' in request.path or 'bagian_jabatan' in request.path %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'tenaga_pengajar' in request.path or 'bagian_jabatan' in request.path %}font-semibold text-white{% else %}text-green-50{% endif %}">Tenaga Pengajar</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 text-green-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="ml-4 mt-2 space-y-1.5"
+                        style="display: none;">
+                        <a href="{% url 'admin-panel:tenaga_pengajar_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'tenaga_pengajar_list' in request.resolver_match.url_name or 'tenaga_pengajar_detail' in request.resolver_match.url_name or 'tenaga_pengajar_create' in request.resolver_match.url_name or 'tenaga_pengajar_update' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-list w-4 mr-2.5 {% if 'tenaga_pengajar_list' in request.resolver_match.url_name or 'tenaga_pengajar_detail' in request.resolver_match.url_name or 'tenaga_pengajar_create' in request.resolver_match.url_name or 'tenaga_pengajar_update' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'tenaga_pengajar_list' in request.resolver_match.url_name or 'tenaga_pengajar_detail' in request.resolver_match.url_name or 'tenaga_pengajar_create' in request.resolver_match.url_name or 'tenaga_pengajar_update' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Daftar Pengajar</span>
+                        </a>
+                        <a href="{% url 'admin-panel:tenaga_pengajar_create' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'tenaga_pengajar_create' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-plus w-4 mr-2.5 {% if 'tenaga_pengajar_create' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'tenaga_pengajar_create' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Tambah Pengajar</span>
+                        </a>
+                        <a href="{% url 'admin-panel:bagian_jabatan_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'bagian_jabatan' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-tags w-4 mr-2.5 {% if 'bagian_jabatan' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'bagian_jabatan' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Bagian/Jabatan</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Tools -->
+                <div x-data="{ open: {% if 'tools' in request.path or 'image_converter' in request.resolver_match.url_name or 'converted_image' in request.resolver_match.url_name %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'tools' in request.path or 'image_converter' in request.resolver_match.url_name or 'converted_image' in request.resolver_match.url_name %}bg-white/10 border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas fa-tools w-5 mr-3 {% if 'tools' in request.path or 'image_converter' in request.resolver_match.url_name or 'converted_image' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'tools' in request.path or 'image_converter' in request.resolver_match.url_name or 'converted_image' in request.resolver_match.url_name %}font-semibold text-white{% else %}text-green-50{% endif %}">Tools</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 text-green-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="ml-4 mt-2 space-y-1.5"
+                        style="display: none;">
+                        <a href="{% url 'admin-panel:image_converter' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'image_converter' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-image w-4 mr-2.5 {% if 'image_converter' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'image_converter' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Konversi ke WebP</span>
+                        </a>
+                        <a href="{% url 'admin-panel:converted_image_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'converted_image_list' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-list w-4 mr-2.5 {% if 'converted_image_list' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'converted_image_list' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Daftar Gambar WebP</span>
+                        </a>
+                        <a href="{% url 'admin-panel:bug_note_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'bug_note' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-bug w-4 mr-2.5 {% if 'bug_note' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'bug_note' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Catatan Bug</span>
+                        </a>
+                        <a href="{% url 'admin-panel:media_files_manager' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'media_files_manager' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-folder-open w-4 mr-2.5 {% if 'media_files_manager' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'media_files_manager' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Pengelola Media Files</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Pengaturan Website -->
+                <div x-data="{ open: {% if 'hero' in request.path or 'sejarah' in request.path or 'visi' in request.path or 'program-pendidikan' in request.path or 'program' in request.resolver_match.url_name or 'faq' in request.resolver_match.url_name or 'fasilitas' in request.path or 'ekstrakurikuler' in request.path or 'jadwal' in request.path or 'persyaratan' in request.path or 'alur' in request.path or 'biaya' in request.path or 'contact' in request.path or 'social' in request.path or 'seragam' in request.path or 'kmi' in request.path or 'statistik' in request.path or 'media' in request.path or 'dokumentasi' in request.path or 'informasi-tambahan' in request.path or 'informasi_tambahan' in request.resolver_match.url_name or 'settings' in request.resolver_match.url_name or 'user_settings' in request.resolver_match.url_name %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'hero' in request.path or 'sejarah' in request.path or 'visi' in request.path or 'program-pendidikan' in request.path or 'program' in request.resolver_match.url_name or 'faq' in request.resolver_match.url_name or 'fasilitas' in request.path or 'ekstrakurikuler' in request.path or 'jadwal' in request.path or 'persyaratan' in request.path or 'alur' in request.path or 'biaya' in request.path or 'contact' in request.path or 'social' in request.path or 'seragam' in request.path or 'kmi' in request.path or 'statistik' in request.path or 'media' in request.path or 'dokumentasi' in request.path or 'informasi-tambahan' in request.path or 'informasi_tambahan' in request.resolver_match.url_name or 'settings' in request.resolver_match.url_name or 'user_settings' in request.resolver_match.url_name %}bg-white/10 border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas fa-cog w-5 mr-3 {% if 'hero' in request.path or 'sejarah' in request.path or 'visi' in request.path or 'program-pendidikan' in request.path or 'program' in request.resolver_match.url_name or 'faq' in request.resolver_match.url_name or 'fasilitas' in request.path or 'ekstrakurikuler' in request.path or 'jadwal' in request.path or 'persyaratan' in request.path or 'alur' in request.path or 'biaya' in request.path or 'contact' in request.path or 'social' in request.path or 'seragam' in request.path or 'kmi' in request.path or 'statistik' in request.path or 'media' in request.path or 'dokumentasi' in request.path or 'informasi-tambahan' in request.path or 'informasi_tambahan' in request.resolver_match.url_name or 'settings' in request.resolver_match.url_name or 'user_settings' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'hero' in request.path or 'sejarah' in request.path or 'visi' in request.path or 'program-pendidikan' in request.path or 'program' in request.resolver_match.url_name or 'faq' in request.resolver_match.url_name or 'fasilitas' in request.path or 'ekstrakurikuler' in request.path or 'jadwal' in request.path or 'persyaratan' in request.path or 'alur' in request.path or 'biaya' in request.path or 'contact' in request.path or 'social' in request.path or 'seragam' in request.path or 'kmi' in request.path or 'statistik' in request.path or 'media' in request.path or 'dokumentasi' in request.path or 'informasi-tambahan' in request.path or 'informasi_tambahan' in request.resolver_match.url_name or 'settings' in request.resolver_match.url_name or 'user_settings' in request.resolver_match.url_name %}font-semibold text-white{% else %}text-green-50{% endif %}">Pengaturan Website</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 text-green-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="ml-4 mt-2 space-y-1.5"
+                        style="display: none;">
+                        <a href="{% url 'core:hero_section_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'hero_section' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-images w-4 mr-2.5 {% if 'hero_section' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'hero_section' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Hero Section</span>
+                        </a>
+                        <a href="{% url 'core:sejarah_timeline_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'sejarah_timeline' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-history w-4 mr-2.5 {% if 'sejarah_timeline' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'sejarah_timeline' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Sejarah Timeline</span>
+                        </a>
+                        <a href="{% url 'core:visi_misi_form' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'visi_misi' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-eye w-4 mr-2.5 {% if 'visi_misi' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'visi_misi' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Visi Misi</span>
+                        </a>
+                        <a href="{% url 'core:program_pendidikan_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'program_pendidikan' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-school w-4 mr-2.5 {% if 'program_pendidikan' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'program_pendidikan' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Program Pendidikan</span>
+                        </a>
+                        <a href="{% url 'core:fasilitas_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'fasilitas' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-building w-4 mr-2.5 {% if 'fasilitas' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'fasilitas' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Fasilitas</span>
+                        </a>
+                        <a href="{% url 'core:ekstrakurikuler_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'ekstrakurikuler' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-futbol w-4 mr-2.5 {% if 'ekstrakurikuler' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'ekstrakurikuler' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Ekstrakurikuler</span>
+                        </a>
+                        <a href="{% url 'core:jadwal_harian_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'jadwal_harian' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-clock w-4 mr-2.5 {% if 'jadwal_harian' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'jadwal_harian' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Jadwal Harian</span>
+                        </a>
+                        <a href="{% url 'core:persyaratan_form' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'persyaratan' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-clipboard-list w-4 mr-2.5 {% if 'persyaratan' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'persyaratan' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Persyaratan</span>
+                        </a>
+                        <a href="{% url 'core:alur_pendaftaran_form' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'alur_pendaftaran' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-stream w-4 mr-2.5 {% if 'alur_pendaftaran' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'alur_pendaftaran' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Alur Pendaftaran</span>
+                        </a>
+                        <a href="{% url 'core:biaya_pendidikan_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'biaya_pendidikan' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-money-bill-wave w-4 mr-2.5 {% if 'biaya_pendidikan' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'biaya_pendidikan' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Biaya Pendidikan</span>
+                        </a>
+                        <a href="{% url 'core:social_media_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'social_media' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-share-alt w-4 mr-2.5 {% if 'social_media' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'social_media' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Social Media</span>
+                        </a>
+                        <a href="{% url 'core:seragam_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'seragam' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-tshirt w-4 mr-2.5 {% if 'seragam' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'seragam' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Seragam</span>
+                        </a>
+                        <a href="{% url 'core:kmi_form' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'kmi' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-graduation-cap w-4 mr-2.5 {% if 'kmi' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'kmi' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">KMI</span>
+                        </a>
+                        <a href="{% url 'core:statistik_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'statistik' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-chart-bar w-4 mr-2.5 {% if 'statistik' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'statistik' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Prestasi & Statistik</span>
+                        </a>
+                        <a href="{% url 'core:media_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'media' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-photo-video w-4 mr-2.5 {% if 'media' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'media' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Media (Galeri & Video)</span>
+                        </a>
+                        <a href="{% url 'core:dokumentasi_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'dokumentasi' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-folder-open w-4 mr-2.5 {% if 'dokumentasi' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'dokumentasi' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Dokumentasi</span>
+                        </a>
+                        <a href="{% url 'core:program_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'program' in request.resolver_match.url_name and 'program_pendidikan' not in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-calendar w-4 mr-2.5 {% if 'program' in request.resolver_match.url_name and 'program_pendidikan' not in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'program' in request.resolver_match.url_name and 'program_pendidikan' not in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Program/Kegiatan</span>
+                        </a>
+                        <a href="{% url 'core:faq_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'faq' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-question-circle w-4 mr-2.5 {% if 'faq' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'faq' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">FAQ</span>
+                        </a>
+                        <a href="{% url 'core:informasi_tambahan_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'informasi_tambahan' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-info-circle w-4 mr-2.5 {% if 'informasi_tambahan' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'informasi_tambahan' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Informasi Tambahan</span>
+                        </a>
+                        {% if user.is_superuser or user.role == 'superadmin' %}
+                        <a href="{% url 'admin-panel:settings' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if request.resolver_match.url_name == 'settings' %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-globe w-4 mr-2.5 {% if request.resolver_match.url_name == 'settings' %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if request.resolver_match.url_name == 'settings' %}font-medium text-white{% else %}text-green-50{% endif %}">Pengaturan Umum</span>
+                        </a>
+                        {% endif %}
+                        
+                    </div>
+                </div>
+                
+                <!-- User Management -->
+                <div x-data="{ open: {% if 'user_profile' in request.resolver_match.url_name or 'staff' in request.resolver_match.url_name %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/10 hover:shadow-lg transition-all duration-200 {% if 'user_profile' in request.resolver_match.url_name or 'staff' in request.resolver_match.url_name %}bg-white/10 border-l-4 border-green-300{% else %}border-l-4 border-transparent{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas fa-user-shield w-5 mr-3 {% if 'user_profile' in request.resolver_match.url_name or 'staff' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'user_profile' in request.resolver_match.url_name or 'staff' in request.resolver_match.url_name %}font-semibold text-white{% else %}text-green-50{% endif %}">User Management</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 text-green-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="ml-4 mt-2 space-y-1.5"
+                        style="display: none;">
+                        <a href="{% url 'admin-panel:user_profile' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'user_profile' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-user w-4 mr-2.5 {% if 'user_profile' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'user_profile' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Profil Saya</span>
+                        </a>
+                        <a href="{% url 'admin-panel:staff_list' %}" class="flex items-center px-4 py-2.5 text-sm rounded-lg hover:bg-white/10 hover:shadow-md transition-all duration-200 {% if 'staff' in request.resolver_match.url_name %}bg-white/15 shadow-md border-l-2 border-green-300{% else %}border-l-2 border-transparent{% endif %}">
+                            <i class="fas fa-users-cog w-4 mr-2.5 {% if 'staff' in request.resolver_match.url_name %}text-green-200{% else %}text-green-100{% endif %}"></i>
+                            <span class="{% if 'staff' in request.resolver_match.url_name %}font-medium text-white{% else %}text-green-50{% endif %}">Kelola User</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Divider -->
+                <div class="border-t border-green-600/30 my-4"></div>
+                
+                <!-- Logout -->
+                <a href="{% url 'users:logout' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-red-600/20 hover:shadow-lg transition-all duration-200 border-l-4 border-transparent hover:border-red-400">
+                    <i class="fas fa-sign-out-alt w-5 mr-3 text-red-200"></i>
+                    <span class="text-red-100">Logout</span>
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col lg:ml-64">
+            <!-- Topbar -->
+            <header class="fixed top-0 right-0 left-0 lg:left-64 bg-white shadow-md border-b border-gray-200 z-40 backdrop-blur-sm bg-white/95">
+                <div class="flex items-center justify-between h-16 px-4 lg:px-6">
+                    <!-- Mobile Menu Button -->
+                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    
+                    <!-- Page Title -->
+                    <div class="flex-1">
+                        <h1 class="text-xl font-semibold text-gray-900">{% block page_title %}Dashboard{% endblock %}</h1>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="flex items-center space-x-4" x-data="{ open: false }">
+                        <!-- User Info -->
+                        <div class="flex items-center space-x-3 relative">
+                            <div class="text-right hidden sm:block">
+                                <p class="text-sm font-medium text-gray-900">{{ user.get_full_name|default:user.username }}</p>
+                                <p class="text-xs text-gray-500">{{ user.get_role_display }}</p>
+                            </div>
+                            <button 
+                                @click="open = !open"
+                                @click.away="open = false"
+                                class="relative focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full">
+                                {% if user.avatar %}
+                                <img 
+                                    src="{{ user.avatar.url }}" 
+                                    alt="{{ user.username }}" 
+                                    class="w-10 h-10 rounded-full object-cover border-2 border-green-600"
+                                    onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                >
+                                <div class="w-10 h-10 bg-green-600 rounded-full items-center justify-center text-white font-semibold hover:bg-green-700 transition-colors hidden">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                {% else %}
+                                <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold hover:bg-green-700 transition-colors">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                {% endif %}
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div 
+                                x-show="open"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                                style="display: none;"
+                            >
+                                <div class="py-1">
+                                    <div class="px-4 py-3 border-b border-gray-200">
+                                        <p class="text-sm font-medium text-gray-900">{{ user.get_full_name|default:user.username }}</p>
+                                        <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
+                                    </div>
+                                    <a href="{% url 'admin-panel:user_profile' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-user w-4 mr-3 text-gray-400"></i>
+                                        Profil Saya
+                                    </a>
+                                    <a href="{% url 'admin-panel:user_profile' %}?edit=1" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-cog w-4 mr-3 text-gray-400"></i>
+                                        Pengaturan
+                                    </a>
+                                    <div class="border-t border-gray-200"></div>
+                                    <a href="{% url 'users:logout' %}" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                        <i class="fas fa-sign-out-alt w-4 mr-3"></i>
+                                        Logout
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Notification Container - Pojok Kanan Atas di Bawah Header -->
+            <div 
+                id="notification-container" 
+                class="fixed top-16 right-4 lg:right-6 z-50 space-y-3 max-h-[calc(100vh-5rem)] overflow-y-auto"
+                style="scrollbar-width: thin;"
+                x-data="{ notifications: [] }"
+            ></div>
+            
+            <!-- Content Area -->
+            <main class="flex-1 bg-gray-50 px-3 sm:px-4 lg:px-6 pb-4 lg:pb-6 min-h-screen">
+                <!-- Breadcrumb -->
+                {% block breadcrumb %}
+                <nav class="mb-3 sm:mb-4 pt-2" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
+                        <li><a href="{% url 'admin-panel:index' %}" class="hover:text-gray-900">Dashboard</a></li>
+                        {% block breadcrumb_items %}{% endblock %}
+                    </ol>
+                </nav>
+                {% endblock %}
+                
+                <!-- Page Content -->
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- Overlay untuk Mobile Sidebar -->
+    <div 
+        x-show="sidebarOpen && window.innerWidth < 1024"
+        @click="sidebarOpen = false"
+        x-transition:enter="transition-opacity ease-linear duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition-opacity ease-linear duration-300"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden"
+        style="display: none;"
+    >    </div>
+    
+    <!-- AJAX Filter Script -->
+    <script src="{% static 'admin-panel/js/filter-ajax.js' %}"></script>
+    
+    <!-- Notification Helper -->
+    <script src="{% static 'admin-panel/js/notification.js' %}"></script>
+    
+    <!-- Global Notification System -->
+    <script>
+        // Notification System untuk Admin Panel
+        (function() {
+            const notificationContainer = document.getElementById('notification-container');
+            let notificationIdCounter = 0;
+            
+            // Fungsi untuk membuat notifikasi
+            function createNotification(type, message, duration = 5000) {
+                const notificationId = 'notification-' + (++notificationIdCounter);
+                const notification = document.createElement('div');
+                notification.id = notificationId;
+                notification.className = 'notification-toast';
+                
+                // Mapping type ke warna dan icon
+                const typeConfig = {
+                    'success': {
+                        bg: 'bg-green-50',
+                        border: 'border-green-200',
+                        text: 'text-green-800',
+                        icon: 'fa-check-circle',
+                        iconBg: 'bg-green-100',
+                        iconColor: 'text-green-600'
+                    },
+                    'error': {
+                        bg: 'bg-red-50',
+                        border: 'border-red-200',
+                        text: 'text-red-800',
+                        icon: 'fa-exclamation-circle',
+                        iconBg: 'bg-red-100',
+                        iconColor: 'text-red-600'
+                    },
+                    'warning': {
+                        bg: 'bg-yellow-50',
+                        border: 'border-yellow-200',
+                        text: 'text-yellow-800',
+                        icon: 'fa-exclamation-triangle',
+                        iconBg: 'bg-yellow-100',
+                        iconColor: 'text-yellow-600'
+                    },
+                    'info': {
+                        bg: 'bg-blue-50',
+                        border: 'border-blue-200',
+                        text: 'text-blue-800',
+                        icon: 'fa-info-circle',
+                        iconBg: 'bg-blue-100',
+                        iconColor: 'text-blue-600'
+                    }
+                };
+                
+                const config = typeConfig[type] || typeConfig['info'];
+                
+                notification.innerHTML = `
+                    <div class="${config.bg} ${config.border} border-l-4 ${config.text} p-4 rounded-lg shadow-lg notification-toast animate-slide-in-right pointer-events-auto">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="${config.iconBg} ${config.iconColor} w-8 h-8 rounded-full flex items-center justify-center">
+                                    <i class="fas ${config.icon} text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="text-sm font-medium ${config.text}">
+                                    ${escapeHtml(message)}
+                                </p>
+                            </div>
+                            <div class="ml-4 flex-shrink-0 flex">
+                                <button 
+                                    onclick="removeNotification('${notificationId}')" 
+                                    class="inline-flex ${config.text} hover:opacity-75 focus:outline-none transition-opacity"
+                                >
+                                    <i class="fas fa-times text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Tambahkan ke container (di awal untuk muncul dari atas)
+                notificationContainer.insertBefore(notification, notificationContainer.firstChild);
+                
+                // Auto remove setelah duration
+                if (duration > 0) {
+                    setTimeout(() => {
+                        removeNotification(notificationId);
+                    }, duration);
+                }
+                
+                return notificationId;
+            }
+            
+            // Fungsi untuk menghapus notifikasi
+            window.removeNotification = function(notificationId) {
+                const notification = document.getElementById(notificationId);
+                if (notification) {
+                    notification.style.animation = 'slide-out-right 0.3s ease-out';
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }
+            };
+            
+            // Fungsi untuk escape HTML
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            // Expose fungsi global untuk AJAX/JavaScript
+            window.showNotification = function(type, message, duration) {
+                return createNotification(type, message, duration);
+            };
+            
+            // Convert Django messages ke notifikasi
+            {% if messages %}
+            document.addEventListener('DOMContentLoaded', function() {
+                {% for message in messages %}
+                showNotification(
+                    '{{ message.tags|default:"info" }}',
+                    '{{ message|escapejs }}',
+                    5000
+                );
+                {% endfor %}
+            });
+            {% endif %}
+            
+            // Listen untuk HTMX events
+            document.body.addEventListener('htmx:afterRequest', function(event) {
+                // Check jika ada response message dari server
+                const response = event.detail.xhr;
+                if (response && response.status >= 200 && response.status < 300) {
+                    try {
+                        const data = JSON.parse(response.responseText);
+                        if (data.message) {
+                            showNotification(data.message_type || 'success', data.message);
+                        }
+                    } catch (e) {
+                        // Bukan JSON, skip
+                    }
+                } else if (response && response.status >= 400) {
+                    showNotification('error', 'Terjadi kesalahan saat memproses permintaan.');
+                }
+            });
+            
+            // Listen untuk custom notification events
+            document.addEventListener('showNotification', function(event) {
+                const { type, message, duration } = event.detail;
+                showNotification(type || 'info', message || 'Notification', duration || 5000);
+            });
+        })();
+    </script>
+    
+    <!-- CSS Animation untuk Notification -->
+    <style>
+        @keyframes slide-in-right {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slide-out-right {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .animate-slide-in-right {
+            animation: slide-in-right 0.3s ease-out;
+        }
+    </style>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Floating Bug Note Button -->
+    <button 
+        id="bug-note-fab"
+        class="fixed bottom-24 right-4 lg:right-6 z-50 bg-red-500 hover:bg-red-600 text-white w-12 h-12 rounded-full shadow-2xl hover:shadow-red-500/40 transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center"
+        onclick="openBugNoteModal()"
+        title="Catat Bug">
+        <i class="fas fa-bug text-lg"></i>
+    </button>
+    
+    <!-- Bug Note Modal -->
+    <div id="bug-note-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-3" onclick="closeBugNoteModal()">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto overflow-hidden" onclick="event.stopPropagation()">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-bug text-white"></i>
+                    <h3 class="text-white font-bold">Catatan Bug</h3>
+                </div>
+                <button class="text-white hover:text-gray-200" onclick="closeBugNoteModal()">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <form method="post" action="{% url 'admin-panel:bug_note_create' %}" class="p-4 space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-1">Judul *</label>
+                    <input type="text" name="title" required maxlength="200"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                           placeholder="Ringkas, contoh: Hero tidak loading di mobile">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-1">Deskripsi</label>
+                    <textarea name="description" rows="4"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                              placeholder="Langkah reproduksi, ekspektasi, hasil aktual"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-1">Status</label>
+                        <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            <option value="open">Open</option>
+                            <option value="progress">In Progress</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-1">URL Halaman</label>
+                        <input type="url" name="page_url" id="bug-note-page-url"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                               placeholder="Auto terisi" />
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200" onclick="closeBugNoteModal()">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 shadow">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function openBugNoteModal() {
+            const modal = document.getElementById('bug-note-modal');
+            const urlInput = document.getElementById('bug-note-page-url');
+            if (urlInput) urlInput.value = window.location.href;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeBugNoteModal() {
+            const modal = document.getElementById('bug-note-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    </script>
+    
+    <!-- Image Picker Modal Component (Global) -->
+    {% include 'admin-panel/components/image_picker_modal.html' %}
+    
+    <!-- Image Picker JavaScript -->
+    <script src="{% static 'admin-panel/js/image_picker.js' %}"></script>
+</body>
+</html>
+

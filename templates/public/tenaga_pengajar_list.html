@@ -1,0 +1,641 @@
+{% extends 'public/base.html' %}
+{% load static %}
+
+{% block title %}Tenaga Pengajar - {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren Modern Raudhatussalam{% endif %}{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-br from-green-600 to-blue-600 text-white py-8 md:py-12">
+    <div class="container mx-auto px-3">
+        <div class="text-center">
+            <h1 class="text-2xl md:text-4xl font-bold mb-2">Tenaga Pengajar</h1>
+            <p class="text-sm md:text-lg text-white/90">Ustadz dan Ustadzah {% if settings and settings.nama_pondok %}{{ settings.nama_pondok }}{% else %}Pesantren{% endif %}</p>
+        </div>
+    </div>
+</section>
+
+<!-- Filter & Search Section -->
+<section class="bg-white py-4 md:py-6 border-b border-gray-200">
+    <div class="container mx-auto px-3">
+        <div class="max-w-4xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <div>
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Cari</label>
+                    <input type="text" id="search-input" value="{{ search_query }}" placeholder="Nama, bidang keahlian..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Bagian/Jabatan</label>
+                    <select id="bagian-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-sm">
+                        <option value="">Semua</option>
+                        {% for bagian in bagian_list %}
+                        <option value="{{ bagian.id }}" {% if bagian_filter == bagian.id|stringformat:"s" %}selected{% endif %}>{{ bagian.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                    <select id="jenis-kelamin-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-sm">
+                        <option value="">Semua</option>
+                        <option value="L" {% if jenis_kelamin_filter == "L" %}selected{% endif %}>Ustadz</option>
+                        <option value="P" {% if jenis_kelamin_filter == "P" %}selected{% endif %}>Ustadzah</option>
+                    </select>
+                </div>
+            </div>
+            <div id="filter-loading" class="hidden mt-3 text-center text-sm text-gray-500">
+                <i class="fas fa-spinner fa-spin mr-2"></i>Memuat...
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Tenaga Pengajar List Section -->
+<section class="section bg-gradient-to-br from-green-50 to-blue-50 py-4 md:py-6">
+    <div class="container mx-auto px-3">
+        <div id="pengajar-list-container">
+            {% if pengajar_by_bagian %}
+            <div class="space-y-8">
+                {% for bagian_nama, pengajar_list in pengajar_by_bagian.items %}
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-users mr-2 text-green-600"></i>{{ bagian_nama }}
+                    </h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                        {% for pengajar in pengajar_list %}
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 transform hover:scale-105 active:scale-95" onclick="openPengajarModal({{ pengajar.id }})" style="opacity: 1 !important; visibility: visible !important;">
+                            <div class="relative bg-gradient-to-br from-green-400 to-blue-500">
+                                {% if pengajar.foto %}
+                                <img src="{{ pengajar.foto.url }}" alt="{{ pengajar.nama_lengkap }}" class="w-full h-32 md:h-40 lg:h-48 xl:h-56 object-cover" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="w-full h-32 md:h-40 lg:h-48 xl:h-56 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center hidden">
+                                    <i class="fas fa-user text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white/50"></i>
+                                </div>
+                                {% else %}
+                                <div class="w-full h-32 md:h-40 lg:h-48 xl:h-56 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                                    <i class="fas fa-user text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white/50"></i>
+                                </div>
+                                {% endif %}
+                                <!-- Social Media Icons - Selalu Tampil -->
+                                {% if pengajar.whatsapp or pengajar.facebook or pengajar.instagram %}
+                                <div class="absolute bottom-1 md:bottom-2 left-0 right-0 flex justify-center gap-1 z-10">
+                                    <div class="bg-white/95 backdrop-blur-sm rounded px-1.5 md:px-2 py-0.5 md:py-1 flex gap-1 shadow-md">
+                                        {% if pengajar.whatsapp %}
+                                        <a href="https://wa.me/{{ pengajar.whatsapp }}" target="_blank" rel="noopener noreferrer" class="text-green-600 hover:text-green-700 transition-colors" onclick="event.stopPropagation();" title="WhatsApp">
+                                            <i class="fab fa-whatsapp text-xs"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if pengajar.facebook %}
+                                        <a href="{{ pengajar.facebook }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 transition-colors" onclick="event.stopPropagation();" title="Facebook">
+                                            <i class="fab fa-facebook-f text-xs"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if pengajar.instagram %}
+                                        <a href="{{ pengajar.instagram }}" target="_blank" rel="noopener noreferrer" class="text-pink-600 hover:text-pink-700 transition-colors" onclick="event.stopPropagation();" title="Instagram">
+                                            <i class="fab fa-instagram text-xs"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="p-2 md:p-3 lg:p-4 bg-white">
+                                <!-- Nama -->
+                                <h3 class="font-bold text-gray-900 text-xs md:text-sm lg:text-base mb-1 text-center line-clamp-1">{{ pengajar.nama_lengkap }}</h3>
+                                
+                                <!-- Divider -->
+                                <div class="border-t border-gray-200 my-1"></div>
+                                
+                                <!-- Bagian/Jabatan dan Motto - 1 paragraf di mobile -->
+                                <div class="mb-1">
+                                    {% if pengajar.bagian_jabatan %}
+                                    <p class="text-xs text-gray-700 mb-1 text-center font-medium line-clamp-1">{{ pengajar.bagian_jabatan.nama }}</p>
+                                    {% endif %}
+                                    {% if pengajar.motto %}
+                                    <p class="text-xs text-gray-600 italic text-center line-clamp-2 mt-1">"{{ pengajar.motto|truncatewords:8 }}"</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Badge Jenis Kelamin - Styling dari home (tidak buram) -->
+                                <div class="flex justify-center mb-1">
+                                    <span class="px-1.5 py-0.5 text-xs font-semibold rounded-full {% if pengajar.jenis_kelamin == 'L' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                                        {{ pengajar.get_jenis_kelamin_display_short }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% elif pengajar_list %}
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                {% for pengajar in pengajar_list %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 transform hover:scale-105 active:scale-95" onclick="openPengajarModal({{ pengajar.id }})" style="opacity: 1 !important; visibility: visible !important;">
+                    <div class="relative bg-gradient-to-br from-green-400 to-blue-500">
+                        {% if pengajar.foto %}
+                        <img src="{{ pengajar.foto.url }}" alt="{{ pengajar.nama_lengkap }}" class="w-full h-32 md:h-40 lg:h-48 xl:h-56 object-cover" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-full h-32 md:h-40 lg:h-48 xl:h-56 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center hidden">
+                            <i class="fas fa-user text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white/50"></i>
+                        </div>
+                        {% else %}
+                        <div class="w-full h-32 md:h-40 lg:h-48 xl:h-56 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                            <i class="fas fa-user text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white/50"></i>
+                        </div>
+                        {% endif %}
+                        <!-- Social Media Icons - Selalu Tampil -->
+                        {% if pengajar.whatsapp or pengajar.facebook or pengajar.instagram %}
+                        <div class="absolute bottom-1 md:bottom-2 left-0 right-0 flex justify-center gap-1 z-10">
+                            <div class="bg-white/95 backdrop-blur-sm rounded px-1.5 md:px-2 py-0.5 md:py-1 flex gap-1 shadow-md">
+                                {% if pengajar.whatsapp %}
+                                <a href="https://wa.me/{{ pengajar.whatsapp }}" target="_blank" rel="noopener noreferrer" class="text-green-600 hover:text-green-700 transition-colors" onclick="event.stopPropagation();" title="WhatsApp">
+                                    <i class="fab fa-whatsapp text-xs"></i>
+                                </a>
+                                {% endif %}
+                                {% if pengajar.facebook %}
+                                <a href="{{ pengajar.facebook }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 transition-colors" onclick="event.stopPropagation();" title="Facebook">
+                                    <i class="fab fa-facebook-f text-xs"></i>
+                                </a>
+                                {% endif %}
+                                {% if pengajar.instagram %}
+                                <a href="{{ pengajar.instagram }}" target="_blank" rel="noopener noreferrer" class="text-pink-600 hover:text-pink-700 transition-colors" onclick="event.stopPropagation();" title="Instagram">
+                                    <i class="fab fa-instagram text-xs"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-2 md:p-3 lg:p-4 bg-white">
+                        <!-- Nama -->
+                        <h3 class="font-bold text-gray-900 text-xs md:text-sm lg:text-base mb-1 text-center line-clamp-1">{{ pengajar.nama_lengkap }}</h3>
+                        
+                        <!-- Divider -->
+                        <div class="border-t border-gray-200 my-1"></div>
+                        
+                        <!-- Bagian/Jabatan dan Motto - 1 paragraf di mobile -->
+                        <div class="mb-1">
+                            {% if pengajar.bagian_jabatan %}
+                            <p class="text-xs text-gray-700 mb-1 text-center font-medium line-clamp-1">{{ pengajar.bagian_jabatan.nama }}</p>
+                            {% endif %}
+                            {% if pengajar.motto %}
+                            <p class="text-xs text-gray-600 italic text-center line-clamp-2 mt-1">"{{ pengajar.motto|truncatewords:8 }}"</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Badge Jenis Kelamin - Styling dari home (tidak buram) -->
+                        <div class="flex justify-center mb-1">
+                            <span class="px-1.5 py-0.5 text-xs font-semibold rounded-full {% if pengajar.jenis_kelamin == 'L' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                                {{ pengajar.get_jenis_kelamin_display_short }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12 text-gray-500">
+                <i class="fas fa-search text-6xl mb-4 text-gray-300"></i>
+                <p class="text-lg font-semibold mb-2">Data tidak ditemukan</p>
+                <p class="text-sm text-gray-400">Coba ubah filter atau kata kunci pencarian</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Pengajar Detail Modal -->
+<div id="pengajar-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 hidden p-2 md:p-4" onclick="closePengajarModal(event)">
+    <div class="relative max-w-4xl w-full mx-auto max-h-[90vh] overflow-hidden bg-white rounded-xl shadow-2xl flex flex-col" onclick="event.stopPropagation()">
+        <!-- Modal Content -->
+        <div id="pengajar-modal-content" class="overflow-y-auto flex-1">
+            <!-- Content akan diisi oleh JavaScript -->
+            <div class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+                <p class="mt-4 text-gray-600">Memuat data...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Pengajar Modal (sama dengan di home.html)
+let currentPengajarData = null;
+
+function openPengajarModal(pengajarId) {
+    const modal = document.getElementById('pengajar-modal');
+    const content = document.getElementById('pengajar-modal-content');
+    
+    if (!modal || !content) return;
+    
+    // Show modal with loading
+    modal.classList.remove('hidden');
+    content.innerHTML = `
+        <div class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+            <p class="mt-4 text-gray-600">Memuat data...</p>
+        </div>
+    `;
+    
+    // Fetch data
+    fetch(`/tenaga-pengajar/${pengajarId}/json/`)
+        .then(response => response.json())
+        .then(data => {
+            currentPengajarData = data;
+            // Debug: log media sosial data
+            console.log('Media Sosial Data:', {
+                whatsapp: data.whatsapp,
+                facebook: data.facebook,
+                instagram: data.instagram,
+                twitter: data.twitter,
+                linkedin: data.linkedin,
+                youtube: data.youtube,
+                tiktok: data.tiktok
+            });
+            renderPengajarModal(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-circle text-4xl text-red-400"></i>
+                    <p class="mt-4 text-red-600">Gagal memuat data pengajar</p>
+                </div>
+            `;
+        });
+}
+
+function closePengajarModal(event) {
+    // Prevent event bubbling
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const modal = document.getElementById('pengajar-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        // Reset scroll position
+        const content = document.getElementById('pengajar-modal-content');
+        if (content) {
+            content.scrollTop = 0;
+        }
+    }
+    currentPengajarData = null;
+}
+
+// Close modal dengan ESC key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('pengajar-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closePengajarModal();
+        }
+    }
+});
+
+function renderPengajarModal(data) {
+    const content = document.getElementById('pengajar-modal-content');
+    if (!content) return;
+    
+    // Check if ada media sosial (cek string kosong juga)
+    const hasSocialMedia = (data.whatsapp && data.whatsapp.trim()) || 
+                          (data.facebook && data.facebook.trim()) || 
+                          (data.instagram && data.instagram.trim()) || 
+                          (data.twitter && data.twitter.trim()) || 
+                          (data.linkedin && data.linkedin.trim()) || 
+                          (data.youtube && data.youtube.trim()) || 
+                          (data.tiktok && data.tiktok.trim());
+    
+    const html = `
+        <!-- Header Card dengan Gradient -->
+        <div class="relative bg-gradient-to-br from-green-500 to-blue-500 p-6 md:p-8 text-white">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-4 flex-1">
+                    ${data.foto ? `
+                    <img src="${data.foto}" alt="${data.nama_lengkap}" class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white shadow-xl">
+                    ` : `
+                    <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center">
+                        <i class="fas fa-user text-4xl md:text-5xl text-gray-400"></i>
+                    </div>
+                    `}
+                    <div class="flex-1">
+                        <div class="mb-2 flex flex-wrap items-center gap-2">
+                            <span class="px-3 py-1 text-xs md:text-sm font-semibold rounded-full ${data.jenis_kelamin_short === 'Ustadz' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}">
+                                ${data.jenis_kelamin_short}
+                            </span>
+                            ${data.bagian_jabatan ? `
+                            <span class="px-3 py-1 text-xs md:text-sm font-semibold rounded-full bg-white text-gray-900">
+                                ${data.bagian_jabatan}
+                            </span>
+                            ` : ''}
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-bold mb-1">${data.nama_lengkap}</h3>
+                        ${data.nama_panggilan ? `<p class="text-sm md:text-base text-white/90">${data.nama_panggilan}</p>` : ''}
+                    </div>
+                </div>
+                <button onclick="closePengajarModal()" class="bg-white hover:bg-gray-100 text-gray-900 p-2 rounded-full transition-colors shadow-lg flex-shrink-0 ml-4">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Media Sosial di Header (jika ada) - Background Putih Solid -->
+            ${hasSocialMedia ? `
+            <div class="flex items-center gap-2 flex-wrap">
+                ${data.whatsapp ? `
+                <a href="https://wa.me/${data.whatsapp}" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-gray-100 text-green-600 p-2 rounded-lg transition-colors shadow-md" title="WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                ` : ''}
+                ${data.facebook ? `
+                <a href="${data.facebook}" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-gray-100 text-blue-600 p-2 rounded-lg transition-colors shadow-md" title="Facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                ` : ''}
+                ${data.instagram ? `
+                <a href="${data.instagram}" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-gray-100 text-pink-600 p-2 rounded-lg transition-colors shadow-md" title="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                ` : ''}
+                ${data.twitter ? `
+                <a href="${data.twitter}" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-gray-100 text-blue-400 p-2 rounded-lg transition-colors shadow-md" title="Twitter/X">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                ` : ''}
+                ${data.linkedin ? `
+                <a href="${data.linkedin}" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-gray-100 text-blue-700 p-2 rounded-lg transition-colors shadow-md" title="LinkedIn">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                ` : ''}
+                ${data.youtube ? `
+                <a href="${data.youtube}" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-gray-100 text-red-600 p-2 rounded-lg transition-colors shadow-md" title="YouTube">
+                    <i class="fab fa-youtube"></i>
+                </a>
+                ` : ''}
+                ${data.tiktok ? `
+                <a href="${data.tiktok}" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-gray-100 text-gray-900 p-2 rounded-lg transition-colors shadow-md" title="TikTok">
+                    <i class="fab fa-tiktok"></i>
+                </a>
+                ` : ''}
+            </div>
+            ` : ''}
+        </div>
+        
+        <!-- Content Card -->
+        <div class="p-4 md:p-6 bg-white">
+            
+            <!-- Biodata -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                ${data.tempat_lahir || data.tanggal_lahir ? `
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Tempat & Tanggal Lahir</label>
+                    <p class="text-gray-900">${data.tempat_lahir || ''}${data.tanggal_lahir ? (data.tempat_lahir ? ', ' : '') + data.tanggal_lahir : ''}</p>
+                </div>
+                ` : ''}
+                ${data.alamat ? `
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Alamat</label>
+                    <p class="text-gray-900">${data.alamat}</p>
+                </div>
+                ` : ''}
+                ${data.no_hp ? `
+                <div>
+                    <label class="text-sm font-medium text-gray-500">No. HP</label>
+                    <p class="text-gray-900">${data.no_hp}</p>
+                </div>
+                ` : ''}
+                ${data.email ? `
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Email</label>
+                    <p class="text-gray-900">${data.email}</p>
+                </div>
+                ` : ''}
+            </div>
+            
+            <!-- Pendidikan -->
+            ${data.pendidikan_terakhir || data.universitas || data.tahun_lulus ? `
+            <div class="mb-6 pb-6 border-b border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Pendidikan</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${data.pendidikan_terakhir ? `
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Pendidikan Terakhir</label>
+                        <p class="text-gray-900">${data.pendidikan_terakhir}</p>
+                    </div>
+                    ` : ''}
+                    ${data.universitas ? `
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Universitas/Institusi</label>
+                        <p class="text-gray-900">${data.universitas}</p>
+                    </div>
+                    ` : ''}
+                    ${data.tahun_lulus ? `
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Tahun Lulus</label>
+                        <p class="text-gray-900">${data.tahun_lulus}</p>
+                    </div>
+                    ` : ''}
+                    ${data.riwayat_pendidikan ? `
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-medium text-gray-500">Riwayat Pendidikan</label>
+                        <p class="text-gray-900 whitespace-pre-line">${data.riwayat_pendidikan}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
+            
+            <!-- Keahlian -->
+            ${data.bidang_keahlian || data.mata_pelajaran ? `
+            <div class="mb-6 pb-6 border-b border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Keahlian & Bidang</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${data.bidang_keahlian ? `
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Bidang Keahlian</label>
+                        <p class="text-gray-900">${data.bidang_keahlian}</p>
+                    </div>
+                    ` : ''}
+                    ${data.mata_pelajaran ? `
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Mata Pelajaran yang Diampu</label>
+                        <p class="text-gray-900">${data.mata_pelajaran}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
+            
+            <!-- Pengalaman & Prestasi -->
+            ${data.pengalaman_mengajar || data.prestasi ? `
+            <div class="mb-6 pb-6 border-b border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Pengalaman & Prestasi</h4>
+                ${data.pengalaman_mengajar ? `
+                <div class="mb-4">
+                    <label class="text-sm font-medium text-gray-500">Pengalaman Mengajar</label>
+                    <p class="text-gray-900 whitespace-pre-line">${data.pengalaman_mengajar}</p>
+                </div>
+                ` : ''}
+                ${data.prestasi ? `
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Prestasi</label>
+                    <p class="text-gray-900 whitespace-pre-line">${data.prestasi}</p>
+                </div>
+                ` : ''}
+            </div>
+            ` : ''}
+            
+            <!-- Biodata Tambahan -->
+            ${data.organisasi || data.karya_tulis || data.motto ? `
+            <div class="mb-6 pb-6 border-b border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Biodata Tambahan</h4>
+                ${data.organisasi ? `
+                <div class="mb-4">
+                    <label class="text-sm font-medium text-gray-500">Organisasi</label>
+                    <p class="text-gray-900 whitespace-pre-line">${data.organisasi}</p>
+                </div>
+                ` : ''}
+                ${data.karya_tulis ? `
+                <div class="mb-4">
+                    <label class="text-sm font-medium text-gray-500">Karya Tulis</label>
+                    <p class="text-gray-900 whitespace-pre-line">${data.karya_tulis}</p>
+                </div>
+                ` : ''}
+                ${data.motto ? `
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Motto</label>
+                    <p class="text-gray-900 italic text-lg">"${data.motto}"</p>
+                </div>
+                ` : ''}
+            </div>
+            ` : ''}
+            
+            <!-- Media Sosial Card (jika ada) -->
+            ${hasSocialMedia ? `
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Media Sosial</h4>
+                <div class="flex flex-wrap gap-3">
+                    ${(data.whatsapp && data.whatsapp.trim()) ? `
+                    <a href="https://wa.me/${data.whatsapp.trim()}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </a>
+                    ` : ''}
+                    ${(data.facebook && data.facebook.trim()) ? `
+                    <a href="${data.facebook.trim()}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                        <i class="fab fa-facebook-f"></i>
+                        <span>Facebook</span>
+                    </a>
+                    ` : ''}
+                    ${(data.instagram && data.instagram.trim()) ? `
+                    <a href="${data.instagram.trim()}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-lg transition-colors">
+                        <i class="fab fa-instagram"></i>
+                        <span>Instagram</span>
+                    </a>
+                    ` : ''}
+                    ${(data.twitter && data.twitter.trim()) ? `
+                    <a href="${data.twitter.trim()}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-lg transition-colors">
+                        <i class="fab fa-twitter"></i>
+                        <span>Twitter</span>
+                    </a>
+                    ` : ''}
+                    ${(data.linkedin && data.linkedin.trim()) ? `
+                    <a href="${data.linkedin.trim()}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors">
+                        <i class="fab fa-linkedin-in"></i>
+                        <span>LinkedIn</span>
+                    </a>
+                    ` : ''}
+                    ${(data.youtube && data.youtube.trim()) ? `
+                    <a href="${data.youtube.trim()}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                        <i class="fab fa-youtube"></i>
+                        <span>YouTube</span>
+                    </a>
+                    ` : ''}
+                    ${(data.tiktok && data.tiktok.trim()) ? `
+                    <a href="${data.tiktok.trim()}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors">
+                        <i class="fab fa-tiktok"></i>
+                        <span>TikTok</span>
+                    </a>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    content.innerHTML = html;
+}
+
+// Filter Realtime dengan AJAX (Sederhana)
+let filterTimeout;
+const searchInput = document.getElementById('search-input');
+const bagianSelect = document.getElementById('bagian-select');
+const jenisKelaminSelect = document.getElementById('jenis-kelamin-select');
+const container = document.getElementById('pengajar-list-container');
+const loading = document.getElementById('filter-loading');
+
+function performFilter() {
+    if (!container) return;
+    
+    if (loading) loading.classList.remove('hidden');
+    
+    const params = new URLSearchParams();
+    if (searchInput && searchInput.value.trim()) params.append('search', searchInput.value.trim());
+    if (bagianSelect && bagianSelect.value) params.append('bagian', bagianSelect.value);
+    if (jenisKelaminSelect && jenisKelaminSelect.value) params.append('jenis_kelamin', jenisKelaminSelect.value);
+    
+    fetch(`/tenaga-pengajar/?${params.toString()}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        container.innerHTML = data.html || '<div class="text-center py-12 text-gray-500"><p>Data tidak ditemukan</p></div>';
+        if (loading) loading.classList.add('hidden');
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        container.innerHTML = '<div class="text-center py-12 text-red-500"><p>Terjadi kesalahan</p></div>';
+        if (loading) loading.classList.add('hidden');
+    });
+}
+
+// Event listeners
+if (searchInput) {
+    searchInput.addEventListener('input', () => {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(performFilter, 500);
+    });
+}
+if (bagianSelect) bagianSelect.addEventListener('change', performFilter);
+if (jenisKelaminSelect) jenisKelaminSelect.addEventListener('change', performFilter);
+</script>
+<style>
+/* Pengajar Card Animations - Touch Friendly */
+.pengajar-card,
+.bg-white.rounded-lg.shadow-md {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.pengajar-card:active,
+.bg-white.rounded-lg.shadow-md:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-in-out;
+}
+
+@media (max-width: 768px) {
+    .pengajar-card,
+    .bg-white.rounded-lg.shadow-md {
+        transition: transform 0.15s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .pengajar-card:active,
+    .bg-white.rounded-lg.shadow-md:active {
+        transform: scale(0.93);
+    }
+}
+</style>
+{% endblock %}
+
+{% block kontak_section %}
+<!-- Section Hubungi Kami dihapus dari halaman ini -->
+{% endblock %}
+

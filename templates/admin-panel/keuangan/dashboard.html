@@ -1,0 +1,297 @@
+{% extends 'admin-panel/base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard Keuangan - Admin Panel{% endblock %}
+
+{% block page_title %}Dashboard Keuangan{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Dashboard Keuangan</span></li>
+{% endblock %}
+
+{% block content %}
+<div>
+    <!-- Statistik Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <!-- Total Pembayaran -->
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Pembayaran</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">
+                        {% if currency == 'IDR' %}
+                            Rp {{ total_payment.total|default:0|floatformat:0|intcomma }}
+                        {% elif currency == 'USD' %}
+                            $ {{ total_payment.total|default:0|floatformat:2|intcomma }}
+                        {% else %}
+                            € {{ total_payment.total|default:0|floatformat:2|intcomma }}
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">{{ total_payment.count|default:0 }} transaksi</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Terverifikasi -->
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Terverifikasi</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">
+                        {% if currency == 'IDR' %}
+                            Rp {{ verified_total.total|default:0|floatformat:0|intcomma }}
+                        {% elif currency == 'USD' %}
+                            $ {{ verified_total.total|default:0|floatformat:2|intcomma }}
+                        {% else %}
+                            € {{ verified_total.total|default:0|floatformat:2|intcomma }}
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">{{ verified_total.count|default:0 }} transaksi</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pending -->
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pending</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">
+                        {% if currency == 'IDR' %}
+                            Rp {{ pending_total.total|default:0|floatformat:0|intcomma }}
+                        {% elif currency == 'USD' %}
+                            $ {{ pending_total.total|default:0|floatformat:2|intcomma }}
+                        {% else %}
+                            € {{ pending_total.total|default:0|floatformat:2|intcomma }}
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">{{ pending_total.count|default:0 }} transaksi</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ditolak -->
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Ditolak</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">
+                        {% if currency == 'IDR' %}
+                            Rp {{ rejected_total.total|default:0|floatformat:0|intcomma }}
+                        {% elif currency == 'USD' %}
+                            $ {{ rejected_total.total|default:0|floatformat:2|intcomma }}
+                        {% else %}
+                            € {{ rejected_total.total|default:0|floatformat:2|intcomma }}
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">{{ rejected_total.count|default:0 }} transaksi</p>
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistik Tambahan -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <!-- Hari Ini -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Hari Ini</h3>
+            <p class="text-2xl font-bold text-gray-900">
+                {% if currency == 'IDR' %}
+                    Rp {{ today_payments.total|default:0|floatformat:0|intcomma }}
+                {% elif currency == 'USD' %}
+                    $ {{ today_payments.total|default:0|floatformat:2|intcomma }}
+                {% else %}
+                    € {{ today_payments.total|default:0|floatformat:2|intcomma }}
+                {% endif %}
+            </p>
+            <p class="text-sm text-gray-600 mt-2">{{ today_payments.count|default:0 }} transaksi</p>
+        </div>
+        
+        <!-- Bulan Ini -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Bulan Ini</h3>
+            <p class="text-2xl font-bold text-gray-900">
+                {% if currency == 'IDR' %}
+                    Rp {{ month_payments.total|default:0|floatformat:0|intcomma }}
+                {% elif currency == 'USD' %}
+                    $ {{ month_payments.total|default:0|floatformat:2|intcomma }}
+                {% else %}
+                    € {{ month_payments.total|default:0|floatformat:2|intcomma }}
+                {% endif %}
+            </p>
+            <p class="text-sm text-gray-600 mt-2">{{ month_payments.count|default:0 }} transaksi</p>
+        </div>
+        
+        <!-- Rata-rata -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Rata-rata</h3>
+            <p class="text-2xl font-bold text-gray-900">
+                {% if currency == 'IDR' %}
+                    Rp {{ total_payment.avg|default:0|floatformat:0|intcomma }}
+                {% elif currency == 'USD' %}
+                    $ {{ total_payment.avg|default:0|floatformat:2|intcomma }}
+                {% else %}
+                    € {{ total_payment.avg|default:0|floatformat:2|intcomma }}
+                {% endif %}
+            </p>
+            <p class="text-sm text-gray-600 mt-2">per transaksi</p>
+        </div>
+    </div>
+    
+    <!-- Charts & Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Pembayaran per Status -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Pembayaran per Status</h3>
+            <div class="space-y-3">
+                {% for item in payment_by_status %}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">
+                        {{ item.status_display|default:item.status }}
+                    </span>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-gray-900">
+                            {% if currency == 'IDR' %}
+                                Rp {{ item.total|default:0|floatformat:0|intcomma }}
+                            {% elif currency == 'USD' %}
+                                $ {{ item.total|default:0|floatformat:2|intcomma }}
+                            {% else %}
+                                € {{ item.total|default:0|floatformat:2|intcomma }}
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-500">{{ item.count }} transaksi</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-gray-500 py-4">Tidak ada data</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Pembayaran per Bank -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Pembayaran per Bank</h3>
+            <div class="space-y-3">
+                {% for item in payment_by_bank %}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">{{ item.bank_pengirim }}</span>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-gray-900">
+                            {% if currency == 'IDR' %}
+                                Rp {{ item.total|default:0|floatformat:0|intcomma }}
+                            {% elif currency == 'USD' %}
+                                $ {{ item.total|default:0|floatformat:2|intcomma }}
+                            {% else %}
+                                € {{ item.total|default:0|floatformat:2|intcomma }}
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-500">{{ item.count }} transaksi</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-gray-500 py-4">Tidak ada data</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Payments & Recent Payments -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Top 10 Pembayaran Terbesar -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Top 10 Pembayaran Terbesar</h3>
+            </div>
+            <div class="p-6">
+                {% if top_payments %}
+                <div class="space-y-3">
+                    {% for payment in top_payments %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">{{ payment.santri.nama_lengkap }}</p>
+                            <p class="text-xs text-gray-500">{{ payment.santri.nisn }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-gray-900">
+                                {% if currency == 'IDR' %}
+                                    Rp {{ payment.jumlah_transfer|floatformat:0|intcomma }}
+                                {% elif currency == 'USD' %}
+                                    $ {{ payment.jumlah_transfer|floatformat:2|intcomma }}
+                                {% else %}
+                                    € {{ payment.jumlah_transfer|floatformat:2|intcomma }}
+                                {% endif %}
+                            </p>
+                            <span class="text-xs px-2 py-1 rounded {{ payment.get_status_display_class }}">
+                                {{ payment.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-gray-500 py-8">Tidak ada data</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Pembayaran Terbaru -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Pembayaran Terbaru</h3>
+                    <a href="{% url 'admin-panel:payment_list' %}" class="text-sm text-green-600 hover:underline">
+                        Lihat semua
+                    </a>
+                </div>
+            </div>
+            <div class="p-6">
+                {% if recent_payments %}
+                <div class="space-y-3">
+                    {% for payment in recent_payments %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">{{ payment.santri.nama_lengkap }}</p>
+                            <p class="text-xs text-gray-500">{{ payment.created_at|date:"d M Y, H:i" }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-gray-900">
+                                {% if currency == 'IDR' %}
+                                    Rp {{ payment.jumlah_transfer|floatformat:0|intcomma }}
+                                {% elif currency == 'USD' %}
+                                    $ {{ payment.jumlah_transfer|floatformat:2|intcomma }}
+                                {% else %}
+                                    € {{ payment.jumlah_transfer|floatformat:2|intcomma }}
+                                {% endif %}
+                            </p>
+                            <span class="text-xs px-2 py-1 rounded {{ payment.get_status_display_class }}">
+                                {{ payment.get_status_display }}
+                            </span>
+                        </div>
+                        <a href="{% url 'admin-panel:payment_detail' payment.id %}" class="ml-4 text-green-600 hover:text-green-700">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-gray-500 py-8">Tidak ada data</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

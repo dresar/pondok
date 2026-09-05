@@ -1,0 +1,217 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Status Pendaftaran - User Panel{% endblock %}
+{% block page_title %}Status Pendaftaran{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-4 md:space-y-6">
+    {% if not has_santri %}
+    <!-- Belum Ada Data Pendaftaran -->
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-xl shadow-md p-6 md:p-8">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-4xl text-yellow-600"></i>
+            </div>
+            <div class="ml-4 flex-1">
+                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-2">Belum Ada Data Pendaftaran</h3>
+                <p class="text-sm text-gray-700 mb-4">
+                    Anda belum mengisi formulir pendaftaran santri. Silakan lengkapi formulir pendaftaran terlebih dahulu.
+                </p>
+                <a href="{% url 'users:pendaftaran' %}" class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors shadow-md">
+                    <i class="fas fa-file-alt mr-2"></i>Isi Formulir Pendaftaran
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Status Card -->
+    <div class="bg-gradient-to-r {% if santri.status == 'accepted' %}from-green-50 to-emerald-50 border-green-500{% elif santri.status == 'verified' %}from-blue-50 to-cyan-50 border-blue-500{% elif santri.status == 'rejected' %}from-red-50 to-rose-50 border-red-500{% else %}from-yellow-50 to-orange-50 border-yellow-500{% endif %} border-l-4 rounded-xl shadow-md p-4 md:p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-2">Status Pendaftaran</h3>
+                <p class="text-sm text-gray-700">
+                    {% if santri.status == 'accepted' %}
+                        Pendaftaran Diterima
+                    {% elif santri.status == 'verified' %}
+                        Pembayaran Terverifikasi
+                    {% elif santri.status == 'rejected' %}
+                        Pendaftaran Ditolak
+                    {% else %}
+                        Menunggu Verifikasi Dokumen
+                    {% endif %}
+                </p>
+            </div>
+            <div class="w-16 h-16 {% if santri.status == 'accepted' %}bg-green-100{% elif santri.status == 'verified' %}bg-blue-100{% elif santri.status == 'rejected' %}bg-red-100{% else %}bg-yellow-100{% endif %} rounded-full flex items-center justify-center">
+                <i class="fas {% if santri.status == 'accepted' %}fa-check-circle{% elif santri.status == 'verified' %}fa-check-double{% elif santri.status == 'rejected' %}fa-times-circle{% else %}fa-clock{% endif %} text-2xl {% if santri.status == 'accepted' %}text-green-600{% elif santri.status == 'verified' %}text-blue-600{% elif santri.status == 'rejected' %}text-red-600{% else %}text-yellow-600{% endif %}"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Timeline -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-6">Progress Pendaftaran</h3>
+        <div class="space-y-4">
+            <!-- Step 1: Pendaftaran -->
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 {% if santri.status != 'pending' %}bg-green-600{% else %}bg-green-600{% endif %} rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-900">Pendaftaran Diterima</h4>
+                    <p class="text-xs text-gray-600 mt-1">Formulir pendaftaran telah diterima</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ santri.created_at|date:"d F Y" }}</p>
+                </div>
+            </div>
+            
+            <!-- Step 2: Verifikasi Dokumen -->
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 {% if santri.status == 'verified' or santri.status == 'accepted' %}bg-green-600{% elif santri.status == 'rejected' %}bg-red-600{% else %}bg-yellow-500{% endif %} rounded-full flex items-center justify-center text-white">
+                        <i class="fas {% if santri.status == 'verified' or santri.status == 'accepted' %}fa-check{% elif santri.status == 'rejected' %}fa-times{% else %}fa-clock{% endif %}"></i>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-900">Verifikasi Dokumen</h4>
+                    <p class="text-xs text-gray-600 mt-1">
+                        {% if santri.status == 'verified' or santri.status == 'accepted' %}
+                            Dokumen telah diverifikasi dan diterima
+                        {% elif santri.status == 'rejected' %}
+                            Dokumen ditolak
+                        {% else %}
+                            Dokumen sedang diperiksa oleh panitia
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        {% if santri.status == 'pending' %}Sedang diproses{% else %}{{ santri.updated_at|date:"d F Y" }}{% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Step 3: Pembayaran -->
+            {% if santri.status == 'verified' or santri.status == 'accepted' %}
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    {% if payment and payment.status == 'rejected' %}
+                    <!-- Pembayaran ditolak -->
+                    <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-times"></i>
+                    </div>
+                    {% elif santri.status == 'verified' or santri.status == 'accepted' or payment.status == 'verified' %}
+                    <!-- Pembayaran terverifikasi atau diterima -->
+                    <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    {% else %}
+                    <!-- Pembayaran pending -->
+                    <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-900">Pembayaran</h4>
+                    <p class="text-xs text-gray-600 mt-1">
+                        {% if payment and payment.status == 'rejected' %}
+                            Pembayaran ditolak
+                        {% elif santri.status == 'verified' or santri.status == 'accepted' or payment.status == 'verified' %}
+                            Pembayaran telah diterima dan terverifikasi
+                        {% elif payment and payment.status == 'pending' %}
+                            Menunggu verifikasi pembayaran
+                        {% else %}
+                            Belum ada bukti pembayaran
+                        {% endif %}
+                    </p>
+                    {% if payment and payment.created_at %}
+                    <p class="text-xs text-gray-500 mt-1">{{ payment.created_at|date:"d F Y" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-500">Pembayaran</h4>
+                    <p class="text-xs text-gray-500 mt-1">Menunggu verifikasi dokumen selesai</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Step 4: Finalisasi -->
+            {% if santri.status == 'accepted' %}
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-900">Finalisasi</h4>
+                    <p class="text-xs text-gray-600 mt-1">Pendaftaran telah selesai dan diterima</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-500">Finalisasi</h4>
+                    <p class="text-xs text-gray-500 mt-1">Menunggu tahap sebelumnya selesai</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Detail Pendaftaran -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-gray-900">Detail Pendaftaran</h3>
+            <a href="{% url 'users:pendaftaran_pdf' %}" target="_blank" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center">
+                <i class="fas fa-file-pdf mr-2"></i>Download PDF
+            </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-xs text-gray-600 mb-1">Nama Santri</p>
+                <p class="text-sm font-semibold text-gray-900">{{ santri.nama_lengkap }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-600 mb-1">NISN</p>
+                <p class="text-sm font-semibold text-gray-900">{{ santri.nisn }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-600 mb-1">Tanggal Daftar</p>
+                <p class="text-sm font-semibold text-gray-900">{{ santri.created_at|date:"d F Y" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-600 mb-1">Status</p>
+                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full {{ santri.get_status_display_class }}">
+                    {{ santri.get_status_display }}
+                </span>
+            </div>
+            {% if santri.asal_sekolah %}
+            <div>
+                <p class="text-xs text-gray-600 mb-1">Asal Sekolah</p>
+                <p class="text-sm font-semibold text-gray-900">{{ santri.asal_sekolah }}</p>
+            </div>
+            {% endif %}
+            {% if santri.kelas_terakhir %}
+            <div>
+                <p class="text-xs text-gray-600 mb-1">Kelas Terakhir</p>
+                <p class="text-sm font-semibold text-gray-900">{{ santri.kelas_terakhir }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'core:informasi_tambahan_list' %}" class="text-gray-500 hover:text-gray-900">Informasi Tambahan</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">{% if informasi %}Edit{% else %}Tambah{% endif %}</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <form method="post">
+        {% csrf_token %}
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Judul *</label>
+                {{ form.judul }}
+                {% if form.judul.errors %}<p class="mt-1 text-sm text-red-600">{{ form.judul.errors.0 }}</p>{% endif %}
+                <p class="mt-1 text-xs text-gray-500">Contoh: Waktu Pendaftaran, Dokumen yang Diperlukan, Cara Pembayaran</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi/Isi *</label>
+                {{ form.deskripsi }}
+                {% if form.deskripsi.errors %}<p class="mt-1 text-sm text-red-600">{{ form.deskripsi.errors.0 }}</p>{% endif %}
+                <p class="mt-1 text-xs text-gray-500">Isi informasi yang akan ditampilkan di halaman public</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Icon (Font Awesome) *</label>
+                {{ form.icon }}
+                {% if form.icon.errors %}<p class="mt-1 text-sm text-red-600">{{ form.icon.errors.0 }}</p>{% endif %}
+                <p class="mt-1 text-xs text-gray-500">Contoh: fas fa-calendar-check, fas fa-file-alt, fas fa-money-check-alt</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Warna Icon</label>
+                {{ form.warna }}
+                {% if form.warna.errors %}<p class="mt-1 text-sm text-red-600">{{ form.warna.errors.0 }}</p>{% endif %}
+                <p class="mt-1 text-xs text-gray-500">Warna untuk icon dan background</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Urutan</label>
+                {{ form.order }}
+                {% if form.order.errors %}<p class="mt-1 text-sm text-red-600">{{ form.order.errors.0 }}</p>{% endif %}
+                <p class="mt-1 text-xs text-gray-500">Angka lebih kecil akan tampil lebih dulu</p>
+            </div>
+            
+            <div>
+                <label class="flex items-center">
+                    {{ form.is_published }}
+                    <span class="ml-2 text-sm text-gray-700">Publikasikan (tampilkan di halaman public)</span>
+                </label>
+                {% if form.is_published.errors %}<p class="mt-1 text-sm text-red-600">{{ form.is_published.errors.0 }}</p>{% endif %}
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <a href="{% url 'core:informasi_tambahan_list' %}" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">Batal</a>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Simpan</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

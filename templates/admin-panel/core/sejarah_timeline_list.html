@@ -1,0 +1,500 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .timeline-container {
+        position: relative;
+        padding: 2rem 0;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 3rem;
+        padding-left: 5rem;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 1.5rem;
+        top: 3rem;
+        bottom: -3rem;
+        width: 2px;
+        background: linear-gradient(to bottom, #3b82f6, #60a5fa);
+    }
+    .timeline-item:last-child::before {
+        display: none;
+    }
+    .timeline-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3rem;
+        height: 3rem;
+        background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        border: 3px solid white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        z-index: 10;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .timeline-content {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-left: 4px solid #3b82f6;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    .timeline-content:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transform: translateX(5px);
+        border-left-color: #2563eb;
+    }
+    .timeline-title {
+        color: #1f2937;
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-bottom: 0.75rem;
+    }
+    .timeline-description {
+        color: #4b5563;
+        line-height: 1.8;
+    }
+    @media (max-width: 768px) {
+        .timeline-item {
+            padding-left: 4rem;
+        }
+        .timeline-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block title %}Sejarah Timeline - Admin Panel{% endblock %}
+
+{% block page_title %}Sejarah Timeline{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Sejarah Timeline</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    deleteModal: false, 
+    deleteId: null, 
+    deleteName: '', 
+    formModal: false 
+}">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow mb-6 p-6 border-b-4 border-blue-500">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h2 class="text-3xl font-bold mb-2 text-gray-900">Sejarah Singkat</h2>
+                <p class="text-gray-600">Perjalanan Pendirian Pesantren Modern Raudhatussalam</p>
+                <div class="mt-2 h-0.5 w-32 bg-blue-500"></div>
+            </div>
+            <button 
+                @click="formModal = true" 
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center shadow-md">
+                <i class="fas fa-plus mr-2"></i>Tambah Timeline
+            </button>
+        </div>
+    </div>
+    
+    <!-- Search -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <form method="get" class="flex gap-4">
+            <input 
+                type="text" 
+                name="search" 
+                value="{{ search }}" 
+                placeholder="Cari timeline..." 
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                <i class="fas fa-search mr-2"></i>Cari
+            </button>
+        </form>
+    </div>
+    
+    <!-- Timeline -->
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        {% if timelines %}
+        <div class="timeline-container">
+            {% for timeline in timelines %}
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="{{ timeline.icon|default:'fas fa-history' }}"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="timeline-title">{{ timeline.judul }}</h3>
+                            <div class="timeline-description">
+                                {{ timeline.deskripsi|linebreaks }}
+                            </div>
+                            <!-- Gambar Timeline -->
+                            {% if timeline.gambar.all %}
+                            <div class="mt-4 grid grid-cols-3 gap-2">
+                                {% for gambar in timeline.gambar.all %}
+                                <div class="relative group">
+                                    <img src="{{ gambar.gambar.url }}" alt="{{ timeline.judul }}" class="w-full h-24 object-cover rounded-lg">
+                                    <button 
+                                        onclick="if(confirm('Hapus gambar ini?')) { fetch('{% url 'core:sejarah_timeline_image_delete' gambar.id %}', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}}).then(() => location.reload()); }"
+                                        class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                            <button 
+                                @click="formModal = true; window.location.href = '?edit={{ timeline.id }}'" 
+                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                                title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button 
+                                @click="deleteModal = true; deleteId = {{ timeline.id }}; deleteName = '{{ timeline.judul }}'" 
+                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                                title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Form Upload Gambar -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-image mr-1 text-blue-600"></i>Tambah Gambar
+                            </label>
+                            <form method="post" action="{% url 'core:sejarah_timeline_image_add' timeline.id %}" enctype="multipart/form-data" class="space-y-3" id="sejarah-upload-form-{{ timeline.id }}">
+                                {% csrf_token %}
+                                <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm shadow-sm" 
+                                            data-timeline-id="{{ timeline.id }}"
+                                            onclick="openSejarahImagePicker({{ timeline.id }})">
+                                        <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                                    </button>
+                                    <span class="text-sm text-gray-500 self-center hidden sm:inline">atau</span>
+                                    <div class="flex-1">
+                                        <input type="file" name="gambar" accept="image/*" id="sejarah-file-input-{{ timeline.id }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                    </div>
+                                </div>
+                                <div id="sejarah-gambar-{{ timeline.id }}-preview" class="mb-2 hidden"></div>
+                                <div class="flex gap-2 items-end">
+                                    <div class="flex-1">
+                                        <label class="block text-xs text-gray-600 mb-1">Urutan Tampil</label>
+                                        <input type="number" name="order" value="0" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="0">
+                                    </div>
+                                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium shadow-sm flex items-center">
+                                        <i class="fas fa-upload mr-2"></i>Upload
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-info-circle mr-1"></i>Pilih gambar dari gallery atau upload file gambar (JPG, PNG, WebP)
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if timelines.has_other_pages %}
+        <div class="mt-8 flex justify-center items-center gap-2">
+            {% if timelines.has_previous %}
+            <a href="?page={{ timelines.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" 
+               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            <span class="px-4 py-2 text-sm text-gray-700">Halaman {{ timelines.number }} dari {{ timelines.paginator.num_pages }}</span>
+            {% if timelines.has_next %}
+            <a href="?page={{ timelines.next_page_number }}{% if search %}&search={{ search }}{% endif %}" 
+               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
+            <i class="fas fa-inbox text-6xl mb-4 text-gray-300"></i>
+            <p class="text-xl">Tidak ada data timeline</p>
+            <p class="text-sm mt-2">Klik tombol "Tambah Timeline" untuk menambahkan data</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Form Modal -->
+    <div 
+        x-show="formModal || {% if timeline %}true{% else %}false{% endif %}" 
+        x-cloak 
+        @click.away="formModal = false; window.location.href = '{% url 'core:sejarah_timeline_list' %}'" 
+        class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
+        style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" @click.stop>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">{% if timeline %}Edit Timeline{% else %}Tambah Timeline{% endif %}</h3>
+                <button 
+                    @click="formModal = false; window.location.href = '{% url 'core:sejarah_timeline_list' %}'" 
+                    class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" action="{% if timeline %}{% url 'core:sejarah_timeline_update' timeline.id %}{% else %}{% url 'core:sejarah_timeline_create' %}{% endif %}">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul *</label>
+                        {{ form.judul }}
+                        {% if form.judul.errors %}<p class="mt-1 text-sm text-red-600">{{ form.judul.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Contoh: Awal Mula, Pertemuan Bersejarah, Pendirian Resmi</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon (Font Awesome) *</label>
+                        {{ form.icon }}
+                        {% if form.icon.errors %}<p class="mt-1 text-sm text-red-600">{{ form.icon.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">
+                            Contoh: 
+                            <span class="font-mono">fas fa-history</span> (sejarah),
+                            <span class="font-mono">fas fa-handshake</span> (pertemuan),
+                            <span class="font-mono">fas fa-flag</span> (pendirian),
+                            <span class="font-mono">fas fa-arrow-right</span> (awal mula)
+                        </p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi *</label>
+                        {{ form.deskripsi }}
+                        {% if form.deskripsi.errors %}<p class="mt-1 text-sm text-red-600">{{ form.deskripsi.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Deskripsi lengkap tentang peristiwa sejarah. Gunakan Enter untuk baris baru.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Urutan</label>
+                        {{ form.order }}
+                        {% if form.order.errors %}<p class="mt-1 text-sm text-red-600">{{ form.order.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Urutan tampil (0 = otomatis berdasarkan tanggal dibuat)</p>
+                    </div>
+                    {% if timeline %}
+                    <!-- Form Upload Gambar untuk Timeline yang sudah ada -->
+                    <div class="pt-4 border-t border-gray-200">
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-image mr-1 text-blue-600"></i>Upload Gambar
+                            </label>
+                            <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                                <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm shadow-sm"
+                                        data-timeline-id="{{ timeline.id }}"
+                                        onclick="openSejarahImagePickerModal({{ timeline.id }})">
+                                    <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                                </button>
+                                <span class="text-sm text-gray-500 self-center hidden sm:inline">atau</span>
+                                <div class="flex-1">
+                                    <input type="file" name="gambar" accept="image/*" id="sejarah-file-input-modal" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                </div>
+                            </div>
+                            <div id="sejarah-gambar-modal-preview" class="mb-2 hidden"></div>
+                            <form method="post" action="{% url 'core:sejarah_timeline_image_add' timeline.id %}" enctype="multipart/form-data" class="space-y-2" id="sejarah-upload-form-modal" onsubmit="event.preventDefault(); handleSejarahImageUpload(this, {{ timeline.id }});">
+                                {% csrf_token %}
+                                <div class="flex gap-2 items-end">
+                                    <div class="flex-1">
+                                        <label class="block text-xs text-gray-600 mb-1">Urutan Tampil</label>
+                                        <input type="number" name="order" value="0" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="0">
+                                    </div>
+                                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium shadow-sm flex items-center">
+                                        <i class="fas fa-upload mr-2"></i>Upload
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-info-circle mr-1"></i>Pilih gambar dari gallery atau upload file gambar (JPG, PNG, WebP)
+                                </p>
+                            </form>
+                        </div>
+                        <!-- Daftar Gambar yang sudah ada -->
+                        {% if timeline.gambar.all %}
+                        <div class="mt-3 grid grid-cols-3 gap-2">
+                            {% for gambar in timeline.gambar.all %}
+                            <div class="relative group">
+                                <img src="{{ gambar.gambar.url }}" alt="{{ timeline.judul }}" class="w-full h-20 object-cover rounded-lg">
+                                <button 
+                                    onclick="if(confirm('Hapus gambar ini?')) { fetch('{% url 'core:sejarah_timeline_image_delete' gambar.id %}', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}}).then(() => location.reload()); }"
+                                    class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button 
+                            type="button" 
+                            @click="formModal = false; window.location.href = '{% url 'core:sejarah_timeline_list' %}'" 
+                            class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Simpan
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Modal -->
+    <div 
+        x-show="deleteModal" 
+        x-cloak 
+        class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
+        style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Hapus Timeline</h3>
+            <p class="text-gray-700 mb-6">Hapus "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end space-x-3">
+                <button 
+                    @click="deleteModal = false" 
+                    class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                    Batal
+                </button>
+                <form method="post" action="{% url 'core:sejarah_timeline_delete' 0 %}" x-bind:action="'/admin-panel/core/sejarah-timeline/' + deleteId + '/delete/'">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Helper function untuk update image indicator
+    function updateImageIndicator(fieldName, hasSelectedImage) {
+        const requiredIndicator = document.getElementById(fieldName + '-required-indicator');
+        const optionalIndicator = document.getElementById(fieldName + '-optional-indicator');
+        const imageInput = document.querySelector('input[name="gambar"]');
+        
+        if (hasSelectedImage) {
+            if (requiredIndicator) requiredIndicator.style.display = 'none';
+            if (optionalIndicator) optionalIndicator.classList.remove('hidden');
+            if (imageInput) {
+                imageInput.removeAttribute('required');
+                imageInput.setAttribute('data-optional', 'true');
+            }
+        } else {
+            if (requiredIndicator) requiredIndicator.style.display = 'inline';
+            if (optionalIndicator) optionalIndicator.classList.add('hidden');
+        }
+    }
+    
+    // Function untuk open image picker dari timeline card
+    function openSejarahImagePicker(timelineId) {
+        openImagePicker({
+            targetPreviewId: 'sejarah-gambar-' + timelineId + '-preview',
+            onSelect: function(imageId, imageUrl, imageTitle) {
+                const preview = document.getElementById('sejarah-gambar-' + timelineId + '-preview');
+                if (preview) {
+                    const escapedTitle = imageTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    preview.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-2"><img src="' + imageUrl + '" alt="' + escapedTitle + '" class="w-full h-24 object-cover rounded-lg mb-2"><p class="text-xs text-green-600"><i class="fas fa-check-circle mr-1"></i>Gambar dipilih dari gallery</p></div>';
+                    preview.style.display = 'block';
+                }
+                let hiddenInput = document.getElementById('selected_sejarah_gambar_' + timelineId + '_id');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'selected_sejarah_gambar_' + timelineId + '_id';
+                    hiddenInput.name = 'selected_sejarah_gambar_id';
+                    const form = document.getElementById('sejarah-upload-form-' + timelineId);
+                    if (form) {
+                        form.appendChild(hiddenInput);
+                    }
+                }
+                hiddenInput.value = imageId;
+                // Clear file input jika sudah pilih dari gallery
+                const fileInput = document.getElementById('sejarah-file-input-' + timelineId);
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                updateImageIndicator('sejarah-gambar-' + timelineId, true);
+            }
+        });
+    }
+    
+    // Function untuk open image picker dari modal
+    function openSejarahImagePickerModal(timelineId) {
+        openImagePicker({
+            targetPreviewId: 'sejarah-gambar-modal-preview',
+            onSelect: function(imageId, imageUrl, imageTitle) {
+                const preview = document.getElementById('sejarah-gambar-modal-preview');
+                if (preview) {
+                    const escapedTitle = imageTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    preview.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-2"><img src="' + imageUrl + '" alt="' + escapedTitle + '" class="w-full h-24 object-cover rounded-lg mb-2"><p class="text-xs text-green-600"><i class="fas fa-check-circle mr-1"></i>Gambar dipilih dari gallery</p></div>';
+                    preview.style.display = 'block';
+                }
+                let hiddenInput = document.getElementById('selected_sejarah_gambar_modal_id');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'selected_sejarah_gambar_modal_id';
+                    hiddenInput.name = 'selected_sejarah_gambar_id';
+                    const form = document.getElementById('sejarah-upload-form-modal');
+                    if (form) {
+                        form.appendChild(hiddenInput);
+                    }
+                }
+                hiddenInput.value = imageId;
+                // Clear file input jika sudah pilih dari gallery
+                const fileInput = document.getElementById('sejarah-file-input-modal');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                updateImageIndicator('sejarah-gambar-modal', true);
+            }
+        });
+    }
+    
+    // Function untuk handle upload gambar dari modal
+    function handleSejarahImageUpload(form, timelineId) {
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(() => {
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Gagal mengupload gambar. Silakan coba lagi.');
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,290 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+{% if form %}{{ form.media.css }}{% endif %}
+<style>
+    .summernote-content {
+        line-height: 1.8;
+    }
+    .summernote-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .summernote-content p {
+        margin-bottom: 1rem;
+    }
+    .summernote-content ul, .summernote-content ol {
+        margin: 1rem 0;
+        padding-left: 2rem;
+    }
+    .summernote-content li {
+        margin: 0.5rem 0;
+    }
+    /* Flowchart Styles */
+    .flowchart-container {
+        position: relative;
+        padding: 2rem 0;
+    }
+    .flowchart-step {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .flowchart-step::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: -1.5rem;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 1.5rem;
+        background: linear-gradient(to bottom, #10b981, #059669);
+    }
+    .flowchart-step:last-child::after {
+        display: none;
+    }
+    .flowchart-card {
+        background: white;
+        border: 2px solid #10b981;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    .flowchart-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    .flowchart-number {
+        position: absolute;
+        left: -2.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3rem;
+        height: 3rem;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.125rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    @media (max-width: 768px) {
+        .flowchart-number {
+            left: -1.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1rem;
+        }
+        .flowchart-step {
+            padding-left: 3rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block title %}Alur Pendaftaran - Admin Panel{% endblock %}
+
+{% block page_title %}Alur Pendaftaran{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Alur Pendaftaran</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-6xl" x-data="{ editMode: {% if form.errors %}true{% else %}false{% endif %} }">
+    <!-- Header dengan Tombol Edit -->
+    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Alur Pendaftaran</h2>
+            <p class="text-sm text-gray-600 mt-1">Kelola alur pendaftaran dan tahapan tes seleksi</p>
+        </div>
+        <button 
+            x-show="!editMode"
+            @click="editMode = true"
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center">
+            <i class="fas fa-edit mr-2"></i>Edit Alur Pendaftaran
+        </button>
+    </div>
+    
+    <!-- Mode Read-Only -->
+    <div x-show="!editMode" class="space-y-8">
+        <!-- Gambar Utama -->
+        {% if alur and alur.gambar_utama %}
+        <div>
+            <label class="block text-sm font-medium text-gray-500 mb-2">Gambar Utama Alur Pendaftaran</label>
+            <div class="rounded-lg border border-gray-200 overflow-hidden">
+                <img src="{{ alur.gambar_utama.url }}" alt="Gambar Alur Pendaftaran" class="w-full h-auto">
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Alur Pendaftaran -->
+        <div>
+            <label class="block text-sm font-medium text-gray-500 mb-4">Alur Pendaftaran</label>
+            <div class="p-6 bg-gray-50 rounded-lg border border-gray-200">
+                {% if alur and alur.alur_pendaftaran %}
+                <div class="summernote-content prose prose-sm max-w-none">
+                    {{ alur.alur_pendaftaran|safe }}
+                </div>
+                {% else %}
+                <p class="text-gray-500 italic">Belum ada alur pendaftaran yang diisi</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Tahapan Tes Seleksi -->
+        {% if alur and alur.tahapan_tes %}
+        <div>
+            <label class="block text-sm font-medium text-gray-500 mb-4">Tahapan Tes Seleksi PSB</label>
+            <div class="p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="summernote-content prose prose-sm max-w-none">
+                    {{ alur.tahapan_tes|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if alur %}
+        <div class="text-sm text-gray-500 pt-4 border-t border-gray-200">
+            <i class="fas fa-clock mr-2"></i>Terakhir diupdate: {{ alur.updated_at|date:"d F Y, H:i" }}
+        </div>
+        {% endif %}
+        
+        <div class="flex justify-end pt-4">
+            <a href="{% url 'admin-panel:index' %}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+        </div>
+    </div>
+    
+    <!-- Mode Edit -->
+    <div x-show="editMode" x-cloak style="display: none;">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Gambar Utama -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Gambar Utama Alur Pendaftaran
+                    <span id="alur-gambar-required-indicator" class="text-red-500 hidden">*</span>
+                    <span id="alur-gambar-optional-indicator" class="text-gray-500 text-xs hidden">(Opsional jika sudah pilih dari gallery)</span>
+                </label>
+                <div class="flex gap-2 mb-2">
+                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm" onclick="openAlurImagePicker()">
+                        <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                    </button>
+                    <span class="text-xs text-gray-500 self-center">atau</span>
+                </div>
+                {% if alur and alur.gambar_utama %}
+                <div id="alur-gambar-preview" class="mb-3">
+                    <img src="{{ alur.gambar_utama.url }}" alt="Gambar saat ini" class="max-w-md h-auto rounded-lg border border-gray-300">
+                    <p class="text-xs text-gray-500 mt-1">Gambar saat ini</p>
+                </div>
+                {% else %}
+                <div id="alur-gambar-preview" class="mb-3 hidden"></div>
+                {% endif %}
+                {{ form.gambar_utama }}
+                <p class="mt-1 text-xs text-gray-500">Upload manual (opsional jika sudah pilih dari gallery)</p>
+                {% if form.gambar_utama.errors %}<p class="mt-1 text-sm text-red-600">{{ form.gambar_utama.errors.0 }}</p>{% endif %}
+            </div>
+            
+            <!-- Alur Pendaftaran -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Alur Pendaftaran *</label>
+                {{ form.alur_pendaftaran }}
+                {% if form.alur_pendaftaran.errors %}<p class="mt-1 text-sm text-red-600">{{ form.alur_pendaftaran.errors.0 }}</p>{% endif %}
+                <p class="mt-1 text-xs text-gray-500">Gunakan editor untuk membuat alur pendaftaran dengan format HTML. Contoh: buat list berurutan untuk setiap langkah pendaftaran.</p>
+            </div>
+            
+            <!-- Tahapan Tes Seleksi -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tahapan Tes Seleksi PSB</label>
+                {{ form.tahapan_tes }}
+                {% if form.tahapan_tes.errors %}<p class="mt-1 text-sm text-red-600">{{ form.tahapan_tes.errors.0 }}</p>{% endif %}
+                <p class="mt-1 text-xs text-gray-500">Gunakan editor untuk membuat tahapan tes seleksi dengan format HTML.</p>
+            </div>
+            
+            <!-- Preview jika ada -->
+            {% if alur and alur.alur_pendaftaran %}
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">Preview Alur Pendaftaran:</h4>
+                <div class="summernote-content prose prose-sm max-w-none">
+                    {{ alur.alur_pendaftaran|safe }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="flex justify-end space-x-3 pt-4">
+                <button 
+                    type="button"
+                    @click="editMode = false"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                    <i class="fas fa-times mr-2"></i>Batal
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i>Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if form %}{{ form.media.js }}{% endif %}
+<script>
+    // Helper function untuk update image indicator
+    function updateImageIndicator(fieldName, hasSelectedImage) {
+        const requiredIndicator = document.getElementById(fieldName + '-required-indicator');
+        const optionalIndicator = document.getElementById(fieldName + '-optional-indicator');
+        const imageInput = document.querySelector('input[name="gambar_utama"]');
+        
+        if (hasSelectedImage) {
+            if (requiredIndicator) requiredIndicator.style.display = 'none';
+            if (optionalIndicator) optionalIndicator.classList.remove('hidden');
+            if (imageInput) {
+                imageInput.removeAttribute('required');
+                imageInput.setAttribute('data-optional', 'true');
+            }
+        } else {
+            if (requiredIndicator) requiredIndicator.style.display = 'inline';
+            if (optionalIndicator) optionalIndicator.classList.add('hidden');
+        }
+    }
+    
+    // Function untuk open image picker alur pendaftaran
+    function openAlurImagePicker() {
+        openImagePicker({
+            targetPreviewId: 'alur-gambar-preview',
+            onSelect: function(imageId, imageUrl, imageTitle) {
+                const preview = document.getElementById('alur-gambar-preview');
+                if (preview) {
+                    const escapedTitle = imageTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    preview.innerHTML = '<img src="' + imageUrl + '" alt="' + escapedTitle + '" class="max-w-md h-auto rounded-lg border border-gray-300 mb-2"><p class="text-xs text-green-600"><i class="fas fa-check-circle mr-1"></i>Gambar dipilih dari gallery</p>';
+                    preview.style.display = 'block';
+                }
+                let hiddenInput = document.getElementById('selected_alur_gambar_id');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'selected_alur_gambar_id';
+                    hiddenInput.name = 'selected_alur_gambar_id';
+                    const form = document.querySelector('form');
+                    if (form) {
+                        form.appendChild(hiddenInput);
+                    }
+                }
+                hiddenInput.value = imageId;
+                updateImageIndicator('alur-gambar', true);
+            }
+        });
+    }
+</script>
+{% endblock %}

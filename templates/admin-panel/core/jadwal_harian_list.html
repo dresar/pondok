@@ -1,0 +1,301 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .timeline-container {
+        position: relative;
+        padding: 2rem 0;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2.5rem;
+        padding-left: 6rem;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 2rem;
+        top: 2.5rem;
+        bottom: -2.5rem;
+        width: 2px;
+        background: linear-gradient(to bottom, #60a5fa, #3b82f6);
+    }
+    .timeline-item:last-child::before {
+        display: none;
+    }
+    .timeline-time {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4rem;
+        text-align: center;
+    }
+    .timeline-time-bracket {
+        position: absolute;
+        left: 1.5rem;
+        top: 0.5rem;
+        width: 1rem;
+        height: 1.5rem;
+        border-top: 2px solid #3b82f6;
+        border-bottom: 2px solid #3b82f6;
+    }
+    .timeline-time-bracket::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0.5rem;
+        height: 2px;
+        background: #3b82f6;
+    }
+    .timeline-time-text {
+        position: absolute;
+        left: 0;
+        top: 2rem;
+        width: 4rem;
+        color: #1f2937;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-align: center;
+    }
+    .timeline-content {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-left: 4px solid #3b82f6;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    .timeline-content:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transform: translateX(5px);
+        border-left-color: #2563eb;
+    }
+    .timeline-title {
+        color: #1f2937;
+        font-size: 1.125rem;
+        font-weight: bold;
+        margin-bottom: 0.75rem;
+    }
+    .timeline-description {
+        color: #4b5563;
+        line-height: 1.8;
+        font-size: 0.9375rem;
+    }
+    @media (max-width: 768px) {
+        .timeline-item {
+            padding-left: 5rem;
+        }
+        .timeline-time {
+            width: 3.5rem;
+        }
+        .timeline-time-text {
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block title %}Jadwal Harian - Admin Panel{% endblock %}
+
+{% block page_title %}Jadwal Harian{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Jadwal Harian</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    formModal: false,
+    deleteModal: false,
+    deleteId: null,
+    deleteName: ''
+}">
+    <!-- Header dengan Tab Santri/Santriwati -->
+    <div class="bg-white rounded-lg shadow mb-6 p-6 border-b-4 border-blue-500">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div>
+                <h2 class="text-3xl font-bold mb-2 text-gray-900">Timing Kegiatan Harian</h2>
+                <p class="text-gray-600">Jadwal Aktivitas {{ kategori|title }}</p>
+                <div class="mt-2 h-0.5 w-32 bg-blue-500"></div>
+            </div>
+            <button 
+                @click="formModal = true" 
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center shadow-md">
+                <i class="fas fa-plus mr-2"></i>Tambah Jadwal
+            </button>
+        </div>
+        
+        <!-- Tab Santri / Santriwati -->
+        <div class="flex gap-2 border-b border-gray-200">
+            <a 
+                href="?kategori=santri"
+                class="px-6 py-3 transition-colors {% if kategori == 'santri' %}border-b-2 border-blue-500 text-blue-600 font-semibold{% else %}text-gray-600 hover:text-gray-900{% endif %}">
+                <i class="fas fa-male mr-2"></i>Jadwal Santri (Putra)
+            </a>
+            <a 
+                href="?kategori=santriwati"
+                class="px-6 py-3 transition-colors {% if kategori == 'santriwati' %}border-b-2 border-blue-500 text-blue-600 font-semibold{% else %}text-gray-600 hover:text-gray-900{% endif %}">
+                <i class="fas fa-female mr-2"></i>Jadwal Santriwati (Putri)
+            </a>
+        </div>
+    </div>
+    
+    <!-- Search -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <form method="get" class="flex gap-4">
+            <input type="hidden" name="kategori" value="{{ kategori }}">
+            <input 
+                type="text" 
+                name="search" 
+                value="{{ search }}" 
+                placeholder="Cari jadwal..." 
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                <i class="fas fa-search mr-2"></i>Cari
+            </button>
+        </form>
+    </div>
+    
+    <!-- Timeline -->
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        {% if jadwal %}
+        <div class="timeline-container">
+            {% for j in jadwal %}
+            <div class="timeline-item">
+                <div class="timeline-time">
+                    <div class="timeline-time-bracket"></div>
+                    <div class="timeline-time-text">{{ j.waktu }}</div>
+                </div>
+                <div class="timeline-content">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="timeline-title">{{ j.judul }}</h3>
+                            <div class="timeline-description">
+                                {{ j.deskripsi|linebreaks }}
+                            </div>
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                            <button 
+                                @click="formModal = true; window.location.href = '?kategori={{ kategori }}&edit={{ j.id }}'" 
+                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                                title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button 
+                                @click="deleteModal = true; deleteId = {{ j.id }}; deleteName = '{{ j.judul }}'" 
+                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                                title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
+            <i class="fas fa-clock text-6xl mb-4 text-gray-300"></i>
+            <p class="text-xl">Tidak ada jadwal untuk {{ kategori|title }}</p>
+            <p class="text-sm mt-2">Klik tombol "Tambah Jadwal" untuk menambahkan jadwal</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Form Modal -->
+    <div 
+        x-show="formModal || {% if jadwal_obj %}true{% else %}false{% endif %}" 
+        x-cloak 
+        @click.away="formModal = false; window.location.href = '?kategori={{ kategori }}'" 
+        class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
+        style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" @click.stop>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">{% if jadwal_obj %}Edit Jadwal{% else %}Tambah Jadwal {{ kategori|title }}{% endif %}</h3>
+                <button 
+                    @click="formModal = false; window.location.href = '?kategori={{ kategori }}'" 
+                    class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" action="{% if jadwal_obj %}{% url 'core:jadwal_harian_update' jadwal_obj.id %}{% else %}{% url 'core:jadwal_harian_create' %}{% endif %}">
+                {% csrf_token %}
+                <input type="hidden" name="kategori" value="{{ kategori }}">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Waktu *</label>
+                        {{ form.waktu }}
+                        {% if form.waktu.errors %}<p class="mt-1 text-sm text-red-600">{{ form.waktu.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Contoh: 04.00-06.00, 07.30-12.15</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul Aktivitas *</label>
+                        {{ form.judul }}
+                        {% if form.judul.errors %}<p class="mt-1 text-sm text-red-600">{{ form.judul.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Contoh: Aktivitas Pagi, Persiapan Sekolah, KBM Pagi</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi *</label>
+                        {{ form.deskripsi }}
+                        {% if form.deskripsi.errors %}<p class="mt-1 text-sm text-red-600">{{ form.deskripsi.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Deskripsi lengkap tentang aktivitas. Gunakan Enter untuk baris baru.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Kategori *</label>
+                        {{ form.kategori }}
+                        {% if form.kategori.errors %}<p class="mt-1 text-sm text-red-600">{{ form.kategori.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Urutan</label>
+                        {{ form.order }}
+                        {% if form.order.errors %}<p class="mt-1 text-sm text-red-600">{{ form.order.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Urutan tampil (0 = otomatis berdasarkan waktu)</p>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button 
+                            type="button" 
+                            @click="formModal = false; window.location.href = '?kategori={{ kategori }}'" 
+                            class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Simpan
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Modal -->
+    <div 
+        x-show="deleteModal" 
+        x-cloak 
+        class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
+        style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Hapus Jadwal</h3>
+            <p class="text-gray-700 mb-6">Hapus "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end space-x-3">
+                <button 
+                    @click="deleteModal = false" 
+                    class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                    Batal
+                </button>
+                <form method="post" action="{% url 'core:jadwal_harian_delete' 0 %}" x-bind:action="'/admin-panel/core/jadwal-harian/' + deleteId + '/delete/'">
+                    {% csrf_token %}
+                    <input type="hidden" name="kategori" value="{{ kategori }}">
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

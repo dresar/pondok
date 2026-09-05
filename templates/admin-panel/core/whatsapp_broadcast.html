@@ -1,0 +1,335 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Broadcast WhatsApp - Admin Panel{% endblock %}
+
+{% block page_title %}Broadcast WhatsApp{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Broadcast WhatsApp</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-4xl">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Broadcast WhatsApp Manual</h2>
+        <p class="text-sm text-gray-600">Pilih template atau tulis pesan custom, lalu pilih santri untuk broadcast</p>
+    </div>
+    
+    <form method="post" id="broadcast-form" class="space-y-6">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Template (Opsional)</label>
+            <select name="template_id" id="template-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white">
+                <option value="">-- Pilih Template atau Tulis Manual --</option>
+                {% for template in templates %}
+                <option value="{{ template.id }}" data-pesan="{{ template.pesan }}">{{ template.nama }} {% if template.kategori %}({{ template.kategori.nama }}){% endif %}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-gray-700">Pesan *</label>
+                <button type="button" id="btn-preview" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    <i class="fas fa-eye mr-1"></i>Preview Pesan
+                </button>
+            </div>
+            <textarea name="pesan_custom" id="pesan-custom" rows="8" required
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                      placeholder="Tulis pesan atau pilih template di atas. Gunakan variabel seperti {nama}, {nama_santri}, {nisn}, {nisn_santri} untuk personalisasi."></textarea>
+            <div class="mt-2">
+                <button type="button" id="btn-toggle-vars" class="text-xs text-gray-600 hover:text-gray-800 mb-2">
+                    <i class="fas fa-chevron-down mr-1"></i>Lihat Semua Variabel yang Tersedia
+                </button>
+                <div id="variabel-docs" class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs">
+                    <h4 class="font-semibold text-gray-900 mb-3">Dokumentasi Variabel:</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <p class="font-semibold text-gray-700 mb-1">Data Pribadi:</p>
+                            <ul class="space-y-1 text-gray-600">
+                                <li><code class="bg-white px-1 rounded">{nama}</code> / <code class="bg-white px-1 rounded">{nama_lengkap}</code> / <code class="bg-white px-1 rounded">{nama_santri}</code> - Nama lengkap</li>
+                                <li><code class="bg-white px-1 rounded">{nisn}</code> / <code class="bg-white px-1 rounded">{nisn_santri}</code> - NISN</li>
+                                <li><code class="bg-white px-1 rounded">{tempat_lahir}</code> - Tempat lahir</li>
+                                <li><code class="bg-white px-1 rounded">{tanggal_lahir}</code> - Tanggal lahir (format: 01 Januari 2024)</li>
+                                <li><code class="bg-white px-1 rounded">{tanggal_lahir_short}</code> - Tanggal lahir (format: 01/01/2024)</li>
+                                <li><code class="bg-white px-1 rounded">{jenis_kelamin}</code> - Jenis kelamin</li>
+                                <li><code class="bg-white px-1 rounded">{agama}</code> - Agama</li>
+                                <li><code class="bg-white px-1 rounded">{golongan_darah}</code> - Golongan darah</li>
+                                <li><code class="bg-white px-1 rounded">{tinggi_badan}</code> - Tinggi badan (cm)</li>
+                                <li><code class="bg-white px-1 rounded">{berat_badan}</code> - Berat badan (kg)</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700 mb-1">Data Orang Tua:</p>
+                            <ul class="space-y-1 text-gray-600">
+                                <li><code class="bg-white px-1 rounded">{nama_ayah}</code> - Nama ayah</li>
+                                <li><code class="bg-white px-1 rounded">{nik_ayah}</code> - NIK ayah</li>
+                                <li><code class="bg-white px-1 rounded">{nama_ibu}</code> - Nama ibu</li>
+                                <li><code class="bg-white px-1 rounded">{nik_ibu}</code> - NIK ibu</li>
+                                <li><code class="bg-white px-1 rounded">{pekerjaan_ayah}</code> - Pekerjaan ayah</li>
+                                <li><code class="bg-white px-1 rounded">{pekerjaan_ibu}</code> - Pekerjaan ibu</li>
+                                <li><code class="bg-white px-1 rounded">{no_hp_ayah}</code> - No. HP ayah</li>
+                                <li><code class="bg-white px-1 rounded">{no_hp_ibu}</code> - No. HP ibu</li>
+                                <li><code class="bg-white px-1 rounded">{alamat_orangtua}</code> - Alamat orang tua</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700 mb-1">Kontak:</p>
+                            <ul class="space-y-1 text-gray-600">
+                                <li><code class="bg-white px-1 rounded">{alamat}</code> - Alamat lengkap</li>
+                                <li><code class="bg-white px-1 rounded">{no_hp}</code> - No. HP santri</li>
+                                <li><code class="bg-white px-1 rounded">{email}</code> - Email santri</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700 mb-1">Data Sekolah & Lainnya:</p>
+                            <ul class="space-y-1 text-gray-600">
+                                <li><code class="bg-white px-1 rounded">{asal_sekolah}</code> - Asal sekolah</li>
+                                <li><code class="bg-white px-1 rounded">{kelas_terakhir}</code> - Kelas terakhir</li>
+                                <li><code class="bg-white px-1 rounded">{tahun_lulus}</code> - Tahun lulus</li>
+                                <li><code class="bg-white px-1 rounded">{no_ijazah}</code> - No. Ijazah</li>
+                                <li><code class="bg-white px-1 rounded">{status}</code> - Status pendaftaran</li>
+                                <li><code class="bg-white px-1 rounded">{tanggal_daftar}</code> - Tanggal daftar (format: 01 Januari 2024)</li>
+                                <li><code class="bg-white px-1 rounded">{tanggal_daftar_short}</code> - Tanggal daftar (format: 01/01/2024)</li>
+                                <li><code class="bg-white px-1 rounded">{tanggal_hari_ini}</code> - Tanggal hari ini (format: 01 Januari 2024)</li>
+                                <li><code class="bg-white px-1 rounded">{tanggal_hari_ini_short}</code> - Tanggal hari ini (format: 01/01/2024)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Santri *</label>
+            <div class="border border-gray-300 rounded-lg p-4 max-h-96 overflow-y-auto">
+                <div class="mb-2">
+                    <input type="checkbox" id="select-all" class="rounded text-green-600 focus:ring-green-500">
+                    <label for="select-all" class="ml-2 font-medium">Pilih Semua</label>
+                </div>
+                <div class="space-y-2">
+                    {% for santri_id, nama, no_hp in santri_list %}
+                    <div class="flex items-center">
+                        <input type="checkbox" name="santri_ids" value="{{ santri_id }}" 
+                               class="rounded text-green-600 focus:ring-green-500 santri-checkbox"
+                               {% if not no_hp %}disabled title="Tidak ada nomor HP"{% endif %}>
+                        <label class="ml-2 text-sm {% if not no_hp %}text-gray-400{% endif %}">
+                            {{ nama }} {% if no_hp %}<span class="text-gray-500">({{ no_hp }})</span>{% else %}<span class="text-red-500">(Tidak ada HP)</span>{% endif %}
+                        </label>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-sm">Tidak ada santri dengan nomor HP</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 pt-4">
+            <a href="{% url 'core:whatsapp_template_list' %}" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">Batal</a>
+            <button type="submit" id="btn-submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                <i class="fab fa-whatsapp mr-2"></i>Generate Link WhatsApp
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Preview Modal -->
+<div id="preview-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                        Preview Pesan WhatsApp
+                    </h3>
+                    <button type="button" id="btn-close-preview" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-2">
+                    <p class="text-sm text-gray-500 mb-3">Pesan yang akan dikirim ke santri terpilih:</p>
+                    <div id="preview-content" class="bg-gray-50 border border-gray-200 rounded-lg p-4 min-h-[200px] max-h-[400px] overflow-y-auto whitespace-pre-wrap text-sm">
+                        <!-- Preview akan diisi oleh JavaScript -->
+                    </div>
+                    <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-xs text-yellow-800">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <strong>Catatan:</strong> Variabel akan diganti dengan data santri yang sebenarnya saat pesan dikirim.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="btn-confirm-send" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    <i class="fab fa-whatsapp mr-2"></i>Kirim Sekarang
+                </button>
+                <button type="button" id="btn-cancel-preview" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const templateSelect = document.getElementById('template-select');
+    const pesanCustom = document.getElementById('pesan-custom');
+    const selectAll = document.getElementById('select-all');
+    const santriCheckboxes = document.querySelectorAll('.santri-checkbox');
+    const btnToggleVars = document.getElementById('btn-toggle-vars');
+    const variabelDocs = document.getElementById('variabel-docs');
+    const btnPreview = document.getElementById('btn-preview');
+    const previewModal = document.getElementById('preview-modal');
+    const previewContent = document.getElementById('preview-content');
+    const btnClosePreview = document.getElementById('btn-close-preview');
+    const btnCancelPreview = document.getElementById('btn-cancel-preview');
+    const btnConfirmSend = document.getElementById('btn-confirm-send');
+    const broadcastForm = document.getElementById('broadcast-form');
+    const btnSubmit = document.getElementById('btn-submit');
+    
+    // Load template pesan saat dipilih
+    templateSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            pesanCustom.value = selectedOption.dataset.pesan;
+        }
+    });
+    
+    // Select all checkbox
+    selectAll.addEventListener('change', function() {
+        santriCheckboxes.forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = this.checked;
+            }
+        });
+    });
+    
+    // Toggle variabel documentation
+    btnToggleVars.addEventListener('click', function() {
+        const isHidden = variabelDocs.classList.contains('hidden');
+        if (isHidden) {
+            variabelDocs.classList.remove('hidden');
+            this.innerHTML = '<i class="fas fa-chevron-up mr-1"></i>Sembunyikan Variabel';
+        } else {
+            variabelDocs.classList.add('hidden');
+            this.innerHTML = '<i class="fas fa-chevron-down mr-1"></i>Lihat Semua Variabel yang Tersedia';
+        }
+    });
+    
+    // Preview pesan
+    btnPreview.addEventListener('click', function() {
+        const pesan = pesanCustom.value.trim();
+        if (!pesan) {
+            alert('Silakan tulis pesan terlebih dahulu!');
+            return;
+        }
+        
+        // Sample data untuk preview
+        const bulanIndo = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const now = new Date();
+        const tanggalHariIni = `${now.getDate()} ${bulanIndo[now.getMonth()]} ${now.getFullYear()}`;
+        const tanggalHariIniShort = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+        
+        const sampleData = {
+            nama: 'Ahmad Fauzi',
+            nama_lengkap: 'Ahmad Fauzi',
+            nama_santri: 'Ahmad Fauzi',
+            nisn: '1234567890',
+            nisn_santri: '1234567890',
+            tempat_lahir: 'Jakarta',
+            tanggal_lahir: '15 Januari 2010',
+            tanggal_lahir_short: '15/01/2010',
+            jenis_kelamin: 'Laki-laki',
+            agama: 'Islam',
+            golongan_darah: 'A',
+            tinggi_badan: '150',
+            berat_badan: '45',
+            nama_ayah: 'Budi Santoso',
+            nik_ayah: '1234567890123456',
+            nama_ibu: 'Siti Aisyah',
+            nik_ibu: '1234567890123457',
+            pekerjaan_ayah: 'Pegawai Swasta',
+            pekerjaan_ibu: 'Ibu Rumah Tangga',
+            no_hp_ayah: '081234567890',
+            no_hp_ibu: '081234567891',
+            alamat_orangtua: 'Jl. Contoh No. 123, Jakarta',
+            alamat: 'Jl. Contoh No. 123, Jakarta',
+            no_hp: '081234567892',
+            email: 'ahmad@example.com',
+            asal_sekolah: 'SD Negeri 1 Jakarta',
+            kelas_terakhir: '6 SD',
+            tahun_lulus: '2024',
+            no_ijazah: 'IJZ/2024/001',
+            status: 'Diterima',
+            tanggal_daftar: '01 Januari 2024',
+            tanggal_daftar_short: '01/01/2024',
+            tanggal_hari_ini: tanggalHariIni,
+            tanggal_hari_ini_short: tanggalHariIniShort
+        };
+        
+        // Replace variabel dengan sample data (case-sensitive)
+        let previewText = pesan;
+        for (const [key, value] of Object.entries(sampleData)) {
+            const regex = new RegExp(`\\{${key}\\}`, 'g');
+            previewText = previewText.replace(regex, value || '');
+        }
+        
+        // Highlight variabel yang tidak ter-replace (warnakan dengan merah)
+        previewText = previewText.replace(/\{([^}]+)\}/g, '<span class="bg-red-100 text-red-800 px-1 rounded font-semibold" title="Variabel tidak dikenali">{$1}</span>');
+        
+        // Escape HTML untuk teks biasa, tapi biarkan highlight
+        previewContent.innerHTML = previewText;
+        previewModal.classList.remove('hidden');
+    });
+    
+    // Close preview modal
+    function closePreview() {
+        previewModal.classList.add('hidden');
+    }
+    
+    btnClosePreview.addEventListener('click', closePreview);
+    btnCancelPreview.addEventListener('click', closePreview);
+    
+    // Close on outside click
+    previewModal.addEventListener('click', function(e) {
+        if (e.target === previewModal) {
+            closePreview();
+        }
+    });
+    
+    // Confirm send from preview
+    btnConfirmSend.addEventListener('click', function() {
+        closePreview();
+        broadcastForm.submit();
+    });
+    
+    // Prevent form submit langsung, minta preview dulu
+    let formSubmitted = false;
+    broadcastForm.addEventListener('submit', function(e) {
+        if (!formSubmitted) {
+            e.preventDefault();
+            const pesan = pesanCustom.value.trim();
+            if (!pesan) {
+                alert('Silakan tulis pesan terlebih dahulu!');
+                return;
+            }
+            
+            const selectedSantri = Array.from(santriCheckboxes).filter(cb => cb.checked);
+            if (selectedSantri.length === 0) {
+                alert('Pilih minimal 1 santri!');
+                return;
+            }
+            
+            // Show preview
+            btnPreview.click();
+        }
+    });
+});
+</script>
+{% endblock %}
+

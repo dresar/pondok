@@ -1,0 +1,255 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Konversi Gambar ke WebP - Admin Panel{% endblock %}
+
+{% block page_title %}Konversi Gambar ke WebP{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Tools</span></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Konversi ke WebP</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Konversi Gambar ke WebP</h2>
+        <p class="text-sm text-gray-600">Konversi gambar JPG/PNG ke format WebP untuk mengurangi ukuran file tanpa kehilangan kualitas yang signifikan</p>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Form Upload -->
+        <div>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p class="text-sm text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <strong>Tips:</strong> Format WebP dapat mengurangi ukuran file hingga 30-50% dibandingkan JPG/PNG dengan kualitas yang sama.
+                </p>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Judul (Minimalis) -->
+                <div>
+                    <label for="{{ form.judul.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.judul.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.judul }}
+                    {% if form.judul.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.judul.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.judul.help_text }}</p>
+                </div>
+                
+                <!-- Upload Gambar (Minimalis) -->
+                <div>
+                    <label for="{{ form.image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.image.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.image }}
+                    {% if form.image.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.image.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.image.help_text }}</p>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Konversi ke WebP
+                </button>
+            </form>
+        </div>
+        
+        <!-- Hasil Konversi -->
+        <div>
+            {% if converted_image %}
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center mb-3">
+                    <i class="fas fa-check-circle text-green-600 mr-2 text-xl"></i>
+                    <h3 class="text-lg font-semibold text-green-900">Konversi Berhasil!</h3>
+                </div>
+                <div class="space-y-2 text-sm text-green-800">
+                    {% if converted_image.original_size and converted_image.converted_size %}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-green-700 mb-1">Ukuran Asli</p>
+                            <p class="font-bold text-lg text-green-900">{{ converted_image.get_original_size_mb }} MB</p>
+                            <p class="text-xs text-green-600">{{ converted_image.original_size|filesizeformat }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-green-700 mb-1">Ukuran WebP</p>
+                            <p class="font-bold text-lg text-green-900">{{ converted_image.get_converted_size_kb }} KB</p>
+                            <p class="text-xs text-green-600">{{ converted_image.converted_size|filesizeformat }}</p>
+                        </div>
+                    </div>
+                    {% if converted_image.compression_ratio %}
+                    <div class="mt-3 pt-3 border-t border-green-300">
+                        <p class="text-xs text-green-700 mb-1">Penghematan Penyimpanan</p>
+                        <p class="font-bold text-xl text-green-900">{{ converted_image.get_savings_mb }} MB</p>
+                        <p class="text-xs text-green-600">({{ converted_image.compression_ratio|floatformat:1 }}% lebih kecil)</p>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+                <h4 class="text-sm font-semibold text-gray-900 mb-3">Gambar Hasil Konversi:</h4>
+                <div class="mb-4">
+                    <img src="{{ converted_image.webp_image.url }}" alt="Gambar WebP" class="w-full h-auto rounded-lg shadow-md">
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ converted_image.webp_image.url }}" download class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-center text-sm font-medium">
+                        <i class="fas fa-download mr-2"></i>Download
+                    </a>
+                    <button onclick="openSaveModal({{ converted_image.id }})" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                        <i class="fas fa-save mr-2"></i>Simpan
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                <i class="fas fa-image text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-600">Hasil konversi akan muncul di sini</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Simpan Gambar -->
+{% if converted_image %}
+<div id="save-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden" onclick="closeSaveModal()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Simpan Gambar WebP</h3>
+                <button onclick="closeSaveModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Preview -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <img src="{{ converted_image.webp_image.url }}" alt="Preview" class="w-full h-auto rounded-lg">
+                </div>
+                
+                <!-- Informasi Detail -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-3">
+                        <p class="text-xs text-blue-700 mb-1">Ukuran Asli</p>
+                        <p class="font-bold text-blue-900">{{ converted_image.get_original_size_mb }} MB</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3">
+                        <p class="text-xs text-green-700 mb-1">Ukuran WebP</p>
+                        <p class="font-bold text-green-900">{{ converted_image.get_converted_size_kb }} KB</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-3">
+                        <p class="text-xs text-purple-700 mb-1">Penghematan</p>
+                        <p class="font-bold text-purple-900">{{ converted_image.get_savings_mb }} MB</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-3">
+                        <p class="text-xs text-orange-700 mb-1">Dimensi</p>
+                        <p class="font-bold text-orange-900">{{ converted_image.width }}x{{ converted_image.height }}px</p>
+                    </div>
+                </div>
+                
+                <!-- URL CDN -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-link mr-2 text-green-600"></i>URL CDN (Public Access)
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" id="cdn-url" value="{% url 'cdn_image' converted_image.id %}" readonly 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm">
+                        <button onclick="copyCDNUrl()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        URL ini dapat diakses secara publik tanpa autentikasi
+                    </p>
+                </div>
+                
+                <!-- URL Media -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-image mr-2 text-blue-600"></i>URL Media (Internal)
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" id="media-url" value="{{ converted_image.webp_image.url }}" readonly 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm">
+                        <button onclick="copyMediaUrl()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex gap-2 pt-4 border-t border-gray-200">
+                    <a href="{{ converted_image.webp_image.url }}" download class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-center text-sm font-medium">
+                        <i class="fas fa-download mr-2"></i>Download File
+                    </a>
+                    <button onclick="closeSaveModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+    </div>
+</div>
+
+<script>
+// Modal functions
+function openSaveModal(imageId) {
+    const modal = document.getElementById('save-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeSaveModal() {
+    const modal = document.getElementById('save-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Copy functions
+function copyCDNUrl() {
+    const url = document.getElementById('cdn-url').value;
+    const fullUrl = window.location.origin + url;
+    navigator.clipboard.writeText(fullUrl).then(function() {
+        alert('URL CDN berhasil disalin!');
+    }, function() {
+        alert('Gagal menyalin URL');
+    });
+}
+
+function copyMediaUrl() {
+    const url = document.getElementById('media-url').value;
+    const fullUrl = window.location.origin + url;
+    navigator.clipboard.writeText(fullUrl).then(function() {
+        alert('URL Media berhasil disalin!');
+    }, function() {
+        alert('Gagal menyalin URL');
+    });
+}
+
+// Close modal dengan ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeSaveModal();
+    }
+});
+</script>
+{% endblock %}
+

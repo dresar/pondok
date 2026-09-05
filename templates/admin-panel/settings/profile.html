@@ -1,0 +1,548 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Profil Saya - Admin Panel{% endblock %}
+
+{% block page_title %}Profil Saya{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Profil</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Profil Saya</h2>
+            <p class="text-sm text-gray-600">Kelola informasi profil dan akun Anda</p>
+        </div>
+        {% if not is_editing %}
+        <button 
+            onclick="window.location.href='?edit=1'"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+            <i class="fas fa-edit mr-2"></i>Edit Profil
+        </button>
+        {% endif %}
+    </div>
+    
+    <!-- User Info Card -->
+    <div class="mb-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border border-green-200">
+        <div class="flex items-center space-x-4">
+            <div class="relative">
+                {% if user.avatar %}
+                <img 
+                    src="{{ user.avatar.url }}" 
+                    alt="{{ user.username }}" 
+                    class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                    onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                >
+                <div class="w-20 h-20 bg-green-600 rounded-full items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg hidden">
+                    {{ user.username|first|upper }}
+                </div>
+                {% else %}
+                <div class="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
+                    {{ user.username|first|upper }}
+                </div>
+                {% endif %}
+                {% if is_editing %}
+                <label for="{{ form.avatar.id_for_label }}" class="absolute bottom-0 right-0 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white cursor-pointer hover:bg-green-700 transition-colors shadow-lg z-10" title="Klik untuk upload foto baru">
+                    <i class="fas fa-camera text-sm"></i>
+                </label>
+                {% endif %}
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-gray-900">
+                    {{ user.get_full_name|default:user.username }}
+                </h3>
+                <p class="text-sm text-gray-600">@{{ user.username }}</p>
+                <p class="text-sm text-gray-600 mt-1">
+                    <i class="fas fa-user-tag mr-1"></i>{{ user.get_role_display }}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Username -->
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.username.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-gray-500">Username tidak dapat diubah</p>
+            </div>
+            
+            <!-- Email -->
+            <div>
+                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.email.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- First Name -->
+            <div>
+                <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.first_name.label }}
+                </label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Last Name -->
+            <div>
+                <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.last_name.label }}
+                </label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Phone -->
+            <div>
+                <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.phone.label }}
+                </label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Role -->
+            <div>
+                <label for="{{ form.role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.role.label }}
+                </label>
+                {{ form.role }}
+                {% if form.role.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.role.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-gray-500">Role tidak dapat diubah</p>
+            </div>
+            
+            <!-- Avatar (only in edit mode) -->
+            {% if is_editing %}
+            <div class="md:col-span-2">
+                <label for="{{ form.avatar.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.avatar.label }}
+                </label>
+                
+                <!-- Preview Area -->
+                <div class="mb-4">
+                    <div class="flex items-center space-x-4">
+                        <!-- Current Avatar Preview -->
+                        <div class="relative">
+                            {% if user.avatar %}
+                            <img 
+                                id="current-avatar-preview" 
+                                src="{{ user.avatar.url }}" 
+                                alt="Current Avatar" 
+                                class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-md"
+                                onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                            >
+                            <div id="current-avatar-fallback" class="w-24 h-24 bg-gray-300 rounded-full items-center justify-center text-gray-500 border-4 border-gray-200 shadow-md hidden">
+                                <i class="fas fa-user text-2xl"></i>
+                            </div>
+                            {% else %}
+                            <div id="current-avatar-preview" class="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 border-4 border-gray-200 shadow-md">
+                                <i class="fas fa-user text-2xl"></i>
+                            </div>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-2 text-center">Foto Saat Ini</p>
+                        </div>
+                        
+                        <!-- New Avatar Preview (akan muncul setelah user pilih file) -->
+                        <div class="hidden" id="new-avatar-preview-container">
+                            <div class="relative">
+                                <img id="new-avatar-preview" src="" alt="New Avatar Preview" class="w-24 h-24 rounded-full object-cover border-4 border-green-500 shadow-md">
+                                <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">Baru</span>
+                            </div>
+                            <p class="text-xs text-green-600 mt-2 text-center font-medium">Foto Baru</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Input -->
+                <div class="relative">
+                    <div class="flex items-center justify-center w-full">
+                        <label for="{{ form.avatar.id_for_label }}" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                <p class="mb-2 text-sm text-gray-500">
+                                    <span class="font-semibold">Klik untuk upload</span> atau drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500">JPG, PNG atau GIF (MAX. 2MB)</p>
+                            </div>
+                            <input 
+                                type="file" 
+                                name="{{ form.avatar.name }}" 
+                                id="{{ form.avatar.id_for_label }}" 
+                                accept="image/jpeg,image/jpg,image/png,image/gif"
+                                class="hidden"
+                                onchange="previewAvatar(this); updateFileInputLabel(this)"
+                            >
+                        </label>
+                    </div>
+                    <div id="file-name-display" class="mt-2 text-sm text-gray-600 hidden">
+                        <i class="fas fa-file-image mr-2"></i>
+                        <span id="file-name-text"></span>
+                    </div>
+                </div>
+                
+                {% if form.avatar.errors %}
+                <p class="mt-2 text-sm text-red-600">{{ form.avatar.errors.0 }}</p>
+                {% endif %}
+                
+                <div class="mt-2 space-y-1">
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Format: JPG, PNG, atau GIF. Ukuran maksimal 2MB
+                    </p>
+                    {% if user.avatar %}
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-link mr-1"></i>
+                        <a href="{{ user.avatar.url }}" target="_blank" class="text-green-600 hover:underline" onclick="return true;">Lihat foto saat ini</a>
+                        <span class="text-gray-400 ml-2" id="avatar-status"></span>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Additional Info -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-6">
+            <h4 class="text-sm font-semibold text-gray-700 mb-3">Informasi Tambahan</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-600">Tanggal Bergabung:</span>
+                    <span class="font-medium text-gray-900 ml-2">{{ user.date_joined|date:"d F Y" }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">Terakhir Login:</span>
+                    <span class="font-medium text-gray-900 ml-2">
+                        {% if user.last_login %}
+                            {{ user.last_login|date:"d F Y, H:i" }}
+                        {% else %}
+                            Belum pernah login
+                        {% endif %}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-gray-600">Status:</span>
+                    {% if user.is_active %}
+                    <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Aktif</span>
+                    {% else %}
+                    <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Nonaktif</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="text-gray-600">Superuser:</span>
+                    {% if user.is_superuser %}
+                    <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Ya</span>
+                    {% else %}
+                    <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Tidak</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Login Statistics -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-chart-line mr-2 text-green-600"></i>Statistik Login
+            </h3>
+            
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Total Login</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ total_logins }}</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-sign-in-alt text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Login Berhasil</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ successful_logins }}</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-check-circle text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Login Gagal</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ failed_logins }}</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-times-circle text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Login History Table -->
+            <div class="mt-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-4">Riwayat Login</h4>
+                {% if login_history %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Agent</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pesan Error</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for login in login_history %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                    {{ login.created_at|date:"d M Y, H:i:s" }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    {% if login.status == 'success' %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle mr-1"></i>Berhasil
+                                    </span>
+                                    {% else %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                        <i class="fas fa-times-circle mr-1"></i>Gagal
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                    {{ login.ip_address|default:"-" }}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600">
+                                    <span class="truncate block max-w-xs" title="{{ login.user_agent }}">
+                                        {{ login.user_agent|truncatewords:5|default:"-" }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600">
+                                    {{ login.error_message|default:"-" }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if login_history.has_other_pages %}
+                <div class="mt-4 flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Menampilkan {{ login_history.start_index }} sampai {{ login_history.end_index }} dari {{ total_logins }} login
+                    </div>
+                    <div class="flex space-x-2">
+                        {% if login_history.has_previous %}
+                        <a href="?page={{ login_history.previous_page_number }}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                            <i class="fas fa-chevron-left"></i> Sebelumnya
+                        </a>
+                        {% endif %}
+                        {% if login_history.has_next %}
+                        <a href="?page={{ login_history.next_page_number }}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                            Selanjutnya <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-history text-4xl mb-3 text-gray-300"></i>
+                    <p>Belum ada riwayat login</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <ul class="list-disc list-inside text-sm text-red-800">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Action Buttons -->
+        {% if is_editing %}
+        <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+            <button 
+                type="button"
+                onclick="window.location.href='{% url 'admin-panel:user_profile' %}'"
+                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fas fa-times mr-2"></i>Batal
+            </button>
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                <i class="fas fa-save mr-2"></i>Simpan Perubahan
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<style>
+/* Style untuk disabled/readonly fields */
+input[readonly],
+input[disabled],
+select[disabled],
+textarea[readonly],
+textarea[disabled] {
+    background-color: #f3f4f6 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+</style>
+
+<script>
+// Preview avatar sebelum upload
+function previewAvatar(input) {
+    const container = document.getElementById('new-avatar-preview-container');
+    const preview = document.getElementById('new-avatar-preview');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            container.classList.remove('hidden');
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        container.classList.add('hidden');
+    }
+}
+
+// Update file name display
+function updateFileInputLabel(input) {
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const fileNameText = document.getElementById('file-name-text');
+    
+    if (input.files && input.files[0]) {
+        fileNameText.textContent = input.files[0].name;
+        fileNameDisplay.classList.remove('hidden');
+    } else {
+        fileNameDisplay.classList.add('hidden');
+    }
+}
+
+// Handle avatar image errors (404)
+function handleAvatarError(img) {
+    if (img && img.nextElementSibling) {
+        img.style.display = 'none';
+        img.nextElementSibling.style.display = 'flex';
+    }
+}
+
+// Check if avatar image exists
+function checkAvatarImage(img) {
+    if (!img) return;
+    
+    const testImg = new Image();
+    testImg.onload = function() {
+        // Image exists, do nothing
+    };
+    testImg.onerror = function() {
+        // Image doesn't exist, show fallback
+        handleAvatarError(img);
+    };
+    testImg.src = img.src;
+}
+
+// Pastikan form tidak bisa di-submit jika tidak dalam mode edit
+document.addEventListener('DOMContentLoaded', function() {
+    const isEditing = {{ is_editing|yesno:"true,false" }};
+    const form = document.querySelector('form');
+    
+    // Check all avatar images on page load
+    const avatarImages = document.querySelectorAll('img[src*="avatar"]');
+    avatarImages.forEach(img => {
+        checkAvatarImage(img);
+    });
+    
+    if (!isEditing && form) {
+        // Prevent form submission jika tidak dalam mode edit
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Tambahkan visual indicator untuk readonly fields
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.hasAttribute('readonly') || input.hasAttribute('disabled')) {
+                input.classList.add('bg-gray-100', 'cursor-not-allowed');
+            }
+        });
+    }
+    
+    // Validasi ukuran file avatar (maksimal 2MB)
+    const avatarInput = document.getElementById('{{ form.avatar.id_for_label }}');
+    if (avatarInput) {
+        // Pastikan label di User Info Card terhubung dengan input file
+        const avatarLabel = document.querySelector('label[for="{{ form.avatar.id_for_label }}"]');
+        if (avatarLabel && avatarLabel.closest('.relative')) {
+            // Label sudah terhubung via 'for' attribute, tidak perlu action tambahan
+        }
+        
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = file.size / 1024 / 1024; // Convert to MB
+                if (fileSize > 2) {
+                    alert('Ukuran file terlalu besar! Maksimal 2MB.');
+                    e.target.value = '';
+                    document.getElementById('new-avatar-preview-container').classList.add('hidden');
+                    return false;
+                }
+                
+                // Validasi tipe file
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Format file tidak didukung! Gunakan JPG, PNG, atau GIF.');
+                    e.target.value = '';
+                    document.getElementById('new-avatar-preview-container').classList.add('hidden');
+                    return false;
+                }
+                
+                // Trigger preview
+                previewAvatar(e.target);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,275 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Daftar Gambar WebP - Admin Panel{% endblock %}
+
+{% block page_title %}Daftar Gambar WebP{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Tools</span></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Daftar Gambar WebP</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">Daftar Gambar WebP</h2>
+            <p class="text-sm text-gray-600">Total: {{ total_images }} gambar | Total Penghematan: {{ total_size_saved|floatformat:2 }} MB</p>
+        </div>
+        <a href="{% url 'admin-panel:image_converter' %}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+            <i class="fas fa-plus mr-2"></i>Konversi Baru
+        </a>
+    </div>
+    
+    <!-- Search -->
+    <form method="get" class="mb-6">
+        <div class="flex gap-2">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Cari berdasarkan judul..." 
+                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                   id="search-input">
+            <button type="submit" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                <i class="fas fa-search mr-2"></i>Cari
+            </button>
+            {% if search_query %}
+            <a href="{% url 'admin-panel:converted_image_list' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                <i class="fas fa-times"></i>
+            </a>
+            {% endif %}
+        </div>
+    </form>
+    
+    <!-- List Images -->
+    {% if images %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for image in images %}
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+            <!-- Image Preview -->
+            <div class="relative aspect-video bg-gray-100 overflow-hidden">
+                <img src="{{ image.webp_image.url }}" alt="{{ image.original_filename }}" 
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                <div class="absolute top-2 right-2">
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-600 text-white">
+                        WebP
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Info -->
+            <div class="p-4">
+                <h3 class="font-semibold text-gray-900 text-sm mb-2 line-clamp-1" title="{% if image.judul %}{{ image.judul }}{% else %}{{ image.original_filename }}{% endif %}">
+                    {% if image.judul %}{{ image.judul }}{% else %}{{ image.original_filename }}{% endif %}
+                </h3>
+                
+                <!-- Stats -->
+                <div class="space-y-1 mb-3">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-600">Ukuran Asli:</span>
+                        <span class="font-semibold text-gray-900">{{ image.get_original_size_mb }} MB</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-600">Ukuran WebP:</span>
+                        <span class="font-semibold text-green-600">{{ image.get_converted_size_kb }} KB</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-600">Penghematan:</span>
+                        <span class="font-bold text-green-700">{{ image.get_savings_mb }} MB</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-600">Dimensi:</span>
+                        <span class="text-gray-900">{{ image.width }}x{{ image.height }}px</span>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex gap-2 pt-3 border-t border-gray-100">
+                    <button onclick="openImageModal({{ image.id }})" 
+                            class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium">
+                        <i class="fas fa-eye mr-1"></i>Detail
+                    </button>
+                    <form method="post" action="{% url 'admin-panel:converted_image_delete' image.id %}" 
+                          onsubmit="return confirm('Hapus gambar ini?');" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if images.has_other_pages %}
+    <div class="mt-6 flex justify-center items-center gap-2">
+        {% if images.has_previous %}
+        <a href="?page={{ images.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+           class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+        <span class="px-4 py-2 text-sm text-gray-700">
+            Halaman {{ images.number }} dari {{ images.paginator.num_pages }}
+        </span>
+        {% if images.has_next %}
+        <a href="?page={{ images.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+           class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-image text-6xl mb-4 text-gray-300"></i>
+        <p class="text-lg font-semibold mb-2">Belum ada gambar yang dikonversi</p>
+        <p class="text-sm text-gray-400 mb-4">Mulai konversi gambar pertama Anda</p>
+        <a href="{% url 'admin-panel:image_converter' %}" class="inline-block px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Konversi Gambar
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Detail -->
+<div id="image-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4" onclick="closeImageModal()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Detail Gambar WebP</h3>
+                <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="modal-content" class="space-y-4">
+                <!-- Content akan diisi oleh JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openImageModal(imageId) {
+    const modal = document.getElementById('image-modal');
+    const content = document.getElementById('modal-content');
+    
+    // Fetch data gambar
+    fetch(`/admin-panel/tools/converted-images/${imageId}/json/`)
+        .then(response => response.json())
+        .then(data => {
+            content.innerHTML = `
+                <!-- Preview -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <img src="${data.webp_url}" alt="${data.original_filename}" class="w-full h-auto rounded-lg">
+                </div>
+                
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <p class="text-xs text-blue-700 mb-1">Ukuran Asli</p>
+                        <p class="font-bold text-xl text-blue-900">${data.original_size_mb} MB</p>
+                        <p class="text-xs text-blue-600">${data.original_size_formatted}</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <p class="text-xs text-green-700 mb-1">Ukuran WebP</p>
+                        <p class="font-bold text-xl text-green-900">${data.converted_size_kb} KB</p>
+                        <p class="text-xs text-green-600">${data.converted_size_formatted}</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <p class="text-xs text-purple-700 mb-1">Penghematan</p>
+                        <p class="font-bold text-xl text-purple-900">${data.savings_mb} MB</p>
+                        <p class="text-xs text-purple-600">${data.compression_ratio}% lebih kecil</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <p class="text-xs text-orange-700 mb-1">Dimensi</p>
+                        <p class="font-bold text-xl text-orange-900">${data.width}x${data.height}px</p>
+                        <p class="text-xs text-orange-600">Kualitas: ${data.quality}</p>
+                    </div>
+                </div>
+                
+                <!-- URLs -->
+                <div class="space-y-3">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-link mr-2 text-green-600"></i>URL CDN (Public Access)
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="cdn-url-modal" value="${data.cdn_url}" readonly 
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm">
+                            <button onclick="copyCDNUrlModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-image mr-2 text-blue-600"></i>URL Media (Internal)
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="media-url-modal" value="${data.webp_url}" readonly 
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm">
+                            <button onclick="copyMediaUrlModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex gap-2 pt-4 border-t border-gray-200">
+                    <a href="${data.webp_url}" download class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-center text-sm font-medium">
+                        <i class="fas fa-download mr-2"></i>Download File
+                    </a>
+                    <button onclick="closeImageModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium">
+                        Tutup
+                    </button>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Gagal memuat data gambar');
+        });
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('image-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function copyCDNUrlModal() {
+    const url = document.getElementById('cdn-url-modal').value;
+    const fullUrl = window.location.origin + url;
+    navigator.clipboard.writeText(fullUrl).then(function() {
+        alert('URL CDN berhasil disalin!');
+    }, function() {
+        alert('Gagal menyalin URL');
+    });
+}
+
+function copyMediaUrlModal() {
+    const url = document.getElementById('media-url-modal').value;
+    const fullUrl = window.location.origin + url;
+    navigator.clipboard.writeText(fullUrl).then(function() {
+        alert('URL Media berhasil disalin!');
+    }, function() {
+        alert('Gagal menyalin URL');
+    });
+}
+
+// Close modal dengan ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeImageModal();
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,60 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Detail Kontak - Admin Panel{% endblock %}
+
+{% block page_title %}Detail Kontak{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'core:kontak_list' %}" class="hover:text-gray-900">Kontak</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Detail</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-4xl">
+    <div class="mb-6 border-b pb-4">
+        <h3 class="text-lg font-semibold text-gray-900">{{ kontak.nama }}</h3>
+        <p class="text-sm text-gray-600 mt-1">{{ kontak.subjek }}</p>
+        <div class="mt-2 flex items-center space-x-4 text-sm">
+            <span class="text-gray-600"><i class="fas fa-envelope mr-1"></i>{{ kontak.email }}</span>
+            {% if kontak.no_hp %}
+            <span class="text-gray-600"><i class="fas fa-phone mr-1"></i>{{ kontak.no_hp }}</span>
+            {% endif %}
+            <span class="text-gray-600"><i class="fas fa-clock mr-1"></i>{{ kontak.created_at|date:"d M Y H:i" }}</span>
+        </div>
+    </div>
+    
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Pesan</label>
+            <div class="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p class="text-gray-800 whitespace-pre-wrap">{{ kontak.pesan }}</p>
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            {{ form.status }}
+            {% if form.status.errors %}<p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Balasan</label>
+            {{ form.balasan }}
+            {% if form.balasan.errors %}<p class="mt-1 text-sm text-red-600">{{ form.balasan.errors.0 }}</p>{% endif %}
+            {% if kontak.no_hp and kontak.balasan %}
+            <div class="mt-2">
+                <a href="{{ kontak.get_whatsapp_link }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <i class="fab fa-whatsapp mr-2"></i>Kirim via WhatsApp
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex justify-end space-x-3 pt-4">
+            <a href="{% url 'core:kontak_list' %}" class="px-4 py-2 bg-gray-200 rounded-lg">Kembali</a>
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Simpan</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

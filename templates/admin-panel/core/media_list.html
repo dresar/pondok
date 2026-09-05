@@ -1,0 +1,634 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Media (Galeri & Video) - Admin Panel{% endblock %}
+
+{% block page_title %}Media (Galeri & Video){% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Media</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    deleteModal: false, 
+    deleteId: null, 
+    deleteName: '', 
+    formModal: false,
+    currentTipe: '{{ tipe|default:'' }}',
+    formTipe: '{% if media_obj %}{{ media_obj.tipe }}{% else %}{% endif %}'
+}">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Total Media</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_count }}</p>
+                </div>
+                <i class="fas fa-photo-video text-3xl text-blue-500"></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Galeri</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ gallery_count }}</p>
+                </div>
+                <i class="fas fa-images text-3xl text-green-500"></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Video</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ video_count }}</p>
+                </div>
+                <i class="fas fa-video text-3xl text-purple-500"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 class="text-2xl font-bold text-gray-900">Media (Galeri & Video)</h2>
+            <div class="flex gap-3">
+                <button @click="formModal = true; formTipe = 'gallery'" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                    <i class="fas fa-images mr-2"></i>Tambah Galeri
+                </button>
+                <button @click="formModal = true; formTipe = 'video'" 
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center">
+                    <i class="fas fa-video mr-2"></i>Tambah Video
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <!-- Filters -->
+        <form method="get" class="mb-6 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Media</label>
+                    <select name="tipe" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <option value="">Semua Tipe</option>
+                        <option value="gallery" {% if tipe == 'gallery' %}selected{% endif %}>Galeri (Gambar)</option>
+                        <option value="video" {% if tipe == 'video' %}selected{% endif %}>Video</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
+                    <input type="text" name="search" value="{{ search }}" placeholder="Cari judul atau sub judul..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-search mr-2"></i>Filter
+            </button>
+        </form>
+        
+        {% if media_list %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for media in media_list %}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+                {% if media.tipe == 'gallery' %}
+                    {% if media.gambar %}
+                    <div class="relative h-48 overflow-hidden bg-gray-100">
+                        <img src="{{ media.gambar.url }}" alt="{{ media.judul }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    </div>
+                    {% else %}
+                    <div class="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                        <i class="fas fa-image text-4xl text-gray-400"></i>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    {% if media.featured_image %}
+                    <div class="relative h-48 overflow-hidden bg-gray-100">
+                        <img src="{{ media.featured_image.url }}" alt="{{ media.judul }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <i class="fas fa-play-circle text-4xl text-white/90"></i>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                        <i class="fas fa-video text-4xl text-gray-400"></i>
+                    </div>
+                    {% endif %}
+                {% endif %}
+                
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs px-2 py-1 rounded-full 
+                            {% if media.tipe == 'gallery' %}bg-green-100 text-green-700
+                            {% else %}bg-purple-100 text-purple-700{% endif %}">
+                            {{ media.get_tipe_display }}
+                        </span>
+                        {% if media.is_published %}
+                        <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Published</span>
+                        {% else %}
+                        <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">Draft</span>
+                        {% endif %}
+                    </div>
+                    <h3 class="font-semibold text-gray-900 text-sm mb-1 line-clamp-1">{{ media.judul }}</h3>
+                    {% if media.sub_judul %}
+                    <p class="text-xs text-gray-500 mb-2 line-clamp-2">{{ media.sub_judul }}</p>
+                    {% endif %}
+                    <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <span class="text-xs text-gray-500">Urutan: #{{ media.order }}</span>
+                        <div class="flex items-center gap-2">
+                            <button @click="formModal = true; window.location.href = '?edit={{ media.id }}'" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                <i class="fas fa-edit text-sm"></i>
+                            </button>
+                            <button @click="deleteModal = true; deleteId = {{ media.id }}; deleteName = '{{ media.judul }}'" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if media_list.has_other_pages %}
+        <div class="mt-6 flex justify-center items-center gap-2">
+            {% if media_list.has_previous %}
+            <a href="?page={{ media_list.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if tipe %}&tipe={{ tipe }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            <span class="px-4 py-2 text-sm text-gray-700">Halaman {{ media_list.number }} dari {{ media_list.paginator.num_pages }}</span>
+            {% if media_list.has_next %}
+            <a href="?page={{ media_list.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if tipe %}&tipe={{ tipe }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-photo-video text-4xl mb-4 text-gray-300"></i>
+            <p>Tidak ada data media</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Form Modal -->
+    <div x-show="formModal || {% if media_obj %}true{% else %}false{% endif %}" 
+         x-cloak 
+         @click.away="formModal = false; window.location.href = '{% url 'core:media_list' %}'" 
+         x-init="setTimeout(() => { 
+             const tipeInput = $el.querySelector('input[name=\'tipe\']'); 
+             if (tipeInput) { 
+                 // Prioritize formTipe from button click
+                 const tipe = formTipe || tipeInput.value || 'gallery';
+                 tipeInput.value = tipe;
+                 toggleMediaFields(tipe);
+             } 
+         }, 250)"
+         class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" @click.stop>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">
+                    {% if media_obj %}
+                        Edit Media - {{ media_obj.get_tipe_display }}
+                    {% else %}
+                        <span x-show="formTipe === 'gallery'">Tambah Galeri</span>
+                        <span x-show="formTipe === 'video'">Tambah Video</span>
+                        <span x-show="formTipe !== 'gallery' && formTipe !== 'video'">Tambah Media</span>
+                    {% endif %}
+                </h3>
+                <button @click="formModal = false; window.location.href = '{% url 'core:media_list' %}'" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" id="media-form" action="{% if media_obj %}{% url 'core:media_update' media_obj.id %}{% else %}{% url 'core:media_create' %}{% endif %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <!-- Hidden field for tipe -->
+                <input type="hidden" name="tipe" id="id_tipe" x-bind:value="formTipe || '{% if media_obj %}{{ media_obj.tipe }}{% else %}{% endif %}'" value="{% if media_obj %}{{ media_obj.tipe }}{% else %}{% endif %}">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul *</label>
+                        {{ form.judul }}
+                        {% if form.judul.errors %}<p class="mt-1 text-sm text-red-600">{{ form.judul.errors.0 }}</p>{% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sub Judul (Opsional)</label>
+                        {{ form.sub_judul }}
+                        {% if form.sub_judul.errors %}<p class="mt-1 text-sm text-red-600">{{ form.sub_judul.errors.0 }}</p>{% endif %}
+                    </div>
+                    
+                    <!-- Galeri Fields -->
+                    <div id="gallery-fields" style="display: {% if media_obj and media_obj.tipe == 'gallery' %}block{% else %}none{% endif %};">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-image mr-2 text-green-600"></i>Gambar
+                                <span id="media-gambar-required-indicator" class="text-red-500">*</span>
+                                <span id="media-gambar-optional-indicator" class="text-gray-500 text-xs hidden">(Opsional jika sudah pilih dari gallery)</span>
+                            </label>
+                            
+                            <!-- Pilih dari Gallery atau Upload Manual -->
+                            <div class="space-y-2">
+                                <div class="flex gap-3 items-center">
+                                    <button type="button" 
+                                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm font-medium flex-1"
+                                            onclick="openMediaGambarPicker()">
+                                        <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                                    </button>
+                                    
+                                    <div class="flex-1">
+                                        <label class="block">
+                                            <input type="file" name="gambar" accept="image/*"
+                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100">
+                                        </label>
+                                        <p class="text-xs text-gray-600 mt-1 text-center">Upload Manual</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preview dari Gallery -->
+                                {% if media_obj and media_obj.gambar %}
+                                <div id="media-gambar-preview" class="mb-2">
+                                    <img src="{{ media_obj.gambar.url }}" alt="Current" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                                    <p class="text-xs text-gray-600 mt-1">Gambar saat ini</p>
+                                </div>
+                                {% else %}
+                                <div id="media-gambar-preview" class="mb-2 hidden"></div>
+                                {% endif %}
+                                
+                                <!-- Info Box -->
+                                <div class="p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600">
+                                    <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                                    Pilih dari gallery atau upload manual. Jika sudah pilih dari gallery, upload menjadi opsional.
+                                </div>
+                            </div>
+                            {% if form.gambar.errors %}<p class="mt-1 text-sm text-red-600">{{ form.gambar.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Video Fields -->
+                    <div id="video-fields" style="display: {% if media_obj and media_obj.tipe == 'video' %}block{% else %}none{% endif %};">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">File Video *</label>
+                            {% if media_obj and media_obj.video_file %}
+                            <div class="mb-2">
+                                <a href="{{ media_obj.video_file.url }}" target="_blank" class="text-blue-600 hover:underline text-sm">
+                                    <i class="fas fa-file-video mr-1"></i>Lihat video saat ini
+                                </a>
+                            </div>
+                            {% endif %}
+                            {{ form.video_file }}
+                            {% if form.video_file.errors %}<p class="mt-1 text-sm text-red-600">{{ form.video_file.errors.0 }}</p>{% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Format: MP4, AVI, MOV. Ukuran maksimal 100MB</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-image mr-2 text-purple-600"></i>Thumbnail Video
+                                <span id="media-featured-required-indicator" class="text-red-500 hidden">*</span>
+                                <span id="media-featured-optional-indicator" class="text-gray-500 text-xs">(Opsional)</span>
+                            </label>
+                            
+                            <!-- Pilih dari Gallery atau Upload Manual -->
+                            <div class="space-y-2">
+                                <div class="flex gap-3 items-center">
+                                    <button type="button" 
+                                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm font-medium flex-1"
+                                            onclick="openMediaFeaturedPicker()">
+                                        <i class="fas fa-images mr-2"></i>Pilih dari Gallery
+                                    </button>
+                                    
+                                    <div class="flex-1">
+                                        <label class="block">
+                                            <input type="file" name="featured_image" accept="image/*"
+                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100">
+                                        </label>
+                                        <p class="text-xs text-gray-600 mt-1 text-center">Upload Manual</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preview dari Gallery -->
+                                {% if media_obj and media_obj.featured_image %}
+                                <div id="media-featured-preview" class="mb-2">
+                                    <img src="{{ media_obj.featured_image.url }}" alt="Current" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                                    <p class="text-xs text-gray-600 mt-1">Thumbnail saat ini</p>
+                                </div>
+                                {% else %}
+                                <div id="media-featured-preview" class="mb-2 hidden"></div>
+                                {% endif %}
+                                
+                                <!-- Info Box -->
+                                <div class="p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600">
+                                    <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                                    Pilih dari gallery atau upload manual. Jika sudah pilih dari gallery, upload menjadi opsional.
+                                </div>
+                            </div>
+                            {% if form.featured_image.errors %}<p class="mt-1 text-sm text-red-600">{{ form.featured_image.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Urutan</label>
+                        {{ form.order }}
+                        {% if form.order.errors %}<p class="mt-1 text-sm text-red-600">{{ form.order.errors.0 }}</p>{% endif %}
+                    </div>
+                    
+                    <div class="flex items-center">
+                        {{ form.is_published }}
+                        <label for="{{ form.is_published.id_for_label }}" class="ml-2 text-sm text-gray-700">Publikasikan</label>
+                        {% if form.is_published.errors %}<p class="mt-1 text-sm text-red-600">{{ form.is_published.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" @click="formModal = false; window.location.href = '{% url 'core:media_list' %}'" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Modal -->
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4" @click.stop>
+            <h3 class="text-lg font-semibold mb-4">Hapus Media</h3>
+            <p class="text-gray-700 mb-6">Apakah Anda yakin ingin menghapus media "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end gap-3">
+                <button @click="deleteModal = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                    Batal
+                </button>
+                <form method="post" action="{% url 'core:media_delete' 0 %}" x-bind:action="'{% url 'core:media_delete' 0 %}'.replace('0', deleteId)" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Helper function untuk update image indicator
+function updateImageIndicator(fieldName, hasSelectedImage) {
+    const requiredIndicator = document.getElementById(fieldName + '-required-indicator');
+    const optionalIndicator = document.getElementById(fieldName + '-optional-indicator');
+    let imageInput = null;
+    if (fieldName === 'media-gambar') {
+        imageInput = document.querySelector('input[name="gambar"]');
+    } else if (fieldName === 'media-featured') {
+        imageInput = document.querySelector('input[name="featured_image"]');
+    }
+    
+    if (hasSelectedImage) {
+        if (requiredIndicator) requiredIndicator.style.display = 'none';
+        if (optionalIndicator) optionalIndicator.classList.remove('hidden');
+        if (imageInput) {
+            imageInput.removeAttribute('required');
+            imageInput.setAttribute('data-optional', 'true');
+        }
+    } else {
+        if (requiredIndicator) requiredIndicator.style.display = 'inline';
+        if (optionalIndicator) optionalIndicator.classList.add('hidden');
+    }
+}
+
+// Function untuk open image picker media gambar
+function openMediaGambarPicker() {
+    // Pastikan form sudah ada
+    const form = document.getElementById('media-form') || document.querySelector('form[enctype="multipart/form-data"]');
+    if (!form) {
+        alert('Form tidak ditemukan! Pastikan modal form sudah terbuka.');
+        return;
+    }
+    
+    openImagePicker({
+        targetPreviewId: 'media-gambar-preview',
+        onSelect: function(imageId, imageUrl, imageTitle) {
+            const preview = document.getElementById('media-gambar-preview');
+            if (preview) {
+                const escapedTitle = imageTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                preview.innerHTML = `
+                    <div class="mb-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-300 shadow-md">
+                        <div class="flex items-start gap-4">
+                            <div class="relative flex-shrink-0">
+                                <img src="${imageUrl}" alt="${escapedTitle}" class="w-32 h-32 object-cover rounded-lg border-2 border-green-400 shadow-lg">
+                                <div class="absolute -top-2 -right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-md">
+                                    <i class="fas fa-check-circle mr-1"></i>Dipilih
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-green-700 mb-2 flex items-center">
+                                    <i class="fas fa-check-circle mr-2"></i>Gambar dipilih dari gallery
+                                </p>
+                                <p class="text-xs text-gray-700 mb-3 font-medium line-clamp-2">${escapedTitle}</p>
+                                <button type="button" 
+                                        onclick="document.getElementById('media-gambar-preview').innerHTML = ''; document.getElementById('media-gambar-preview').classList.add('hidden'); const hiddenInput = document.getElementById('selected_media_gambar_id'); if (hiddenInput) hiddenInput.remove(); updateImageIndicator('media-gambar', false);"
+                                        class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-xs font-medium border border-red-200">
+                                    <i class="fas fa-times mr-1"></i>Hapus pilihan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                preview.classList.remove('hidden');
+            }
+            
+            // Buat atau update hidden input untuk image ID
+            const form = document.getElementById('media-form') || document.querySelector('form[enctype="multipart/form-data"]');
+            if (!form) {
+                console.error('Form tidak ditemukan untuk menambahkan hidden input!');
+                alert('Form tidak ditemukan! Silakan tutup dan buka kembali modal form.');
+                return;
+            }
+            
+            let hiddenInput = document.getElementById('selected_media_gambar_id');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'selected_media_gambar_id';
+                hiddenInput.name = 'selected_media_gambar_id';
+                form.appendChild(hiddenInput);
+            }
+            hiddenInput.value = imageId;
+            
+            // Clear file input jika sudah pilih dari gallery
+            const fileInput = form.querySelector('input[name="gambar"]');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.removeAttribute('required');
+            }
+            
+            updateImageIndicator('media-gambar', true);
+        }
+    });
+}
+
+// Function untuk open image picker media featured
+function openMediaFeaturedPicker() {
+    // Pastikan form sudah ada
+    const form = document.getElementById('media-form') || document.querySelector('form[enctype="multipart/form-data"]');
+    if (!form) {
+        alert('Form tidak ditemukan! Pastikan modal form sudah terbuka.');
+        return;
+    }
+    
+    openImagePicker({
+        targetPreviewId: 'media-featured-preview',
+        onSelect: function(imageId, imageUrl, imageTitle) {
+            const preview = document.getElementById('media-featured-preview');
+            if (preview) {
+                const escapedTitle = imageTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                preview.innerHTML = `
+                    <div class="mb-4 p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-300 shadow-md">
+                        <div class="flex items-start gap-4">
+                            <div class="relative flex-shrink-0">
+                                <img src="${imageUrl}" alt="${escapedTitle}" class="w-32 h-32 object-cover rounded-lg border-2 border-purple-400 shadow-lg">
+                                <div class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-md">
+                                    <i class="fas fa-check-circle mr-1"></i>Dipilih
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-purple-700 mb-2 flex items-center">
+                                    <i class="fas fa-check-circle mr-2"></i>Thumbnail dipilih dari gallery
+                                </p>
+                                <p class="text-xs text-gray-700 mb-3 font-medium line-clamp-2">${escapedTitle}</p>
+                                <button type="button" 
+                                        onclick="document.getElementById('media-featured-preview').innerHTML = ''; document.getElementById('media-featured-preview').classList.add('hidden'); const hiddenInput = document.getElementById('selected_media_featured_id'); if (hiddenInput) hiddenInput.remove(); updateImageIndicator('media-featured', false);"
+                                        class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-xs font-medium border border-red-200">
+                                    <i class="fas fa-times mr-1"></i>Hapus pilihan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                preview.classList.remove('hidden');
+            }
+            
+            // Buat atau update hidden input untuk image ID
+            const form = document.getElementById('media-form') || document.querySelector('form[enctype="multipart/form-data"]');
+            if (!form) {
+                console.error('Form tidak ditemukan untuk menambahkan hidden input!');
+                alert('Form tidak ditemukan! Silakan tutup dan buka kembali modal form.');
+                return;
+            }
+            
+            let hiddenInput = document.getElementById('selected_media_featured_id');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'selected_media_featured_id';
+                hiddenInput.name = 'selected_media_featured_id';
+                form.appendChild(hiddenInput);
+            }
+            hiddenInput.value = imageId;
+            
+            // Clear file input jika sudah pilih dari gallery
+            const fileInput = form.querySelector('input[name="featured_image"]');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.removeAttribute('required');
+            }
+            
+            updateImageIndicator('media-featured', true);
+        }
+    });
+}
+
+// Make function globally available
+window.toggleMediaFields = function(tipe) {
+    const galleryFields = document.getElementById('gallery-fields');
+    const videoFields = document.getElementById('video-fields');
+    const tipeInput = document.getElementById('id_tipe');
+    
+    // Update hidden input value
+    if (tipeInput && tipe) {
+        tipeInput.value = tipe;
+    }
+    
+    console.log('toggleMediaFields called with tipe:', tipe); // Debug
+    
+    if (tipe === 'gallery') {
+        if (galleryFields) {
+            galleryFields.style.display = 'block';
+            console.log('Showing gallery fields'); // Debug
+        }
+        if (videoFields) {
+            videoFields.style.display = 'none';
+            console.log('Hiding video fields'); // Debug
+        }
+    } else if (tipe === 'video') {
+        if (galleryFields) {
+            galleryFields.style.display = 'none';
+            console.log('Hiding gallery fields'); // Debug
+        }
+        if (videoFields) {
+            videoFields.style.display = 'block';
+            console.log('Showing video fields'); // Debug
+        }
+    } else {
+        if (galleryFields) galleryFields.style.display = 'none';
+        if (videoFields) videoFields.style.display = 'none';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to initialize fields when modal opens
+    function initMediaFields() {
+        const tipeInput = document.getElementById('id_tipe');
+        if (tipeInput) {
+            const tipe = tipeInput.value;
+            if (tipe) {
+                toggleMediaFields(tipe);
+            }
+        }
+    }
+    
+    // Watch for modal opening using Alpine.js
+    const modalElement = document.querySelector('[x-show*="formModal"]');
+    if (modalElement) {
+        // Use MutationObserver to watch for changes in the modal
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' || mutation.type === 'childList') {
+                    // Check if modal is visible (not hidden)
+                    const modal = document.querySelector('[x-show*="formModal"]');
+                    if (modal && !modal.hasAttribute('x-cloak')) {
+                        // Small delay to ensure DOM is ready
+                        setTimeout(initMediaFields, 100);
+                    }
+                }
+            });
+        });
+        
+        observer.observe(modalElement, { 
+            attributes: true, 
+            attributeFilter: ['class', 'style'],
+            childList: true, 
+            subtree: true 
+        });
+    }
+    
+    // Also listen for clicks on "Tambah Galeri" or "Tambah Video" buttons
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('button');
+        if (button && (button.textContent.includes('Tambah Galeri') || button.textContent.includes('Tambah Video'))) {
+            setTimeout(initMediaFields, 200);
+        }
+    });
+    
+    // Also check when URL changes (for edit mode)
+    if (window.location.search.includes('edit=')) {
+        setTimeout(initMediaFields, 300);
+    }
+});
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,781 @@
+{% extends 'users/base.html' %}
+{% load indonesia_format %}
+
+{% block title %}Profil Saya - User Panel{% endblock %}
+{% block page_title %}Profil Saya{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-4 md:space-y-6">
+    {% if not is_editing %}
+    <!-- Profile Overview -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                <div class="relative">
+                    {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="{{ user.username }}" 
+                         class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-green-500 shadow-lg"
+                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-20 h-20 md:w-24 md:h-24 bg-green-600 rounded-full items-center justify-center text-white text-3xl font-bold border-4 border-green-500 shadow-lg hidden">
+                        {{ user.username|first|upper }}
+                    </div>
+                    {% else %}
+                    <div class="w-20 h-20 md:w-24 md:h-24 bg-green-600 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-green-500 shadow-lg">
+                        {{ user.username|first|upper }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-900">
+                        {{ user.get_full_name|default:user.username }}
+                    </h2>
+                    <p class="text-sm text-gray-600">@{{ user.username }}</p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-envelope mr-1"></i>{{ user.email|default:"-" }}
+                    </p>
+                </div>
+            </div>
+            <a href="?edit=1" class="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors inline-flex items-center">
+                <i class="fas fa-edit mr-2"></i>Edit Profil
+            </a>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-blue-600 font-medium mb-1">Status Akun</p>
+                        <p class="text-lg font-bold text-blue-900">
+                            {% if user.is_active %}
+                            <span class="text-green-600">Aktif</span>
+                            {% else %}
+                            <span class="text-red-600">Nonaktif</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <i class="fas fa-user-check text-2xl text-blue-400"></i>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-green-600 font-medium mb-1">Login Berhasil</p>
+                        <p class="text-lg font-bold text-green-900">{{ successful_logins|default:0 }}</p>
+                        <p class="text-xs text-green-600 mt-1">30 hari: {{ recent_successful|default:0 }}</p>
+                    </div>
+                    <i class="fas fa-check-circle text-2xl text-green-400"></i>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-red-600 font-medium mb-1">Login Gagal</p>
+                        <p class="text-lg font-bold text-red-900">{{ failed_logins|default:0 }}</p>
+                        <p class="text-xs text-red-600 mt-1">30 hari: {{ recent_failed|default:0 }}</p>
+                    </div>
+                    <i class="fas fa-times-circle text-2xl text-red-400"></i>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-orange-600 font-medium mb-1">Pembayaran</p>
+                        <p class="text-lg font-bold text-orange-900">
+                            {{ payment_stats.total }} transaksi
+                        </p>
+                    </div>
+                    <i class="fas fa-money-bill-wave text-2xl text-orange-400"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Information -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Personal Information -->
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-user-circle mr-2 text-green-600"></i>
+                    Informasi Pribadi
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Nama Lengkap</span>
+                        <span class="text-sm font-medium text-gray-900">{{ user.get_full_name|default:"-" }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Username</span>
+                        <span class="text-sm font-medium text-gray-900">@{{ user.username }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Email</span>
+                        <span class="text-sm font-medium text-gray-900">{{ user.email|default:"-" }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">No. HP</span>
+                        <span class="text-sm font-medium text-gray-900">{{ user.phone|default:"-" }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Tanggal Bergabung</span>
+                        <span class="text-sm font-medium text-gray-900">{{ user.date_joined|date:"d M Y"|default:"-" }}</span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-sm text-gray-600">Login Terakhir</span>
+                        <span class="text-sm font-medium text-gray-900">
+                            {% if user.last_login %}
+                            {{ user.last_login|date:"d M Y, H:i" }}
+                            {% else %}
+                            Belum pernah login
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Santri Information -->
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-graduation-cap mr-2 text-blue-600"></i>
+                    Data Santri
+                </h3>
+                {% if santri %}
+                <div class="space-y-3">
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Nama</span>
+                        <span class="text-sm font-medium text-gray-900">{{ santri.nama_lengkap }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">NISN</span>
+                        <span class="text-sm font-medium text-gray-900">{{ santri.nisn }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Status</span>
+                        <span class="text-sm font-medium">
+                            {% if santri.status == 'pending' %}
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Menunggu Verifikasi</span>
+                            {% elif santri.status == 'verified' %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Terverifikasi</span>
+                            {% elif santri.status == 'accepted' %}
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Diterima</span>
+                            {% elif santri.status == 'rejected' %}
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Ditolak</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="pt-2">
+                        <a href="{% url 'users:status' %}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                            <i class="fas fa-eye mr-1"></i>Lihat Detail Pendaftaran
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-info-circle text-3xl mb-2"></i>
+                    <p class="text-sm">Belum ada data pendaftaran santri</p>
+                    <a href="{% url 'users:pendaftaran' %}" class="text-sm text-blue-600 hover:text-blue-800 font-medium mt-2 inline-block">
+                        <i class="fas fa-plus mr-1"></i>Daftar Sekarang
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Payment Statistics -->
+        {% if payment_stats.total > 0 %}
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-chart-line mr-2 text-purple-600"></i>
+                Statistik Pembayaran
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <p class="text-xs text-gray-600 mb-1">Total Transaksi</p>
+                    <p class="text-xl font-bold text-gray-900">{{ payment_stats.total }}</p>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <p class="text-xs text-green-600 mb-1">Terverifikasi</p>
+                    <p class="text-xl font-bold text-green-900">{{ payment_stats.verified }}</p>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <p class="text-xs text-yellow-600 mb-1">Menunggu</p>
+                    <p class="text-xl font-bold text-yellow-900">{{ payment_stats.pending }}</p>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <p class="text-xs text-blue-600 mb-1">Total Dibayar</p>
+                    <p class="text-xl font-bold text-blue-900">{{ payment_stats.total_amount|default:0|rupiah }}</p>
+                </div>
+            </div>
+            
+            {% if payment %}
+            <div class="mt-4">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">Detail Pembayaran</h4>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ payment.jumlah_transfer|rupiah }}</p>
+                            <p class="text-xs text-gray-500">{{ payment.created_at|date:"d M Y, H:i" }}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full
+                            {% if payment.status == 'verified' %}bg-green-100 text-green-800
+                            {% elif payment.status == 'pending' %}bg-yellow-100 text-yellow-800
+                            {% elif payment.status == 'rejected' %}bg-red-100 text-red-800
+                            {% endif %}">
+                            {{ payment.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-gray-600">Bank:</span>
+                            <span class="font-medium text-gray-900 ml-1">{{ payment.get_bank_pengirim_display }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">No. Rekening:</span>
+                            <span class="font-medium text-gray-900 ml-1">{{ payment.no_rekening_pengirim }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-center">
+                    <a href="{% url 'users:riwayat' %}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        <i class="fas fa-list mr-1"></i>Lihat Detail Lengkap
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Login History (View Mode) -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 md:mb-0 flex items-center">
+                    <i class="fas fa-history mr-2 text-indigo-600"></i>
+                    Riwayat Login
+                </h3>
+                
+                <!-- Filter Buttons -->
+                <div class="flex items-center space-x-2">
+                    <a href="?" 
+                       class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                       {% if not status_filter %}bg-indigo-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        Semua
+                    </a>
+                    <a href="?status=success" 
+                       class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                       {% if status_filter == 'success' %}bg-green-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        <i class="fas fa-check-circle mr-1"></i>Berhasil
+                    </a>
+                    <a href="?status=failed" 
+                       class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                       {% if status_filter == 'failed' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        <i class="fas fa-times-circle mr-1"></i>Gagal
+                    </a>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-green-600 font-medium mb-1">Total Login Berhasil</p>
+                            <p class="text-2xl font-bold text-green-900">{{ successful_logins|default:0 }}</p>
+                            <p class="text-xs text-green-600 mt-1">30 hari terakhir: {{ recent_successful|default:0 }}</p>
+                        </div>
+                        <i class="fas fa-check-circle text-3xl text-green-400"></i>
+                    </div>
+                </div>
+                
+                <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-red-600 font-medium mb-1">Total Login Gagal</p>
+                            <p class="text-2xl font-bold text-red-900">{{ failed_logins|default:0 }}</p>
+                            <p class="text-xs text-red-600 mt-1">30 hari terakhir: {{ recent_failed|default:0 }}</p>
+                        </div>
+                        <i class="fas fa-times-circle text-3xl text-red-400"></i>
+                    </div>
+                </div>
+            </div>
+            
+            {% if login_history %}
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-semibold text-gray-700">
+                        Riwayat Login 
+                        {% if status_filter == 'success' %}
+                        (Berhasil)
+                        {% elif status_filter == 'failed' %}
+                        (Gagal)
+                        {% endif %}
+                    </h4>
+                    <span class="text-xs text-gray-500">
+                        Total: {{ login_history.paginator.count }} entri
+                    </span>
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    {% for login in login_history %}
+                    <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
+                        <div class="flex items-center space-x-3 flex-1">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+                                {% if login.status == 'success' %}bg-green-100 text-green-600
+                                {% else %}bg-red-100 text-red-600{% endif %}">
+                                <i class="fas {% if login.status == 'success' %}fa-check{% else %}fa-times{% endif %}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900">
+                                    Login {% if login.status == 'success' %}Berhasil{% else %}Gagal{% endif %}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-clock mr-1"></i>{{ login.created_at|date:"d M Y, H:i" }}
+                                    {% if login.ip_address %}
+                                    <span class="ml-2"><i class="fas fa-network-wired mr-1"></i>{{ login.ip_address }}</span>
+                                    {% endif %}
+                                </p>
+                                {% if login.error_message %}
+                                <p class="text-xs text-red-600 mt-1">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>{{ login.error_message|truncatewords:15 }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2
+                            {% if login.status == 'success' %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ login.get_status_display }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if login_history.has_other_pages %}
+                <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                    <div class="text-xs text-gray-600">
+                        Menampilkan {{ login_history.start_index }} - {{ login_history.end_index }} dari {{ login_history.paginator.count }} entri
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        {% if login_history.has_previous %}
+                        <a href="?page={{ login_history.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                           class="px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-chevron-left mr-1"></i>Sebelumnya
+                        </a>
+                        {% else %}
+                        <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i>Sebelumnya
+                        </span>
+                        {% endif %}
+                        
+                        <span class="text-xs text-gray-600">
+                            Halaman {{ login_history.number }} dari {{ login_history.paginator.num_pages }}
+                        </span>
+                        
+                        {% if login_history.has_next %}
+                        <a href="?page={{ login_history.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                           class="px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            Selanjutnya<i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                        {% else %}
+                        <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                            Selanjutnya<i class="fas fa-chevron-right ml-1"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+                <i class="fas fa-history text-3xl mb-2"></i>
+                <p class="text-sm">Belum ada riwayat login</p>
+                {% if status_filter %}
+                <p class="text-xs text-gray-400 mt-1">Coba ubah filter atau <a href="?" class="text-indigo-600 hover:underline">lihat semua</a></p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Edit Form -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg md:text-xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-edit mr-2 text-green-600"></i>
+                Edit Profil
+            </h3>
+            <a href="{% url 'users:profile' %}" class="text-sm text-gray-600 hover:text-gray-900">
+                <i class="fas fa-times mr-1"></i>Batal
+            </a>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            
+            <!-- Avatar Upload -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Foto Profil</label>
+                
+                <!-- Current Avatar Preview -->
+                <div class="mb-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            {% if user.avatar %}
+                            <img id="current-avatar-preview" src="{{ user.avatar.url }}" alt="Current Avatar" 
+                                 class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-md"
+                                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div id="current-avatar-fallback" class="w-24 h-24 bg-gray-300 rounded-full items-center justify-center text-gray-500 border-4 border-gray-200 shadow-md hidden">
+                                <i class="fas fa-user text-2xl"></i>
+                            </div>
+                            {% else %}
+                            <div id="current-avatar-preview" class="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 border-4 border-gray-200 shadow-md">
+                                <i class="fas fa-user text-2xl"></i>
+                            </div>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-2 text-center">Foto Saat Ini</p>
+                        </div>
+                        
+                        <!-- New Avatar Preview -->
+                        <div class="hidden" id="new-avatar-preview-container">
+                            <div class="relative">
+                                <img id="new-avatar-preview" src="" alt="New Avatar Preview" 
+                                     class="w-24 h-24 rounded-full object-cover border-4 border-green-500 shadow-md">
+                                <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">Baru</span>
+                            </div>
+                            <p class="text-xs text-green-600 mt-2 text-center font-medium">Foto Baru</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Input -->
+                <div class="relative">
+                    <div class="flex items-center justify-center w-full">
+                        <label for="avatar-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                <p class="mb-2 text-sm text-gray-500">
+                                    <span class="font-semibold">Klik untuk upload</span> atau drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500">JPG, PNG atau GIF (MAX. 2MB)</p>
+                            </div>
+                            <input type="file" name="avatar" id="avatar-upload" accept="image/jpeg,image/jpg,image/png,image/gif"
+                                   class="hidden" onchange="previewAvatar(this); updateFileInputLabel(this)">
+                        </label>
+                    </div>
+                    <div id="file-name-display" class="mt-2 text-sm text-gray-600 hidden">
+                        <i class="fas fa-file-image mr-2"></i>
+                        <span id="file-name-text"></span>
+                    </div>
+                </div>
+                
+                <div class="mt-2 space-y-1">
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Format: JPG, PNG, atau GIF. Ukuran maksimal 2MB
+                    </p>
+                    {% if user.avatar %}
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-link mr-1"></i>
+                        <a href="{{ user.avatar.url }}" target="_blank" class="text-green-600 hover:underline">Lihat foto saat ini</a>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Depan</label>
+                    <input type="text" name="first_name" value="{{ user.first_name }}" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Belakang</label>
+                    <input type="text" name="last_name" value="{{ user.last_name }}" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                <input type="text" value="{{ user.username }}" disabled
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-100 text-sm text-gray-600">
+                <p class="text-xs text-gray-500 mt-1">Username tidak dapat diubah</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input type="email" name="email" value="{{ user.email }}" 
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">No. HP</label>
+                <input type="tel" name="phone" value="{{ user.phone|default:'' }}" 
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                       placeholder="081234567890">
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+                <a href="{% url 'users:profile' %}" class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    Batal
+                </a>
+                <button type="submit" class="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-save mr-2"></i>Simpan Perubahan
+                </button>
+            </div>
+        </form>
+        <!-- Login History -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 md:mb-0 flex items-center">
+                    <i class="fas fa-history mr-2 text-indigo-600"></i>
+                    Riwayat Login
+                </h3>
+                
+                <!-- Filter Buttons -->
+                <div class="flex items-center space-x-2">
+                    <a href="?{% if is_editing %}edit=1&{% endif %}" 
+                       class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                       {% if not status_filter %}bg-indigo-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        Semua
+                    </a>
+                    <a href="?status=success{% if is_editing %}&edit=1{% endif %}" 
+                       class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                       {% if status_filter == 'success' %}bg-green-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        <i class="fas fa-check-circle mr-1"></i>Berhasil
+                    </a>
+                    <a href="?status=failed{% if is_editing %}&edit=1{% endif %}" 
+                       class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                       {% if status_filter == 'failed' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        <i class="fas fa-times-circle mr-1"></i>Gagal
+                    </a>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-green-600 font-medium mb-1">Total Login Berhasil</p>
+                            <p class="text-2xl font-bold text-green-900">{{ successful_logins|default:0 }}</p>
+                            <p class="text-xs text-green-600 mt-1">30 hari terakhir: {{ recent_successful|default:0 }}</p>
+                        </div>
+                        <i class="fas fa-check-circle text-3xl text-green-400"></i>
+                    </div>
+                </div>
+                
+                <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-red-600 font-medium mb-1">Total Login Gagal</p>
+                            <p class="text-2xl font-bold text-red-900">{{ failed_logins|default:0 }}</p>
+                            <p class="text-xs text-red-600 mt-1">30 hari terakhir: {{ recent_failed|default:0 }}</p>
+                        </div>
+                        <i class="fas fa-times-circle text-3xl text-red-400"></i>
+                    </div>
+                </div>
+            </div>
+            
+            {% if login_history %}
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-semibold text-gray-700">
+                        Riwayat Login 
+                        {% if status_filter == 'success' %}
+                        (Berhasil)
+                        {% elif status_filter == 'failed' %}
+                        (Gagal)
+                        {% endif %}
+                    </h4>
+                    <span class="text-xs text-gray-500">
+                        Total: {{ login_history.paginator.count }} entri
+                    </span>
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    {% for login in login_history %}
+                    <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
+                        <div class="flex items-center space-x-3 flex-1">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+                                {% if login.status == 'success' %}bg-green-100 text-green-600
+                                {% else %}bg-red-100 text-red-600{% endif %}">
+                                <i class="fas {% if login.status == 'success' %}fa-check{% else %}fa-times{% endif %}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900">
+                                    Login {% if login.status == 'success' %}Berhasil{% else %}Gagal{% endif %}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-clock mr-1"></i>{{ login.created_at|date:"d M Y, H:i" }}
+                                    {% if login.ip_address %}
+                                    <span class="ml-2"><i class="fas fa-network-wired mr-1"></i>{{ login.ip_address }}</span>
+                                    {% endif %}
+                                </p>
+                                {% if login.error_message %}
+                                <p class="text-xs text-red-600 mt-1">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>{{ login.error_message|truncatewords:15 }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2
+                            {% if login.status == 'success' %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ login.get_status_display }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if login_history.has_other_pages %}
+                <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                    <div class="text-xs text-gray-600">
+                        Menampilkan {{ login_history.start_index }} - {{ login_history.end_index }} dari {{ login_history.paginator.count }} entri
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        {% if login_history.has_previous %}
+                        <a href="?page={{ login_history.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if is_editing %}&edit=1{% endif %}" 
+                           class="px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-chevron-left mr-1"></i>Sebelumnya
+                        </a>
+                        {% else %}
+                        <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i>Sebelumnya
+                        </span>
+                        {% endif %}
+                        
+                        <span class="text-xs text-gray-600">
+                            Halaman {{ login_history.number }} dari {{ login_history.paginator.num_pages }}
+                        </span>
+                        
+                        {% if login_history.has_next %}
+                        <a href="?page={{ login_history.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if is_editing %}&edit=1{% endif %}" 
+                           class="px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            Selanjutnya<i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                        {% else %}
+                        <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                            Selanjutnya<i class="fas fa-chevron-right ml-1"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+                <i class="fas fa-history text-3xl mb-2"></i>
+                <p class="text-sm">Belum ada riwayat login</p>
+                {% if status_filter %}
+                <p class="text-xs text-gray-400 mt-1">Coba ubah filter atau <a href="?{% if is_editing %}edit=1{% endif %}" class="text-indigo-600 hover:underline">lihat semua</a></p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Change Password Card -->
+    <div class="bg-white rounded-xl shadow-md p-4 md:p-6">
+        <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-lock mr-2 text-blue-600"></i>
+            Ubah Password
+        </h3>
+        
+        <form method="post" action="{% url 'users:change_password' %}" class="space-y-4">
+            {% csrf_token %}
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
+                <input type="password" name="old_password" required
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
+                <input type="password" name="new_password1" required
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password Baru</label>
+                <input type="password" name="new_password2" required
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            </div>
+            
+            <div class="flex justify-end pt-4">
+                <button type="submit" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-key mr-2"></i>Ubah Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Preview avatar sebelum upload
+function previewAvatar(input) {
+    const container = document.getElementById('new-avatar-preview-container');
+    const preview = document.getElementById('new-avatar-preview');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            container.classList.remove('hidden');
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        container.classList.add('hidden');
+    }
+}
+
+// Update file name display
+function updateFileInputLabel(input) {
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const fileNameText = document.getElementById('file-name-text');
+    
+    if (input.files && input.files[0]) {
+        fileNameText.textContent = input.files[0].name;
+        fileNameDisplay.classList.remove('hidden');
+    } else {
+        fileNameDisplay.classList.add('hidden');
+    }
+}
+
+// Validasi ukuran file avatar (maksimal 2MB)
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('avatar-upload');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = file.size / 1024 / 1024; // Convert to MB
+                if (fileSize > 2) {
+                    alert('Ukuran file terlalu besar! Maksimal 2MB.');
+                    e.target.value = '';
+                    document.getElementById('new-avatar-preview-container').classList.add('hidden');
+                    return false;
+                }
+                
+                // Validasi tipe file
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Format file tidak didukung! Gunakan JPG, PNG, atau GIF.');
+                    e.target.value = '';
+                    document.getElementById('new-avatar-preview-container').classList.add('hidden');
+                    return false;
+                }
+                
+                // Trigger preview
+                previewAvatar(e.target);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

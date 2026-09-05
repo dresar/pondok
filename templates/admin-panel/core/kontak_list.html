@@ -1,0 +1,101 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Kontak/Inquiry - Admin Panel{% endblock %}
+
+{% block page_title %}Kontak/Inquiry{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Kontak/Inquiry</span></li>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ deleteModal: false, deleteId: null, deleteName: '' }">
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 class="text-2xl font-bold text-gray-900">Kontak/Inquiry</h2>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="get" class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" name="search" value="{{ search }}" placeholder="Cari kontak..." 
+                   class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option value="">Semua Status</option>
+                <option value="baru" {% if status == 'baru' %}selected{% endif %}>Baru</option>
+                <option value="dibaca" {% if status == 'dibaca' %}selected{% endif %}>Dibaca</option>
+                <option value="dibalas" {% if status == 'dibalas' %}selected{% endif %}>Dibalas</option>
+                <option value="selesai" {% if status == 'selesai' %}selected{% endif %}>Selesai</option>
+            </select>
+        </form>
+        
+        {% if kontak %}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for k in kontak %}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-2 py-0.5 text-xs rounded-full {% if k.status == 'baru' %}bg-yellow-100 text-yellow-800{% elif k.status == 'dibaca' %}bg-blue-100 text-blue-800{% elif k.status == 'dibalas' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ k.get_status_display }}
+                        </span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 text-sm mb-2 line-clamp-2">{{ k.nama }}</h3>
+                    <p class="text-xs text-gray-600 mb-1 line-clamp-1">{{ k.email }}</p>
+                    {% if k.no_hp %}
+                    <p class="text-xs text-gray-500 mb-2">{{ k.no_hp }}</p>
+                    {% endif %}
+                    <p class="text-xs text-gray-700 mb-3 line-clamp-2 font-medium">{{ k.subjek|truncatewords:5 }}</p>
+                    <p class="text-xs text-gray-500 mb-3">{{ k.created_at|date:"d M Y" }}</p>
+                    <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                        <a href="{% url 'core:kontak_detail' k.id %}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Detail">
+                            <i class="fas fa-eye text-sm"></i>
+                        </a>
+                        <button @click="deleteModal = true; deleteId = {{ k.id }}; deleteName = '{{ k.nama }}'" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if kontak.has_other_pages %}
+        <div class="mt-6 flex justify-center items-center gap-2">
+            {% if kontak.has_previous %}
+            <a href="?page={{ kontak.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            <span class="px-4 py-2 text-sm text-gray-700">Halaman {{ kontak.number }} dari {{ kontak.paginator.num_pages }}</span>
+            {% if kontak.has_next %}
+            <a href="?page={{ kontak.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-inbox text-4xl mb-4 text-gray-300"></i>
+            <p>Tidak ada data</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Delete Modal -->
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Hapus Kontak</h3>
+            <p class="text-gray-700 mb-6">Hapus "<span x-text="deleteName"></span>"?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="deleteModal = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
+                <form method="post" action="{% url 'core:kontak_delete' 0 %}" x-bind:action="'/admin-panel/core/kontak/' + deleteId + '/delete/'">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends 'admin-panel/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Summernote Content Styling */
+    .summernote-content {
+        line-height: 1.8;
+    }
+    .summernote-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .summernote-content p {
+        margin-bottom: 1rem;
+    }
+    .summernote-content h1, .summernote-content h2, .summernote-content h3,
+    .summernote-content h4, .summernote-content h5, .summernote-content h6 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    .summernote-content ul, .summernote-content ol {
+        margin: 1rem 0;
+        padding-left: 2rem;
+    }
+    .summernote-content li {
+        margin: 0.5rem 0;
+    }
+    .summernote-content blockquote {
+        border-left: 4px solid #10b981;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: #6b7280;
+    }
+    .summernote-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+    .summernote-content table th,
+    .summernote-content table td {
+        border: 1px solid #e5e7eb;
+        padding: 0.5rem;
+    }
+    .summernote-content table th {
+        background-color: #f3f4f6;
+        font-weight: 600;
+    }
+    .summernote-content a {
+        color: #10b981;
+        text-decoration: underline;
+    }
+    .summernote-content a:hover {
+        color: #059669;
+    }
+    .summernote-content code {
+        background-color: #f3f4f6;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+    .summernote-content pre {
+        background-color: #1f2937;
+        color: #f9fafb;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+    .summernote-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+    }
+</style>
+{% endblock %}
+
+{% block title %}Detail Artikel - {{ blog_post.title }}{% endblock %}
+
+{% block page_title %}Detail Artikel{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'blog:list' %}" class="hover:text-gray-900">Daftar Artikel</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">{{ blog_post.title|truncatewords:5 }}</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header dengan Actions -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex-1">
+                <h2 class="text-2xl font-bold text-gray-900">{{ blog_post.title }}</h2>
+                <div class="flex items-center space-x-4 mt-2">
+                    <span class="text-sm text-gray-600">
+                        <i class="fas fa-user mr-1"></i>{{ blog_post.author.get_full_name|default:blog_post.author.username }}
+                    </span>
+                    <span class="text-sm text-gray-600">
+                        <i class="fas fa-calendar mr-1"></i>
+                        {% if blog_post.published_at %}
+                        {{ blog_post.published_at|date:"d F Y, H:i" }}
+                        {% else %}
+                        {{ blog_post.created_at|date:"d F Y, H:i" }}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                {% if blog_post.status == 'published' %}
+                <span class="px-4 py-2 text-sm font-medium rounded-full bg-green-100 text-green-800">Published</span>
+                {% elif blog_post.status == 'draft' %}
+                <span class="px-4 py-2 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">Draft</span>
+                {% else %}
+                <span class="px-4 py-2 text-sm font-medium rounded-full bg-gray-100 text-gray-800">Archived</span>
+                {% endif %}
+                {% if blog_post.is_featured %}
+                <span class="px-4 py-2 text-sm font-medium rounded-full bg-purple-100 text-purple-800">Featured</span>
+                {% endif %}
+                <a href="{% url 'blog:update' blog_id=blog_post.id %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistik -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-chart-bar mr-2 text-green-600"></i>Statistik
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-3xl font-bold text-blue-600">{{ blog_post.views_count }}</div>
+                <div class="text-sm text-gray-600 mt-1">
+                    <i class="fas fa-eye mr-1"></i>Views
+                </div>
+            </div>
+            <div class="text-center p-4 bg-red-50 rounded-lg">
+                <div class="text-3xl font-bold text-red-600">{{ blog_post.likes_count }}</div>
+                <div class="text-sm text-gray-600 mt-1">
+                    <i class="fas fa-heart mr-1"></i>Likes
+                </div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+                <div class="text-3xl font-bold text-green-600">{{ blog_post.shares_count }}</div>
+                <div class="text-sm text-gray-600 mt-1">
+                    <i class="fas fa-share mr-1"></i>Shares
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Konten Artikel -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-file-alt mr-2 text-green-600"></i>Konten Artikel
+        </h3>
+        {% if blog_post.excerpt %}
+        <div class="mb-4 p-4 bg-gray-50 rounded-lg border-l-4 border-green-500">
+            <div class="text-gray-700 italic prose prose-sm max-w-none">{{ blog_post.excerpt|safe }}</div>
+        </div>
+        {% endif %}
+        <div class="prose prose-lg max-w-none summernote-content">
+            {{ blog_post.content|safe }}
+        </div>
+    </div>
+    
+    <!-- Featured Image -->
+    {% if blog_post.featured_image %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-image mr-2 text-green-600"></i>Gambar Utama
+        </h3>
+        <div class="flex justify-center">
+            <img src="{{ blog_post.featured_image.url }}" alt="{{ blog_post.title }}" class="max-w-2xl w-full h-auto rounded-lg shadow border border-gray-200">
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Video -->
+    {% if blog_post.video_file %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-video mr-2 text-green-600"></i>Video
+        </h3>
+        <div class="space-y-4">
+            {% if blog_post.video_file %}
+            <div>
+                <h4 class="text-md font-medium text-gray-700 mb-2">Video Upload</h4>
+                <video controls class="w-full rounded-lg border border-gray-200">
+                    <source src="{{ blog_post.video_file.url }}" type="video/mp4">
+                    Browser Anda tidak mendukung video tag.
+                </video>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Kategori & Tag -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-tags mr-2 text-green-600"></i>Kategori & Tag
+        </h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
+                {% if blog_post.category %}
+                <span class="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">{{ blog_post.category.name }}</span>
+                {% else %}
+                <span class="text-gray-400">-</span>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tag</label>
+                {% if blog_post.tags.all %}
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in blog_post.tags.all %}
+                    <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-full">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <span class="text-gray-400">-</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- SEO Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-search mr-2 text-green-600"></i>Informasi SEO
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Meta Title</label>
+                <div class="text-base text-gray-900">
+                    {% if blog_post.meta_title %}
+                        {{ blog_post.meta_title|striptags }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Meta Keywords</label>
+                <div class="text-base text-gray-900">
+                    {% if blog_post.meta_keywords %}
+                        {{ blog_post.meta_keywords|striptags }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-500 mb-1">Meta Description</label>
+                <div class="text-base text-gray-900">
+                    {% if blog_post.meta_description %}
+                        {{ blog_post.meta_description|striptags|truncatewords:50 }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Slug (URL)</label>
+                <p class="text-base text-gray-900 font-mono">{{ blog_post.slug }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Timestamps -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-clock mr-2 text-green-600"></i>Informasi Sistem
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Dibuat</label>
+                <p class="text-base text-gray-900">{{ blog_post.created_at|date:"d F Y, H:i" }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Terakhir Diupdate</label>
+                <p class="text-base text-gray-900">{{ blog_post.updated_at|date:"d F Y, H:i" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-between">
+        <a href="{% url 'blog:list' %}" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+            <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
+        </a>
+        <div class="flex space-x-3">
+            <a href="{% url 'blog:update' blog_id=blog_post.id %}" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">
+                <i class="fas fa-edit mr-2"></i>Edit Artikel
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}
+

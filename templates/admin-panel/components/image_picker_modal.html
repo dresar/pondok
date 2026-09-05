@@ -1,0 +1,75 @@
+<!-- Image Picker Modal - Reusable Component -->
+<div id="image-picker-modal" 
+     class="fixed inset-0 bg-black/95 flex items-center justify-center hidden p-4" 
+     style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 10000 !important;"
+     onclick="closeImagePicker()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col" 
+         style="position: relative !important; z-index: 10001 !important;"
+         onclick="event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 p-4 md:p-6 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-images text-white text-xl md:text-2xl"></i>
+                <div>
+                    <h3 class="text-lg md:text-xl font-bold text-white">Daftar Gambar WebP</h3>
+                    <p class="text-xs md:text-sm text-white/80">Pusat gambar - Semua dari media/converted</p>
+                </div>
+            </div>
+            <button onclick="closeImagePicker()" class="text-white hover:text-gray-200 transition-colors p-2 hover:bg-white/20 rounded-lg">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Search & Upload Section -->
+        <div class="p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
+            <div class="flex flex-col md:flex-row gap-3 mb-4">
+                <div class="flex-1">
+                    <input type="text" id="image-picker-search" placeholder="Cari berdasarkan judul..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           onkeyup="searchImages(this.value)">
+                </div>
+                <a href="{% url 'admin-panel:image_converter' %}" target="_blank" 
+                   class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center whitespace-nowrap">
+                    <i class="fas fa-plus mr-2"></i>Upload Baru
+                </a>
+            </div>
+            <div class="text-xs text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>
+                Semua gambar dari media/converted. Upload baru akan otomatis dikompres ke WebP dan disimpan di media/converted
+            </div>
+        </div>
+        
+        <!-- Gallery Grid -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6">
+            <div id="image-picker-gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                <!-- Images will be loaded here via AJAX -->
+            </div>
+            <div id="image-picker-loading" class="text-center py-12 text-gray-500 hidden">
+                <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                <p>Memuat gambar...</p>
+            </div>
+            <div id="image-picker-empty" class="text-center py-12 text-gray-500 hidden">
+                <i class="fas fa-image text-6xl mb-4 text-gray-300"></i>
+                <p class="text-lg font-semibold mb-2">Tidak ada gambar ditemukan</p>
+                <a href="{% url 'admin-panel:image_converter' %}" target="_blank" 
+                   class="inline-block px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mt-4">
+                    <i class="fas fa-plus mr-2"></i>Upload Gambar Pertama
+                </a>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div id="image-picker-pagination" class="p-4 border-t border-gray-200 flex justify-center items-center gap-2 flex-shrink-0 hidden">
+            <button id="image-picker-prev" onclick="loadImagesPage('prev')" 
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="image-picker-page-info" class="px-4 py-2 text-sm text-gray-700"></span>
+            <button id="image-picker-next" onclick="loadImagesPage('next')" 
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+

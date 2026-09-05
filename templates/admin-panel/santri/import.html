@@ -1,0 +1,92 @@
+{% extends 'admin-panel/base.html' %}
+
+{% block title %}Import Data Santri - Admin Panel{% endblock %}
+
+{% block page_title %}Import Data Santri{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">/</span></li>
+<li><a href="{% url 'admin-panel:santri_list' %}" class="hover:text-gray-900">Daftar Santri</a></li>
+<li><span class="text-gray-500">/</span></li>
+<li><span class="text-gray-900">Import Data</span></li>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Import Data Santri</h2>
+        <p class="text-gray-600">Upload file Excel atau CSV untuk mengimpor data santri secara massal.</p>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+            <i class="fas fa-info-circle mr-2"></i>Petunjuk Import
+        </h3>
+        <ul class="list-disc list-inside text-sm text-blue-800 space-y-2">
+            <li>File harus berformat Excel (.xlsx) atau CSV (.csv)</li>
+            <li>Baris pertama harus berisi header kolom</li>
+            <li>Kolom yang wajib: Nama Lengkap, NISN, Tempat Lahir, Tanggal Lahir, Jenis Kelamin</li>
+            <li>Kolom opsional: Nama Ayah, Nama Ibu, Alamat, No. HP, Email, Asal Sekolah, Kelas Terakhir, Status</li>
+            <li>Format tanggal: YYYY-MM-DD (contoh: 2024-01-15)</li>
+            <li>Jenis Kelamin: L (Laki-laki) atau P (Perempuan)</li>
+            <li>Status: pending, verified, accepted, atau rejected</li>
+        </ul>
+    </div>
+    
+    <!-- Download Template -->
+    <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">Download Template</h3>
+        <div class="flex space-x-3">
+            <a href="{% url 'admin-panel:santri_export' %}?format=excel" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+                <i class="fas fa-download"></i>
+                <span>Download Template Excel</span>
+            </a>
+            <a href="{% url 'admin-panel:santri_export' %}?format=csv" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                <i class="fas fa-download"></i>
+                <span>Download Template CSV</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Upload Form -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Pilih File <span class="text-red-500">*</span>
+            </label>
+            <input 
+                type="file" 
+                name="file" 
+                accept=".xlsx,.csv,.xls"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+            >
+            <p class="mt-1 text-xs text-gray-500">Format: Excel (.xlsx, .xls) atau CSV (.csv)</p>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Format File</label>
+            <select 
+                name="format" 
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+            >
+                <option value="excel">Excel (.xlsx)</option>
+                <option value="csv">CSV (.csv)</option>
+            </select>
+        </div>
+        
+        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+            <a href="{% url 'admin-panel:santri_list' %}" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                <i class="fas fa-upload mr-2"></i>Upload & Import
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
